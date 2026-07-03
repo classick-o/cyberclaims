@@ -1,10 +1,12 @@
 ---
 // Final conversion CTA strip with diagonal top edge + mesh glow.
 import { link } from '../lib/paths';
+import WaveLines from './WaveLines.astro';
 ---
 
 <section class="cta">
   <div class="cta-inner glass">
+    <WaveLines color="#ffffff" opacityBoost={2.4} />
     <div class="glow-blob" style="background:#6b3fa0;width:26rem;height:26rem;top:-8rem;right:-4rem;opacity:0.4;"></div>
     <div class="wrap cta-content" data-reveal>
       <h2 class="h-section cta-title">
@@ -31,7 +33,7 @@ import { link } from '../lib/paths';
     border-inline: none;
     background: var(--gradient-brand);
     border: none;
-    padding: 5rem 0;
+    padding: 2.5rem 0;
   }
   .cta-content {
     position: relative;

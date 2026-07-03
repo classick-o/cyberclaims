@@ -125,14 +125,14 @@ export const SUSTAINABILITY = [
   { value: 900, suffix: '+', label: 'Happy Customers', icon: 'check' },
 ];
 
-// Partner / "Industry Allies" logos. Placeholder slots - client to supply real logos.
+// Partner / "Industry Allies" logos (sourced from the live site).
 export const PARTNERS = [
-  'Ally One',
-  'Ally Two',
-  'Ally Three',
-  'Ally Four',
-  'Ally Five',
-  'Ally Six',
+  { src: '/partners/scam-help.png', alt: 'Scam Help' },
+  { src: '/partners/guide-post.png', alt: 'GuidePost' },
+  { src: '/partners/scam-detector.png', alt: 'Scam Detector' },
+  { src: '/partners/amcham.png', alt: 'AmCham' },
+  { src: '/partners/qlue.png', alt: 'QLUE' },
+  { src: '/partners/tbs.png', alt: 'Transparent Business Solutions' },
 ];
 
 export type Testimonial = { quote: string; name: string };
@@ -167,6 +167,16 @@ export const TESTIMONIALS: Testimonial[] = [
     quote:
       'I love these guys, they were helpful and nice to me throughout the process! We spend 3 month together tracing and recovering my money AND ACHIVED SUCCESS! Regulators ruled in my favour and made the bank reverse the charges! Thank you endlessly. You are the best!',
     name: 'Eve Hart',
+  },
+  {
+    quote:
+      'As a victim of fraud, I was looking for a company to assist me and I do not regret choosing Transparent Business Solutions. They very attentive to my problem and I left satisfied with their services. They were also able to refer me to a law firm I am working on civil proceedings with now. Top notch!',
+    name: 'Dianna Mills',
+  },
+  {
+    quote:
+      'I dealt with them regarding 2 cases of fraud - they ran the investigation perfectly. Unfortunately, when it came to a dispute, it turned out to be way more complicated than I expected. We pushed the case through, but it caused some hustle for me too. I expected them to cover the services 100%, but it turned out case required my involvement as well.',
+    name: 'Clifford R. Forrest',
   },
   {
     quote:

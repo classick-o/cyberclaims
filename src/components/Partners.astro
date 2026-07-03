@@ -1,13 +1,12 @@
 ---
-// "Industry Allies / Our Partners" - logo strip (brief §6: real logos to be supplied by client).
-import Icon from './Icon.astro';
+// "Industry Allies / Our Partners" - logo strip with real logos from the live site.
 import { PARTNERS } from '../data/site';
+import { link } from '../lib/paths';
 ---
 
 <section class="partners">
   <div class="wrap">
     <div class="partners-head" data-reveal>
-      <span class="eyebrow">Our Partners</span>
       <h2 class="h-section">Industry <span class="accent">allies</span></h2>
       <p class="partners-lead">
         We work alongside leading intelligence providers, law firms and compliance networks
@@ -18,9 +17,8 @@ import { PARTNERS } from '../data/site';
     <div class="partners-grid" data-reveal>
       {
         PARTNERS.map((p) => (
-          <div class="partner-logo" title="Partner logo - to be supplied">
-            <Icon name="shield" class="w-5 h-5" />
-            <span>{p}</span>
+          <div class="partner-logo">
+            <img src={link(p.src)} alt={p.alt} loading="lazy" />
           </div>
         ))
       }
@@ -30,7 +28,7 @@ import { PARTNERS } from '../data/site';
 
 <style>
   .partners {
-    padding: 5rem 0;
+    padding: 2.5rem 0;
     background: var(--gradient-depth);
   }
   .partners-head {
@@ -39,7 +37,7 @@ import { PARTNERS } from '../data/site';
     margin: 0 auto 2.75rem;
   }
   .partners-head h2 {
-    margin: 0.9rem 0 1rem;
+    margin: 0 0 1rem;
   }
   .partners-lead {
     color: rgba(255, 255, 255, 0.6);
@@ -54,27 +52,26 @@ import { PARTNERS } from '../data/site';
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
-    height: 5.5rem;
-    border-radius: 0.75rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px dashed rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.5);
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 0.95rem;
-    filter: grayscale(1);
-    opacity: 0.75;
-    transition: opacity 0.3s, filter 0.3s, border-color 0.3s, color 0.3s;
-  }
-  .partner-logo :global(svg) {
-    color: var(--color-purple-300);
+    height: 4.5rem;
+    padding: 1rem;
+    transition: transform 0.3s var(--ease-out-brand);
   }
   .partner-logo:hover {
+    transform: translateY(-3px);
+  }
+  /* white monochrome logos on the dark section */
+  .partner-logo img {
+    max-width: 100%;
+    max-height: 2.4rem;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.55;
+    transition: opacity 0.3s var(--ease-out-brand);
+  }
+  .partner-logo:hover img {
     opacity: 1;
-    filter: grayscale(0);
-    border-color: rgba(139, 91, 189, 0.4);
-    color: #fff;
   }
   @media (min-width: 768px) {
     .partners-grid {

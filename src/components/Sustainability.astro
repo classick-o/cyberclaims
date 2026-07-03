@@ -8,7 +8,6 @@ import { SUSTAINABILITY } from '../data/site';
 <section class="sus">
   <div class="wrap">
     <div class="sus-head" data-reveal>
-      <span class="eyebrow">Responsibility</span>
       <h2 class="h-section">We prioritise <span class="accent">sustainability</span></h2>
       <p class="sus-lead">
         Fighting digital crime shouldn’t cost the planet. A part of every case we resolve
@@ -21,14 +20,16 @@ import { SUSTAINABILITY } from '../data/site';
         SUSTAINABILITY.map((s) => (
           <div class="glass sus-card" data-reveal>
             <span class="sus-icon"><Icon name={s.icon} class="w-6 h-6" /></span>
-            <div class="sus-value">
-              <span
-                class="counter"
-                data-target={s.value}
-                data-suffix={s.suffix ?? ''}
-              >0</span><span class="sus-fix">{s.suffix}</span>
+            <div class="sus-text">
+              <div class="sus-value">
+                <span
+                  class="counter"
+                  data-target={s.value}
+                  data-suffix={s.suffix ?? ''}
+                >0</span><span class="sus-fix">{s.suffix}</span>
+              </div>
+              <div class="sus-label">{s.label}</div>
             </div>
-            <div class="sus-label">{s.label}</div>
           </div>
         ))
       }
@@ -38,7 +39,7 @@ import { SUSTAINABILITY } from '../data/site';
 
 <style>
   .sus {
-    padding: 5rem 0 6rem;
+    padding: 2.5rem 0 3rem;
     background: var(--color-navy);
   }
   .sus-head {
@@ -82,6 +83,12 @@ import { SUSTAINABILITY } from '../data/site';
     background: rgba(139, 91, 189, 0.14);
     border: 1px solid rgba(139, 91, 189, 0.28);
   }
+  .sus-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+  }
   .sus-value {
     font-family: var(--font-display);
     font-weight: 700;
@@ -95,6 +102,37 @@ import { SUSTAINABILITY } from '../data/site';
   .sus-label {
     font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.6);
+  }
+
+  /* compact horizontal cards on mobile */
+  @media (max-width: 767px) {
+    .sus-grid {
+      gap: 0.75rem;
+    }
+    .sus-card {
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: left;
+      gap: 1rem;
+      padding: 0.9rem 1.1rem;
+    }
+    .sus-icon {
+      width: 2.4rem;
+      height: 2.4rem;
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+    .sus-icon :global(svg) {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+    .sus-text {
+      align-items: flex-start;
+    }
+    .sus-value {
+      font-size: 1.6rem;
+    }
   }
   @media (min-width: 768px) {
     .sus-grid {

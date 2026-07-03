@@ -8,12 +8,11 @@ import { link } from '../lib/paths';
 <section class="services">
   <div class="wrap services-head">
     <div data-reveal>
-      <span class="eyebrow">Great Services</span>
       <h2 class="h-section">What we <span class="accent">investigate</span></h2>
     </div>
     <div class="services-nav" data-reveal>
-      <button class="rail-btn" data-dir="-1" aria-label="Previous"><Icon name="arrow" class="w-5 h-5" style="transform:rotate(180deg)" /></button>
-      <button class="rail-btn" data-dir="1" aria-label="Next"><Icon name="arrow" class="w-5 h-5" /></button>
+      <button class="rail-btn rail-prev" data-dir="-1" aria-label="Previous" disabled><Icon name="arrow" class="w-5 h-5" /></button>
+      <button class="rail-btn rail-next" data-dir="1" aria-label="Next"><Icon name="arrow" class="w-5 h-5" /></button>
     </div>
   </div>
 
@@ -38,9 +37,14 @@ import { link } from '../lib/paths';
 
 <style>
   .services {
-    padding: 6rem 0;
-    background: var(--color-navy);
+    position: relative;
+    padding: 3rem 0;
     overflow: hidden;
+  }
+  .services-head,
+  .rail-viewport {
+    position: relative;
+    z-index: 1;
   }
   .services-head {
     display: flex;
@@ -72,6 +76,19 @@ import { link } from '../lib/paths';
     background: var(--color-purple-500);
     border-color: var(--color-purple-400);
   }
+  /* left button points left */
+  .rail-prev :global(svg) {
+    transform: rotate(180deg);
+  }
+  /* disabled state (e.g. prev at start, next at end) */
+  .rail-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .rail-btn:disabled:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
 
   .rail-viewport {
     max-width: 80rem;
@@ -88,6 +105,8 @@ import { link } from '../lib/paths';
   }
   .svc-card {
     position: relative;
+    display: flex;
+    flex-direction: column;
     flex: 0 0 auto;
     width: 18rem;
     padding: 1.25rem;
@@ -129,7 +148,9 @@ import { link } from '../lib/paths';
   .svc-content {
     position: relative;
     z-index: 1;
-    display: block;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
   .svc-title {
     font-size: 1.15rem;
@@ -143,13 +164,15 @@ import { link } from '../lib/paths';
     margin-bottom: 1.1rem;
   }
   .svc-more {
+    align-self: flex-start;
+    margin-top: auto;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
     font-family: var(--font-display);
     font-size: 0.82rem;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--color-purple-300);
   }
   .svc-more :global(svg) {
     transition: transform 0.3s var(--ease-out-brand);
@@ -182,10 +205,27 @@ import { link } from '../lib/paths';
 
 <script>
   const rail = document.getElementById('services-rail');
-  document.querySelectorAll<HTMLButtonElement>('.rail-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
+  const prev = document.querySelector<HTMLButtonElement>('.rail-prev');
+  const next = document.querySelector<HTMLButtonElement>('.rail-next');
+
+  // Enable/disable arrows based on scroll position.
+  function updateNav() {
+    if (!rail || !prev || !next) return;
+    const atStart = rail.scrollLeft <= 2;
+    const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 2;
+    prev.disabled = atStart;
+    next.disabled = atEnd;
+  }
+
+  [prev, next].forEach((btn) =>
+    btn?.addEventListener('click', () => {
       const dir = Number(btn.dataset.dir) || 1;
+      // scroll by ~one card width so paging feels natural
       rail?.scrollBy({ left: dir * 320, behavior: 'smooth' });
-    });
-  });
+    })
+  );
+
+  rail?.addEventListener('scroll', updateNav, { passive: true });
+  window.addEventListener('resize', updateNav);
+  updateNav();
 </script>

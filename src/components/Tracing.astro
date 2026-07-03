@@ -25,7 +25,6 @@ import { link } from '../lib/paths';
     </div>
 
     <div class="tracing-copy" data-reveal>
-      <span class="eyebrow">Tracing</span>
       <h2 class="h-section">Crypto currency <span class="accent">tracing</span></h2>
       <p class="tracing-body">
         Leveraging the world’s leading cryptocurrency intelligence and blockchain analytics,
@@ -41,14 +40,21 @@ import { link } from '../lib/paths';
 
 <style>
   .tracing {
-    padding: 6rem 0;
-    background: var(--color-navy);
+    position: relative;
+    padding: 3rem 0;
+    overflow: hidden;
   }
   .tracing-grid {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: 1fr;
     gap: 3rem;
     align-items: center;
+  }
+  .tracing-visual,
+  .tracing-copy {
+    min-width: 0;
   }
   .tw-card {
     padding: 1.75rem;

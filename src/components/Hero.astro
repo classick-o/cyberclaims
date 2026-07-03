@@ -12,7 +12,6 @@ import { link } from '../lib/paths';
   <div class="wrap hero-grid">
     <!-- Left: headline -->
     <div class="hero-copy">
-      <span class="eyebrow" data-reveal>Blockchain forensics · Asset recovery</span>
       <h1 class="h-display hero-title" data-reveal>
         Have you been a victim of <span class="accent">crypto scams?</span>
       </h1>
@@ -109,6 +108,11 @@ import { link } from '../lib/paths';
     gap: 3rem;
     align-items: center;
   }
+  /* let grid children shrink below their intrinsic width (prevents mobile overflow) */
+  .hero-copy,
+  .hero-form-wrap {
+    min-width: 0;
+  }
   .hero-title {
     margin: 1.4rem 0 1.5rem;
     max-width: 16ch;
@@ -168,18 +172,22 @@ import { link } from '../lib/paths';
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
+    min-width: 0;
   }
   .field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.9rem;
+    min-width: 0;
   }
   .field {
     position: relative;
+    min-width: 0;
   }
   .field input,
   .field textarea {
     width: 100%;
+    min-width: 0;
     padding: 0.95rem 0.9rem 0.35rem;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.12);

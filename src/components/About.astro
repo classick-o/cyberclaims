@@ -13,7 +13,6 @@ const points = [
 <section class="about">
   <div class="wrap about-grid">
     <div class="about-copy" data-reveal>
-      <span class="eyebrow">About Us</span>
       <h2 class="h-section about-title">
         Hello, we are <span class="accent">Cyberclaims</span>
       </h2>
@@ -46,12 +45,30 @@ const points = [
     <!-- Animated blockchain-trace visual -->
     <div class="about-visual" data-reveal>
       <div class="glass trace-card">
-        <div class="trace-head">
-          <span class="trace-dot"></span> Live trace · funds flow
-        </div>
+        <div class="trace-bg" aria-hidden="true"></div>
+        <div class="trace-head">Live trace · funds flow</div>
         <svg class="trace-svg" viewBox="0 0 320 300" fill="none" aria-hidden="true">
+          <defs>
+            <radialGradient id="nodeGrad" cx="35%" cy="28%" r="80%">
+              <stop offset="0" stop-color="#3d2d63" />
+              <stop offset="1" stop-color="#1f1540" />
+            </radialGradient>
+            <radialGradient id="hubGrad" cx="35%" cy="26%" r="80%">
+              <stop offset="0" stop-color="#6e4bae" />
+              <stop offset="1" stop-color="#2c1c52" />
+            </radialGradient>
+            <radialGradient id="flagGrad" cx="35%" cy="28%" r="80%">
+              <stop offset="0" stop-color="#7d2331" />
+              <stop offset="1" stop-color="#3a1119" />
+            </radialGradient>
+            <linearGradient id="linkGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#c7abe1" stop-opacity="0.75" />
+              <stop offset="1" stop-color="#6b3fa0" stop-opacity="0.25" />
+            </linearGradient>
+          </defs>
+
           <!-- Connections -->
-          <g stroke="#8b5bbd" stroke-width="1.5" opacity="0.5">
+          <g stroke="url(#linkGrad)" stroke-width="1.4">
             <path class="trace-line" d="M44 64 L152 112" />
             <path class="trace-line" d="M152 112 L262 72" />
             <path class="trace-line" d="M152 112 L120 200" />
@@ -60,7 +77,6 @@ const points = [
             <path class="trace-line" d="M44 64 L120 200" />
           </g>
 
-          <!-- Nodes (solid fill + icon) -->
           <!-- Wallet (source) -->
           <g transform="translate(44 64)">
             <circle class="node" r="14" />
@@ -71,6 +87,10 @@ const points = [
           </g>
           <!-- Hub: on-chain analysis -->
           <g transform="translate(152 112)">
+            <circle class="halo" r="20" fill="none" stroke="#a880d1" stroke-width="1.4">
+              <animate attributeName="r" values="20;42" dur="2.8s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.45;0" dur="2.8s" repeatCount="indefinite" />
+            </circle>
             <circle class="node node-hub" r="20" />
             <g class="node-icon">
               <circle cx="-2" cy="-2" r="5.5" />
@@ -94,6 +114,10 @@ const points = [
           </g>
           <!-- Cashout point (flagged) -->
           <g transform="translate(244 232)">
+            <circle class="halo-flag" r="17" fill="none" stroke="#f87171" stroke-width="1.4">
+              <animate attributeName="r" values="17;34" dur="2.2s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.55;0" dur="2.2s" repeatCount="indefinite" />
+            </circle>
             <circle class="node node-flag" r="17" />
             <g class="node-icon node-icon-flag">
               <path d="M0 -6v6" />
@@ -114,14 +138,18 @@ const points = [
 <style>
   .about {
     position: relative;
-    padding: 6rem 0;
-    background: var(--gradient-depth);
+    padding: 3rem 0;
+    background: transparent;
   }
   .about-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 3rem;
     align-items: center;
+  }
+  .about-copy,
+  .about-visual {
+    min-width: 0;
   }
   .about-title {
     margin: 1rem 0 1.4rem;
@@ -171,26 +199,35 @@ const points = [
     position: relative;
   }
   .trace-card {
+    position: relative;
     padding: 1.5rem;
+    overflow: hidden;
+  }
+  /* premium backdrop: soft center glow + faint dot grid */
+  .trace-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+      radial-gradient(circle at 50% 42%, rgba(139, 91, 189, 0.22), transparent 60%),
+      radial-gradient(rgba(168, 128, 209, 0.09) 1px, transparent 1.4px);
+    background-size: 100% 100%, 22px 22px;
+  }
+  .trace-head,
+  .trace-svg,
+  .trace-foot {
+    position: relative;
+    z-index: 1;
   }
   .trace-head {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
     font-size: 0.8rem;
     color: rgba(255, 255, 255, 0.6);
     margin-bottom: 0.5rem;
   }
-  .trace-dot {
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background: #4ade80;
-    box-shadow: 0 0 8px #4ade80;
-  }
   .trace-svg {
     width: 100%;
     height: auto;
+    overflow: visible;
   }
   .trace-line {
     stroke-dasharray: 6 6;
@@ -202,22 +239,25 @@ const points = [
     }
   }
   .node {
-    fill: #2b2150;
-    stroke: #a880d1;
-    stroke-width: 1.6;
+    fill: url(#nodeGrad);
+    stroke: rgba(199, 171, 225, 0.5);
+    stroke-width: 1.4;
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
   }
   .node-hub {
-    fill: #3a2568;
-    stroke: #c7abe1;
-    stroke-width: 2;
+    fill: url(#hubGrad);
+    stroke: #d3bce8;
+    stroke-width: 1.8;
+    filter: drop-shadow(0 0 16px rgba(139, 91, 189, 0.6));
   }
   .node-flag {
-    fill: #4a1620;
+    fill: url(#flagGrad);
     stroke: #f87171;
-    stroke-width: 1.8;
+    stroke-width: 1.6;
+    filter: drop-shadow(0 0 16px rgba(248, 113, 113, 0.55));
   }
   .node-icon {
-    color: #d9c8ee;
+    color: #e6d9f5;
     stroke: currentColor;
     stroke-width: 1.5;
     stroke-linecap: round;
@@ -226,19 +266,6 @@ const points = [
   }
   .node-icon-flag {
     color: #fca5a5;
-  }
-  /* pulsing halo on the flagged cashout node */
-  .node-flag {
-    animation: pulse 2s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%,
-    100% {
-      filter: drop-shadow(0 0 0 rgba(248, 113, 113, 0));
-    }
-    50% {
-      filter: drop-shadow(0 0 8px rgba(248, 113, 113, 0.6));
-    }
   }
   .trace-foot {
     display: flex;
