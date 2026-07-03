@@ -1,0 +1,227 @@
+@import 'tailwindcss';
+
+/* ============================================================
+   CYBERCLAIMS — DESIGN TOKENS
+   Brand palette locked to brief (§2.1): purple / dark navy / white.
+   Extended tints & shades are derivatives only — no new primaries.
+   ============================================================ */
+@theme {
+  /* — Purple scale (base 500 = #6B3FA0, the brand purple) — */
+  --color-purple-50: #f2ecf9;
+  --color-purple-100: #e3d5f0;
+  --color-purple-200: #c7abe1;
+  --color-purple-300: #a880d1;
+  --color-purple-400: #8b5bbd;
+  --color-purple-500: #6b3fa0;
+  --color-purple-600: #593585;
+  --color-purple-700: #442866;
+  --color-purple-800: #2f1c47;
+  --color-purple-900: #1d1130;
+
+  /* — Dark navy scale (base = #1A1A2E) — */
+  --color-navy: #1a1a2e;
+  --color-navy-deep: #101020;
+  --color-navy-700: #202038;
+  --color-navy-600: #2a2a48;
+  --color-navy-elevated: #232340;
+
+  /* — Neutrals — */
+  --color-ink: #14141f;
+  --color-mist: #f5f4f9;
+  --color-line: rgba(255, 255, 255, 0.08);
+
+  /* — Signature gradients & glow — */
+  --gradient-brand: linear-gradient(135deg, #6b3fa0 0%, #8b5bbd 100%);
+  --gradient-depth: linear-gradient(160deg, #1a1a2e 0%, #101020 100%);
+  --glow-purple: 0 0 60px rgba(139, 91, 189, 0.35);
+
+  /* — Typography — */
+  --font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+
+  /* — Motion — */
+  --ease-out-brand: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* — Container — */
+  --spacing-gutter: 1.5rem;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--color-navy-deep);
+  color: var(--color-mist);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--color-purple-500);
+  color: #fff;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+/* ============================================================
+   REUSABLE UTILITIES
+   ============================================================ */
+
+/* Section container */
+.wrap {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: var(--spacing-gutter);
+}
+
+/* Fluid display heading */
+.h-display {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1.02;
+}
+.h-section {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.08;
+}
+
+/* Purple accent word inside headings */
+.accent {
+  background: linear-gradient(120deg, #a880d1, #6b3fa0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Eyebrow label */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-purple-300);
+}
+.eyebrow::before {
+  content: '';
+  width: 1.75rem;
+  height: 1px;
+  background: var(--color-purple-400);
+}
+
+/* Frosted-glass card */
+.glass {
+  background: rgba(35, 35, 64, 0.45);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 0.75rem;
+}
+
+/* Primary button */
+.btn {
+  --btn-bg: var(--color-purple-500);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.95rem 1.9rem;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background: var(--btn-bg);
+  box-shadow: 0 8px 24px -8px rgba(107, 63, 160, 0.7);
+  transition: transform 0.25s var(--ease-out-brand),
+    box-shadow 0.25s var(--ease-out-brand), background 0.25s var(--ease-out-brand);
+  cursor: pointer;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  background: var(--color-purple-400);
+  box-shadow: 0 14px 34px -8px rgba(139, 91, 189, 0.85);
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+  color: #fff;
+}
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--color-purple-400);
+}
+
+/* Diagonal / layered section dividers (replaces hard rectangles) */
+.divide-diagonal {
+  clip-path: polygon(0 0, 100% 3vw, 100% 100%, 0 100%);
+}
+
+/* Scroll-reveal initial state (JS toggles .is-visible) */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s var(--ease-out-brand),
+    transform 0.7s var(--ease-out-brand);
+  will-change: opacity, transform;
+}
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Radial mesh glow blob */
+.glow-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Accessibility: respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Hide scrollbar on horizontal card rails */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

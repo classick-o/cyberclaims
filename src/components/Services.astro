@@ -1,0 +1,191 @@
+---
+// Services preview: horizontally scrollable glass cards with hover lift + accent line (brief §4/§5).
+import Icon from './Icon.astro';
+import { SERVICES } from '../data/site';
+import { link } from '../lib/paths';
+---
+
+<section class="services">
+  <div class="wrap services-head">
+    <div data-reveal>
+      <span class="eyebrow">Great Services</span>
+      <h2 class="h-section">What we <span class="accent">investigate</span></h2>
+    </div>
+    <div class="services-nav" data-reveal>
+      <button class="rail-btn" data-dir="-1" aria-label="Previous"><Icon name="arrow" class="w-5 h-5" style="transform:rotate(180deg)" /></button>
+      <button class="rail-btn" data-dir="1" aria-label="Next"><Icon name="arrow" class="w-5 h-5" /></button>
+    </div>
+  </div>
+
+  <div class="rail-viewport">
+    <div class="rail no-scrollbar" id="services-rail" data-reveal>
+      {
+        SERVICES.map((s) => (
+          <a href={link(s.href)} class="svc-card" style={`--accent:${s.accent}`}>
+            <span class="svc-watermark" aria-hidden="true"><Icon name={s.icon} class="w-full h-full" /></span>
+            <span class="svc-content">
+              <h3 class="svc-title">{s.title}</h3>
+              <p class="svc-blurb">{s.blurb}</p>
+              <span class="svc-more">Read more <Icon name="arrow" class="w-4 h-4" /></span>
+            </span>
+            <span class="svc-line"></span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .services {
+    padding: 6rem 0;
+    background: var(--color-navy);
+    overflow: hidden;
+  }
+  .services-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .services-head h2 {
+    margin-top: 0.9rem;
+  }
+  .services-nav {
+    display: none;
+    gap: 0.6rem;
+  }
+  .rail-btn {
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .rail-btn:hover {
+    background: var(--color-purple-500);
+    border-color: var(--color-purple-400);
+  }
+
+  .rail-viewport {
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: var(--spacing-gutter);
+  }
+  .rail {
+    display: flex;
+    gap: 1.25rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 0.5rem 0 1.5rem;
+    scroll-padding-left: 0;
+  }
+  .svc-card {
+    position: relative;
+    flex: 0 0 auto;
+    width: 18rem;
+    padding: 1.25rem;
+    scroll-snap-align: start;
+    background: rgba(35, 35, 64, 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 0.75rem;
+    text-decoration: none;
+    overflow: hidden;
+    transition: transform 0.35s var(--ease-out-brand),
+      box-shadow 0.35s var(--ease-out-brand), border-color 0.35s;
+  }
+  .svc-card:hover {
+    transform: translateY(-8px);
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.6),
+      0 0 40px -12px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  /* large faded watermark icon centered in card background */
+  .svc-watermark {
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 11rem;
+    height: 11rem;
+    color: var(--accent);
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.35s var(--ease-out-brand),
+      transform 0.5s var(--ease-out-brand);
+  }
+  .svc-card:hover .svc-watermark {
+    opacity: 0.16;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+  .svc-content {
+    position: relative;
+    z-index: 1;
+    display: block;
+  }
+  .svc-title {
+    font-size: 1.15rem;
+    color: #fff;
+    margin-bottom: 0.6rem;
+  }
+  .svc-blurb {
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.58);
+    margin-bottom: 1.1rem;
+  }
+  .svc-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .svc-more :global(svg) {
+    transition: transform 0.3s var(--ease-out-brand);
+  }
+  .svc-card:hover .svc-more :global(svg) {
+    transform: translateX(4px);
+  }
+  /* accent line appears at bottom on hover (brief §5) */
+  .svc-line {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    width: 100%;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s var(--ease-out-brand);
+  }
+  .svc-card:hover .svc-line {
+    transform: scaleX(1);
+  }
+
+  @media (min-width: 768px) {
+    .services-nav {
+      display: flex;
+    }
+  }
+</style>
+
+<script>
+  const rail = document.getElementById('services-rail');
+  document.querySelectorAll<HTMLButtonElement>('.rail-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const dir = Number(btn.dataset.dir) || 1;
+      rail?.scrollBy({ left: dir * 320, behavior: 'smooth' });
+    });
+  });
+</script>

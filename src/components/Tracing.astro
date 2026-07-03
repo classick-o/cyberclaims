@@ -1,0 +1,134 @@
+---
+// Featured "Crypto Currency Tracing" highlight — alternating layout (visual left, text right).
+import Icon from './Icon.astro';
+import { link } from '../lib/paths';
+---
+
+<section class="tracing">
+  <div class="wrap tracing-grid">
+    <div class="tracing-visual" data-reveal>
+      <div class="glass tw-card">
+        <div class="tw-row">
+          <span class="tw-chip"><Icon name="tracing" class="w-4 h-4" /> On-chain</span>
+          <span class="tw-chip"><Icon name="globe" class="w-4 h-4" /> VASP risk</span>
+          <span class="tw-chip"><Icon name="lock" class="w-4 h-4" /> Cashout</span>
+        </div>
+        <div class="tw-bars">
+          <div class="tw-bar" style="--h:40%"><span></span><label>Mixer</label></div>
+          <div class="tw-bar" style="--h:72%"><span></span><label>Exchange A</label></div>
+          <div class="tw-bar" style="--h:58%"><span></span><label>Bridge</label></div>
+          <div class="tw-bar" style="--h:90%"><span></span><label>Exchange B</label></div>
+          <div class="tw-bar" style="--h:34%"><span></span><label>Wallet</label></div>
+        </div>
+        <div class="tw-foot">Funds mapped across 5 hops · 2 cashout points flagged</div>
+      </div>
+    </div>
+
+    <div class="tracing-copy" data-reveal>
+      <span class="eyebrow">Tracing</span>
+      <h2 class="h-section">Crypto currency <span class="accent">tracing</span></h2>
+      <p class="tracing-body">
+        Leveraging the world’s leading cryptocurrency intelligence and blockchain analytics,
+        we provide in-depth insights into cryptocurrency tracing, the risks of money
+        laundering associated with virtual asset service providers, and more. Our advanced
+        software enables us to identify risks related to crypto wallets, track cashout points,
+        and precisely determine where funds were sent and cashed out.
+      </p>
+      <a href={link('/cryptocurrency-tracing/')} class="btn">View More</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .tracing {
+    padding: 6rem 0;
+    background: var(--color-navy);
+  }
+  .tracing-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  .tw-card {
+    padding: 1.75rem;
+  }
+  .tw-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .tw-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(139, 91, 189, 0.12);
+    border: 1px solid rgba(139, 91, 189, 0.25);
+  }
+  .tw-chip :global(svg) {
+    width: 0.9rem;
+    height: 0.9rem;
+    color: var(--color-purple-300);
+  }
+  .tw-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.9rem;
+    height: 11rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .tw-bar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+  .tw-bar span {
+    width: 100%;
+    height: var(--h);
+    border-radius: 0.5rem 0.5rem 0 0;
+    background: linear-gradient(180deg, #a880d1, #6b3fa0);
+    transform-origin: bottom;
+    animation: grow 1.2s var(--ease-out-brand) both;
+  }
+  @keyframes grow {
+    from {
+      transform: scaleY(0);
+    }
+  }
+  .tw-bar label {
+    font-size: 0.62rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+  }
+  .tw-foot {
+    margin-top: 1rem;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .tracing-body {
+    margin: 1.2rem 0 1.8rem;
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.7;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tw-bar span {
+      animation: none;
+    }
+  }
+  @media (min-width: 1024px) {
+    .tracing-grid {
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 4.5rem;
+    }
+  }
+</style>

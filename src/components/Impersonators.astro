@@ -1,0 +1,103 @@
+---
+// "Beware of Impersonators" — trust/safety alert band. Copy preserved verbatim.
+import Icon from './Icon.astro';
+---
+
+<section class="imp">
+  <div class="wrap">
+    <div class="glass imp-card" data-reveal>
+      <div class="imp-icon"><Icon name="alert" class="w-7 h-7" /></div>
+      <div class="imp-body">
+        <h2 class="imp-title">Beware of Impersonators</h2>
+        <p class="imp-lead">
+          Your safety and trust are our top priorities. To protect yourself:
+        </p>
+        <ul class="imp-list">
+          <li><Icon name="check" class="w-4 h-4" /> Always verify the identity of anyone claiming to represent us.</li>
+          <li><Icon name="check" class="w-4 h-4" /> Ensure their contact details match our official phone numbers and emails. Our official email domain is <strong>@cyberclaims.net</strong>.</li>
+        </ul>
+        <p class="imp-note">
+          If the details don’t match, it’s likely a fraudulent attempt to deceive you through a
+          recovery scam. If you encounter suspicious communication, report it immediately by
+          completing our contact form or emailing
+          <a href="mailto:contact@cyberclaims.net">contact@cyberclaims.net</a>. Your security matters to us.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .imp {
+    padding: 2rem 0 5rem;
+    background: var(--color-navy-deep);
+  }
+  .imp-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 2rem;
+    border-color: rgba(248, 113, 113, 0.25);
+    background: linear-gradient(
+      160deg,
+      rgba(248, 113, 113, 0.06),
+      rgba(35, 35, 64, 0.45)
+    );
+  }
+  .imp-icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 3.4rem;
+    height: 3.4rem;
+    border-radius: 0.6rem;
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.12);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+  }
+  .imp-title {
+    font-size: 1.4rem;
+    color: #fff;
+    margin-bottom: 0.6rem;
+  }
+  .imp-lead {
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 0.9rem;
+  }
+  .imp-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+  .imp-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.8);
+  }
+  .imp-list :global(svg) {
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+    color: var(--color-purple-300);
+  }
+  .imp-list strong {
+    color: #fff;
+  }
+  .imp-note {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.55);
+  }
+  .imp-note a {
+    color: var(--color-purple-300);
+  }
+  @media (min-width: 768px) {
+    .imp-card {
+      flex-direction: row;
+    }
+  }
+</style>

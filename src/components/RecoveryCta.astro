@@ -1,0 +1,90 @@
+---
+// "Start Your Recovery Now" CTA block — preserved from live homepage (between About & Services).
+import Icon from './Icon.astro';
+import { link } from '../lib/paths';
+---
+
+<section class="rec">
+  <div class="wrap">
+    <div class="glass rec-card" data-reveal>
+      <div class="glow-blob" style="background:#6b3fa0;width:22rem;height:22rem;top:-8rem;left:-4rem;opacity:0.3;"></div>
+      <div class="rec-content">
+        <div class="rec-left">
+          <span class="rec-badge"><span class="rec-dot"></span> Free Case Review — 48-Hour Response</span>
+          <h2 class="rec-title">Start your <span class="accent">recovery</span> now</h2>
+          <p class="rec-sub">
+            Talk to a certified expert about your case. No obligation — just a clear picture
+            of your options and next steps.
+          </p>
+        </div>
+        <div class="rec-actions">
+          <a href={link('/start-process/')} class="btn">Start Process <Icon name="arrow" class="w-4 h-4" /></a>
+          <a href={link('/contact-us/')} class="btn btn-ghost">Book a Consultation</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .rec {
+    padding: 1rem 0 5rem;
+    background: var(--gradient-depth);
+  }
+  .rec-card {
+    position: relative;
+    overflow: hidden;
+    padding: 2.5rem;
+  }
+  .rec-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+  .rec-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--color-purple-200);
+  }
+  .rec-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 8px #4ade80;
+  }
+  .rec-title {
+    font-size: clamp(1.8rem, 4vw, 2.75rem);
+    margin: 0.8rem 0 0.7rem;
+    color: #fff;
+  }
+  .rec-sub {
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.6;
+    max-width: 44ch;
+  }
+  .rec-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+  }
+  @media (min-width: 900px) {
+    .rec-content {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .rec-actions {
+      flex-shrink: 0;
+      flex-direction: column;
+    }
+  }
+</style>

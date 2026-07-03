@@ -1,0 +1,89 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/Hero.astro';
+import Stats from '../components/Stats.astro';
+import About from '../components/About.astro';
+import RecoveryCta from '../components/RecoveryCta.astro';
+import Services from '../components/Services.astro';
+import Tracing from '../components/Tracing.astro';
+import Sustainability from '../components/Sustainability.astro';
+import Testimonials from '../components/Testimonials.astro';
+import Blogs from '../components/Blogs.astro';
+import Partners from '../components/Partners.astro';
+import Press from '../components/Press.astro';
+import Impersonators from '../components/Impersonators.astro';
+import CtaStrip from '../components/CtaStrip.astro';
+---
+
+<Layout>
+  <Hero />
+  <Stats />
+  <About />
+  <RecoveryCta />
+  <Services />
+  <Tracing />
+  <Sustainability />
+  <Testimonials />
+  <Blogs />
+  <Partners />
+  <Press />
+  <Impersonators />
+  <CtaStrip />
+</Layout>
+
+<script>
+  // ── Scroll-reveal (fade/slide-up) via IntersectionObserver (brief §5) ──
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const revealEls = document.querySelectorAll<HTMLElement>('[data-reveal]');
+  if (reduce) {
+    revealEls.forEach((el) => el.classList.add('is-visible'));
+  } else {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e, i) => {
+          if (e.isIntersecting) {
+            const el = e.target as HTMLElement;
+            // subtle stagger for siblings entering together
+            el.style.transitionDelay = `${Math.min(i * 60, 240)}ms`;
+            el.classList.add('is-visible');
+            io.unobserve(el);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+    );
+    revealEls.forEach((el) => io.observe(el));
+  }
+
+  // ── Animated number counters (brief §5) ──
+  const counters = document.querySelectorAll<HTMLElement>('.counter');
+  const fmt = (n: number) => n.toLocaleString('en-US');
+  const runCounter = (el: HTMLElement) => {
+    const target = Number(el.dataset.target || '0');
+    if (reduce) {
+      el.textContent = fmt(target);
+      return;
+    }
+    const dur = 1600;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      el.textContent = fmt(Math.round(target * eased));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+  const cio = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          runCounter(e.target as HTMLElement);
+          cio.unobserve(e.target);
+        }
+      });
+    },
+    { threshold: 0.5 }
+  );
+  counters.forEach((c) => cio.observe(c));
+</script>

@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+.astro/
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# logs & caches
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# working scratch files (site-scrape extract)
+_home_text.txt

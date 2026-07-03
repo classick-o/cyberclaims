@@ -1,0 +1,88 @@
+---
+// Stats band with scroll-triggered animated counters (brief §5).
+// NOTE: figures are placeholders — awaiting verified numbers from TBS (see data/site.ts).
+import { STATS } from '../data/site';
+---
+
+<section id="stats" class="stats">
+  <div class="wrap">
+    <div class="stats-grid">
+      {
+        STATS.map((s) => (
+          <div class="stat" data-reveal>
+            <div class="stat-value">
+              {s.prefix && <span class="stat-fix">{s.prefix}</span>}
+              <span
+                class="counter"
+                data-target={s.value}
+                data-prefix={s.prefix ?? ''}
+                data-suffix={s.suffix ?? ''}
+              >0</span>
+              {s.suffix && <span class="stat-fix">{s.suffix}</span>}
+            </div>
+            <div class="stat-label">{s.label}</div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .stats {
+    position: relative;
+    padding: 3.5rem 0;
+    background: var(--color-navy);
+    border-block: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem 1rem;
+  }
+  .stat {
+    text-align: center;
+    position: relative;
+  }
+  .stat::after {
+    content: '';
+    position: absolute;
+    right: -0.5rem;
+    top: 15%;
+    height: 70%;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .stat:nth-child(2n)::after {
+    display: none;
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    line-height: 1;
+    color: #fff;
+    display: inline-flex;
+    align-items: baseline;
+  }
+  .stat-fix {
+    color: var(--color-purple-300);
+  }
+  .stat-label {
+    margin-top: 0.6rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+    color: rgba(255, 255, 255, 0.55);
+  }
+  @media (min-width: 768px) {
+    .stats-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .stat:nth-child(2n)::after {
+      display: block;
+    }
+    .stat:last-child::after {
+      display: none;
+    }
+  }
+</style>

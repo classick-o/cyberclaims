@@ -1,0 +1,320 @@
+---
+// Homepage hero (brief §4): full-bleed dark, animated particle mesh bg, headline left, lead form right.
+import { CONTACT } from '../data/site';
+import { link } from '../lib/paths';
+---
+
+<section class="hero">
+  <canvas id="mesh" class="hero-mesh" aria-hidden="true"></canvas>
+  <div class="glow-blob hero-glow-1" style="background:#6b3fa0;width:38rem;height:38rem;top:-12rem;left:-10rem;"></div>
+  <div class="glow-blob hero-glow-2" style="background:#8b5bbd;width:28rem;height:28rem;bottom:-10rem;right:-6rem;opacity:0.35;"></div>
+
+  <div class="wrap hero-grid">
+    <!-- Left: headline -->
+    <div class="hero-copy">
+      <span class="eyebrow" data-reveal>Blockchain forensics · Asset recovery</span>
+      <h1 class="h-display hero-title" data-reveal>
+        Have you been a victim of <span class="accent">crypto scams?</span>
+      </h1>
+      <p class="hero-sub" data-reveal>
+        We can help you <strong>TRACE &amp; FREEZE</strong> your assets. Cyberclaims,
+        supported by world-leading cryptocurrency intelligence and blockchain analytics,
+        provides expert crypto tracing and investigation services to help consumers
+        navigate complex crypto-related fraud &amp; crypto scams cases.
+      </p>
+      <div class="hero-cta" data-reveal>
+        <a href={link('/start-process/')} class="btn">Start Process</a>
+        <a href="#lead" class="btn btn-ghost">Free Case Review — 48h</a>
+      </div>
+      <div class="hero-trust" data-reveal>
+        <span><span class="dot"></span> Dutch MOJ · POB {CONTACT.pob}</span>
+        <span><span class="dot"></span> Featured in 350+ news outlets</span>
+      </div>
+    </div>
+
+    <!-- Right: lead form -->
+    <div class="hero-form-wrap" id="lead" data-reveal>
+      <div class="glass hero-form">
+        <div class="form-head">
+          <h2 class="form-title">Start your recovery</h2>
+          <p class="form-note">Free case review · 48-hour response</p>
+        </div>
+        <form class="lead-form" method="post" action="/api/lead" novalidate>
+          <div class="field">
+            <input type="text" name="full_name" required placeholder=" " />
+            <label>Full Name</label>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <input type="email" name="email" required placeholder=" " />
+              <label>Email</label>
+            </div>
+            <div class="field">
+              <input type="tel" name="phone" required placeholder=" " />
+              <label>Phone Number</label>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <input type="text" name="country" required placeholder=" " />
+              <label>Country of Residence</label>
+            </div>
+            <div class="field">
+              <input type="text" name="amount" required placeholder=" " />
+              <label>Amount Lost</label>
+            </div>
+          </div>
+          <div class="field">
+            <textarea name="message" rows="3" required placeholder=" "></textarea>
+            <label>Message</label>
+          </div>
+          <button type="submit" class="btn form-submit">Start Process</button>
+          <p class="form-legal">
+            Protected by CAPTCHA. Your details are confidential and reviewed by certified experts.
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    padding: 7rem 0 4rem;
+    background: var(--gradient-depth);
+    overflow: hidden;
+  }
+  .hero-mesh {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    opacity: 0.6;
+  }
+  .hero-glow-1,
+  .hero-glow-2 {
+    z-index: 0;
+  }
+  .hero-grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  .hero-title {
+    margin: 1.4rem 0 1.5rem;
+    max-width: 16ch;
+  }
+  .hero-sub {
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.72);
+    max-width: 40ch;
+  }
+  .hero-sub strong {
+    color: #fff;
+    font-weight: 600;
+  }
+  .hero-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    margin: 2rem 0 1.75rem;
+  }
+  .hero-trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.55);
+  }
+  .hero-trust span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 8px #4ade80;
+  }
+
+  /* Form */
+  .hero-form {
+    padding: 1.75rem;
+  }
+  .form-head {
+    margin-bottom: 1.3rem;
+  }
+  .form-title {
+    font-size: 1.5rem;
+  }
+  .form-note {
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--color-purple-300);
+  }
+  .lead-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+  }
+  .field {
+    position: relative;
+  }
+  .field input,
+  .field textarea {
+    width: 100%;
+    padding: 0.95rem 0.9rem 0.35rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.7rem;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    transition: border-color 0.2s, background 0.2s;
+    resize: none;
+  }
+  .field textarea {
+    padding-top: 1.3rem;
+  }
+  .field input:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--color-purple-400);
+    background: rgba(139, 91, 189, 0.08);
+  }
+  .field label {
+    position: absolute;
+    left: 0.9rem;
+    top: 0.85rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.45);
+    pointer-events: none;
+    transition: all 0.18s var(--ease-out-brand);
+  }
+  .field input:focus + label,
+  .field input:not(:placeholder-shown) + label,
+  .field textarea:focus + label,
+  .field textarea:not(:placeholder-shown) + label {
+    top: 0.32rem;
+    font-size: 0.68rem;
+    color: var(--color-purple-300);
+  }
+  .form-submit {
+    width: 100%;
+    margin-top: 0.3rem;
+  }
+  .form-legal {
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+  }
+
+  @media (max-width: 520px) {
+    .field-row {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (min-width: 1024px) {
+    .hero-grid {
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 4rem;
+    }
+  }
+</style>
+
+<script>
+  // Lightweight particle-mesh (canvas). Throttled + paused off-screen + reduced-motion aware.
+  const canvas = document.getElementById('mesh') as HTMLCanvasElement | null;
+  if (canvas && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const ctx = canvas.getContext('2d')!;
+    let w = 0,
+      h = 0,
+      raf = 0,
+      running = true;
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    type P = { x: number; y: number; vx: number; vy: number };
+    let pts: P[] = [];
+
+    function seed() {
+      const count = Math.min(70, Math.floor((w * h) / 22000));
+      pts = Array.from({ length: count }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+      }));
+    }
+    function resize() {
+      const r = canvas!.getBoundingClientRect();
+      w = r.width;
+      h = r.height;
+      canvas!.width = w * DPR;
+      canvas!.height = h * DPR;
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      seed();
+    }
+    function frame() {
+      ctx.clearRect(0, 0, w, h);
+      for (const p of pts) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+      }
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const a = pts[i],
+            b = pts[j];
+          const dx = a.x - b.x,
+            dy = a.y - b.y;
+          const d = Math.hypot(dx, dy);
+          if (d < 130) {
+            ctx.strokeStyle = `rgba(139,91,189,${(1 - d / 130) * 0.28})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+      for (const p of pts) {
+        ctx.fillStyle = 'rgba(168,128,209,0.7)';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (running) raf = requestAnimationFrame(frame);
+    }
+    resize();
+    frame();
+    window.addEventListener('resize', resize);
+    // Pause when hero scrolls out of view
+    new IntersectionObserver(
+      ([e]) => {
+        running = e.isIntersecting;
+        if (running) frame();
+        else cancelAnimationFrame(raf);
+      },
+      { threshold: 0 }
+    ).observe(canvas);
+  }
+</script>

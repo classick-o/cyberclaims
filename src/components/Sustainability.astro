@@ -1,0 +1,104 @@
+---
+// "We prioritise Sustainability" — preserved from live site, with scroll-triggered counters.
+// NOTE: placeholder figures — live site currently shows 0 (see data/site.ts).
+import Icon from './Icon.astro';
+import { SUSTAINABILITY } from '../data/site';
+---
+
+<section class="sus">
+  <div class="wrap">
+    <div class="sus-head" data-reveal>
+      <span class="eyebrow">Responsibility</span>
+      <h2 class="h-section">We prioritise <span class="accent">sustainability</span></h2>
+      <p class="sus-lead">
+        Fighting digital crime shouldn’t cost the planet. A part of every case we resolve
+        goes back into offsetting our footprint.
+      </p>
+    </div>
+
+    <div class="sus-grid">
+      {
+        SUSTAINABILITY.map((s) => (
+          <div class="glass sus-card" data-reveal>
+            <span class="sus-icon"><Icon name={s.icon} class="w-6 h-6" /></span>
+            <div class="sus-value">
+              <span
+                class="counter"
+                data-target={s.value}
+                data-suffix={s.suffix ?? ''}
+              >0</span><span class="sus-fix">{s.suffix}</span>
+            </div>
+            <div class="sus-label">{s.label}</div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .sus {
+    padding: 5rem 0 6rem;
+    background: var(--color-navy);
+  }
+  .sus-head {
+    text-align: center;
+    max-width: 42rem;
+    margin: 0 auto 3rem;
+  }
+  .sus-head h2 {
+    margin: 0.9rem 0 1rem;
+  }
+  .sus-lead {
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.6;
+  }
+  .sus-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .sus-card {
+    padding: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.35s var(--ease-out-brand), border-color 0.35s;
+  }
+  .sus-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(139, 91, 189, 0.4);
+  }
+  .sus-icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.6rem;
+    margin-bottom: 0.6rem;
+    color: var(--color-purple-300);
+    background: rgba(139, 91, 189, 0.14);
+    border: 1px solid rgba(139, 91, 189, 0.28);
+  }
+  .sus-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 1;
+    color: #fff;
+  }
+  .sus-fix {
+    color: var(--color-purple-300);
+  }
+  .sus-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  @media (min-width: 768px) {
+    .sus-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>

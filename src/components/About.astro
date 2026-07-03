@@ -1,0 +1,262 @@
+---
+// "Hello, We Are Cyberclaims" — split section: copy left, animated blockchain-trace SVG right.
+import Icon from './Icon.astro';
+import { link } from '../lib/paths';
+
+const points = [
+  'Certified experts in crypto & blockchain forensics',
+  'Global reach — work with you from anywhere',
+  'Free case review with a 48-hour response',
+];
+---
+
+<section class="about">
+  <div class="wrap about-grid">
+    <div class="about-copy" data-reveal>
+      <span class="eyebrow">About Us</span>
+      <h2 class="h-section about-title">
+        Hello, we are <span class="accent">Cyberclaims</span>
+      </h2>
+      <p class="about-lead">
+        At Cyberclaims, you can rely on our team of dedicated and certified experts to
+        provide and implement the best solutions for the challenges hindering your
+        business’s growth.
+      </p>
+      <p class="about-body">
+        If you are a victim of cyber fraud or have lost digital assets due to cyber theft,
+        reaching out to us is the first step toward recovering your assets and getting the
+        support you need.
+      </p>
+      <ul class="about-points">
+        {
+          points.map((p) => (
+            <li>
+              <span class="pt-icon"><Icon name="check" class="w-4 h-4" /></span>
+              {p}
+            </li>
+          ))
+        }
+      </ul>
+      <div class="about-cta">
+        <a href={link('/about-us/')} class="btn">Read More</a>
+        <a href={link('/start-process/')} class="btn btn-ghost">Book a Consultation</a>
+      </div>
+    </div>
+
+    <!-- Animated blockchain-trace visual -->
+    <div class="about-visual" data-reveal>
+      <div class="glass trace-card">
+        <div class="trace-head">
+          <span class="trace-dot"></span> Live trace · funds flow
+        </div>
+        <svg class="trace-svg" viewBox="0 0 320 300" fill="none" aria-hidden="true">
+          <!-- Connections -->
+          <g stroke="#8b5bbd" stroke-width="1.5" opacity="0.5">
+            <path class="trace-line" d="M44 64 L152 112" />
+            <path class="trace-line" d="M152 112 L262 72" />
+            <path class="trace-line" d="M152 112 L120 200" />
+            <path class="trace-line" d="M120 200 L244 232" />
+            <path class="trace-line" d="M262 72 L244 232" />
+            <path class="trace-line" d="M44 64 L120 200" />
+          </g>
+
+          <!-- Nodes (solid fill + icon) -->
+          <!-- Wallet (source) -->
+          <g transform="translate(44 64)">
+            <circle class="node" r="14" />
+            <g class="node-icon">
+              <rect x="-6" y="-4" width="12" height="8" rx="1.6" />
+              <circle cx="3" cy="0" r="1.2" fill="currentColor" stroke="none" />
+            </g>
+          </g>
+          <!-- Hub: on-chain analysis -->
+          <g transform="translate(152 112)">
+            <circle class="node node-hub" r="20" />
+            <g class="node-icon">
+              <circle cx="-2" cy="-2" r="5.5" />
+              <path d="M2.2 2.2 6.5 6.5" />
+            </g>
+          </g>
+          <!-- Exchange / VASP -->
+          <g transform="translate(262 72)">
+            <circle class="node" r="14" />
+            <g class="node-icon">
+              <path d="M-5.5 -2h9l-2.5-2.5M5.5 2h-9l2.5 2.5" />
+            </g>
+          </g>
+          <!-- Bridge / mixer -->
+          <g transform="translate(120 200)">
+            <circle class="node" r="15" />
+            <g class="node-icon">
+              <circle cx="-2.6" cy="0" r="3.4" />
+              <circle cx="2.6" cy="0" r="3.4" />
+            </g>
+          </g>
+          <!-- Cashout point (flagged) -->
+          <g transform="translate(244 232)">
+            <circle class="node node-flag" r="17" />
+            <g class="node-icon node-icon-flag">
+              <path d="M0 -6v6" />
+              <path d="M0 4.4v.2" stroke-width="2.4" />
+            </g>
+          </g>
+        </svg>
+        <div class="trace-foot">
+          <span>Wallet clustered</span>
+          <span>Cashout point identified</span>
+        </div>
+      </div>
+      <div class="glow-blob" style="background:#6b3fa0;width:20rem;height:20rem;top:20%;left:20%;opacity:0.3;z-index:-1;"></div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .about {
+    position: relative;
+    padding: 6rem 0;
+    background: var(--gradient-depth);
+  }
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  .about-title {
+    margin: 1rem 0 1.4rem;
+  }
+  .about-lead {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.82);
+    margin-bottom: 1rem;
+  }
+  .about-body {
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.65;
+    margin-bottom: 1.6rem;
+  }
+  .about-points {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-bottom: 2rem;
+  }
+  .about-points li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+  }
+  .pt-icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: rgba(139, 91, 189, 0.15);
+    color: var(--color-purple-300);
+  }
+  .about-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+  }
+
+  .about-visual {
+    position: relative;
+  }
+  .trace-card {
+    padding: 1.5rem;
+  }
+  .trace-head {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 0.5rem;
+  }
+  .trace-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 8px #4ade80;
+  }
+  .trace-svg {
+    width: 100%;
+    height: auto;
+  }
+  .trace-line {
+    stroke-dasharray: 6 6;
+    animation: dash 3s linear infinite;
+  }
+  @keyframes dash {
+    to {
+      stroke-dashoffset: -24;
+    }
+  }
+  .node {
+    fill: #2b2150;
+    stroke: #a880d1;
+    stroke-width: 1.6;
+  }
+  .node-hub {
+    fill: #3a2568;
+    stroke: #c7abe1;
+    stroke-width: 2;
+  }
+  .node-flag {
+    fill: #4a1620;
+    stroke: #f87171;
+    stroke-width: 1.8;
+  }
+  .node-icon {
+    color: #d9c8ee;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+  .node-icon-flag {
+    color: #fca5a5;
+  }
+  /* pulsing halo on the flagged cashout node */
+  .node-flag {
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 0 rgba(248, 113, 113, 0));
+    }
+    50% {
+      filter: drop-shadow(0 0 8px rgba(248, 113, 113, 0.6));
+    }
+  }
+  .trace-foot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.45);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .trace-line,
+    .node-flag {
+      animation: none;
+    }
+  }
+  @media (min-width: 1024px) {
+    .about-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 4.5rem;
+    }
+  }
+</style>

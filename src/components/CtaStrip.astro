@@ -1,0 +1,79 @@
+---
+// Final conversion CTA strip with diagonal top edge + mesh glow.
+import { link } from '../lib/paths';
+---
+
+<section class="cta">
+  <div class="cta-inner glass">
+    <div class="glow-blob" style="background:#6b3fa0;width:26rem;height:26rem;top:-8rem;right:-4rem;opacity:0.4;"></div>
+    <div class="wrap cta-content" data-reveal>
+      <h2 class="h-section cta-title">
+        Have you been a victim of <span class="accent">crypto scams?</span>
+      </h2>
+      <p class="cta-sub">We can help you trace &amp; freeze your assets. Act now.</p>
+      <div class="cta-actions">
+        <a href={link('/start-process/')} class="btn">Start Process</a>
+        <a href={link('/contact-us/')} class="btn btn-ghost">Contact Us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta {
+    padding: 2rem 0 0;
+    background: var(--color-navy-deep);
+  }
+  .cta-inner {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0;
+    border-inline: none;
+    background: var(--gradient-brand);
+    border: none;
+    padding: 5rem 0;
+  }
+  .cta-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+  .cta-title {
+    color: #fff;
+    max-width: 20ch;
+    margin-inline: auto;
+  }
+  .cta-title .accent {
+    background: linear-gradient(120deg, #fff, #e3d5f0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .cta-sub {
+    margin: 1.1rem 0 2rem;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    justify-content: center;
+  }
+  .cta-actions .btn {
+    background: #fff;
+    color: var(--color-purple-700);
+    box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+  }
+  .cta-actions .btn:hover {
+    background: var(--color-mist);
+  }
+  .cta-actions .btn-ghost {
+    background: transparent;
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+  .cta-actions .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+</style>

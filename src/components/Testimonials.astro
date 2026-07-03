@@ -1,0 +1,140 @@
+---
+// Testimonials — two auto-scrolling marquee rows (pause on hover). Frosted cards.
+import { TESTIMONIALS } from '../data/site';
+
+const initials = (n: string) =>
+  n.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+
+const half = Math.ceil(TESTIMONIALS.length / 2);
+const rowA = TESTIMONIALS.slice(0, half);
+const rowB = TESTIMONIALS.slice(half);
+---
+
+<section class="testi">
+  <div class="wrap testi-head" data-reveal>
+    <span class="eyebrow">Testimonials</span>
+    <h2 class="h-section">Trusted by people we’ve <span class="accent">helped recover</span></h2>
+  </div>
+
+  <div class="marquee-mask">
+    <div class="marquee">
+      <div class="marquee-track">
+        {[...rowA, ...rowA].map((t) => (
+          <figure class="glass testi-card">
+            <blockquote>{t.quote}</blockquote>
+            <figcaption>
+              <span class="avatar">{initials(t.name)}</span>
+              <span class="testi-name">{t.name}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+    <div class="marquee">
+      <div class="marquee-track reverse">
+        {[...rowB, ...rowB].map((t) => (
+          <figure class="glass testi-card">
+            <blockquote>{t.quote}</blockquote>
+            <figcaption>
+              <span class="avatar">{initials(t.name)}</span>
+              <span class="testi-name">{t.name}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .testi {
+    padding: 6rem 0;
+    background: var(--gradient-depth);
+    overflow: hidden;
+  }
+  .testi-head {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .testi-head h2 {
+    margin-top: 0.9rem;
+    max-width: 24ch;
+    margin-inline: auto;
+  }
+  .marquee-mask {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee {
+    overflow: hidden;
+  }
+  .marquee-track {
+    display: flex;
+    gap: 1.25rem;
+    width: max-content;
+    animation: scroll-x 48s linear infinite;
+  }
+  .marquee-track.reverse {
+    animation-direction: reverse;
+    animation-duration: 56s;
+  }
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+  @keyframes scroll-x {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .testi-card {
+    flex: 0 0 auto;
+    width: 22rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .testi-card blockquote {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.78);
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .testi-card figcaption {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: 1.2rem;
+  }
+  .avatar {
+    display: grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--gradient-brand);
+  }
+  .testi-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+      animation: none;
+    }
+    .marquee {
+      overflow-x: auto;
+    }
+  }
+</style>

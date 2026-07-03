@@ -1,0 +1,93 @@
+---
+// Press / media coverage — "As seen on 350+ news sites" logo marquee + featured story.
+import { PRESS } from '../data/site';
+---
+
+<section class="press">
+  <div class="wrap press-head" data-reveal>
+    <span class="press-badge">As seen on — and over 350 news sites</span>
+    <h2 class="press-story">
+      International cybercrime firm <span class="accent">CyberClaims recovers €90,000</span>
+      from a cryptocurrency fraud case
+    </h2>
+  </div>
+
+  <div class="press-marquee-mask">
+    <div class="press-track">
+      {[...PRESS, ...PRESS].map((p) => (
+        <span class="press-logo">{p}</span>
+      ))}
+    </div>
+  </div>
+
+  <p class="press-verify wrap" data-reveal>Verified by BrandPush.co</p>
+</section>
+
+<style>
+  .press {
+    padding: 5rem 0;
+    background: var(--color-navy-deep);
+    overflow: hidden;
+  }
+  .press-head {
+    text-align: center;
+    margin-bottom: 2.75rem;
+  }
+  .press-badge {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-purple-300);
+    margin-bottom: 1rem;
+  }
+  .press-story {
+    font-size: clamp(1.4rem, 3vw, 2.1rem);
+    line-height: 1.3;
+    max-width: 26ch;
+    margin-inline: auto;
+    color: rgba(255, 255, 255, 0.92);
+  }
+  .press-marquee-mask {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  }
+  .press-track {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    width: max-content;
+    animation: scroll-x 40s linear infinite;
+  }
+  @keyframes scroll-x {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .press-logo {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.4);
+    transition: color 0.3s;
+    cursor: default;
+  }
+  .press-logo:hover {
+    color: #fff;
+  }
+  .press-verify {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.4);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .press-track {
+      animation: none;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+</style>

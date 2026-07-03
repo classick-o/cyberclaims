@@ -1,0 +1,239 @@
+---
+// 4-column footer + trust badges (brief §4 Footer).
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { SERVICES, CONTACT } from '../data/site';
+import { link } from '../lib/paths';
+
+const quickLinks = [
+  { label: 'About Us', href: '/about-us/' },
+  { label: 'News', href: '/news/' },
+  { label: 'Start Process', href: '/start-process/' },
+  { label: 'Contact Us', href: '/contact-us/' },
+];
+const resources = [
+  { label: 'Cookie Policy', href: '/cookie-policy/' },
+  { label: 'Privacy Policy', href: '/privacy-policy/' },
+  { label: 'Terms and Conditions', href: '/terms-and-conditions/' },
+  { label: 'Data Protection Addendum', href: '/data-protection-addendum/' },
+];
+---
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <!-- Company -->
+      <div class="footer-col footer-brand">
+        <Logo />
+        <p class="footer-tag">Securing Your Digital World, One Claim at a Time</p>
+        <div class="badges">
+          <span class="badge"><Icon name="shield" class="w-4 h-4" /> Dutch MOJ · POB {CONTACT.pob}</span>
+          <span class="badge"><Icon name="check" class="w-4 h-4" /> TBS B.V. registered</span>
+          <span class="badge"><Icon name="lock" class="w-4 h-4" /> GDPR compliant</span>
+        </div>
+      </div>
+
+      <!-- Services -->
+      <div class="footer-col">
+        <h4 class="footer-h">Services</h4>
+        <ul>
+          {SERVICES.slice(0, 8).map((s) => <li><a href={link(s.href)}>{s.title}</a></li>)}
+        </ul>
+      </div>
+
+      <!-- Quick links + Resources -->
+      <div class="footer-col">
+        <h4 class="footer-h">Company</h4>
+        <ul>
+          {quickLinks.map((l) => <li><a href={link(l.href)}>{l.label}</a></li>)}
+        </ul>
+        <h4 class="footer-h footer-h-sub">Resources</h4>
+        <ul>
+          {resources.map((l) => <li><a href={link(l.href)}>{l.label}</a></li>)}
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div class="footer-col">
+        <h4 class="footer-h">Contact</h4>
+        <ul class="contact-list">
+          {CONTACT.phones.map((p) => (
+            <li><span class="ct-region">{p.region}</span><a href={`tel:${p.number.replace(/\s/g, '')}`}>{p.number}</a></li>
+          ))}
+        </ul>
+        <a class="contact-email" href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
+        <p class="contact-addr">{CONTACT.address}</p>
+        <div class="socials">
+          <a href="#" aria-label="Facebook">f</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+    </div>
+
+    <p class="legal">
+      Transparent Business Solutions B.V. (dba Cyberclaims), offers free consultations.
+      Other services involve applicable retainers, fees, or commissions. Transparent Business
+      Solutions B.V. is an authorized private investigation agency under POB number {CONTACT.pob}
+      from the Dutch Ministry of Justice and Security.
+    </p>
+
+    <div class="footer-bottom">
+      <span>© 2026 Copyright Cyberclaims. All rights reserved.</span>
+      <span class="footer-bottom-links">
+        <a href={link('/privacy-policy/')}>Privacy Policy</a>
+        <a href={link('/cookie-policy/')}>Cookie Policy</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    position: relative;
+    background: var(--color-navy-deep);
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 4.5rem 0 2rem;
+    margin-top: 2rem;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.75rem;
+  }
+  .footer-tag {
+    margin: 1.1rem 0 1.4rem;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 20rem;
+  }
+  .badges {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    align-items: flex-start;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(139, 91, 189, 0.1);
+    border: 1px solid rgba(139, 91, 189, 0.25);
+  }
+  .badge :global(svg) {
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-purple-300);
+  }
+  .footer-h {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-purple-300);
+    margin-bottom: 1rem;
+  }
+  .footer-h-sub {
+    margin-top: 1.6rem;
+  }
+  .footer-col ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .footer-col a {
+    color: rgba(255, 255, 255, 0.62);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+  }
+  .footer-col a:hover {
+    color: #fff;
+  }
+  .contact-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.55rem;
+  }
+  .ct-region {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--color-purple-300);
+    width: 1.5rem;
+  }
+  .contact-email {
+    display: inline-block;
+    margin: 0.6rem 0;
+    color: #fff !important;
+    font-weight: 500;
+  }
+  .contact-addr {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.5;
+    max-width: 16rem;
+  }
+  .socials {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+  .socials a {
+    display: grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff !important;
+    font-size: 0.85rem;
+  }
+  .socials a:hover {
+    background: var(--color-purple-500);
+  }
+  .legal {
+    margin-top: 3rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.4);
+  }
+  .footer-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.45);
+  }
+  .footer-bottom-links {
+    display: flex;
+    gap: 1.25rem;
+  }
+  .footer-bottom-links a {
+    color: rgba(255, 255, 255, 0.55);
+    text-decoration: none;
+  }
+  @media (min-width: 640px) {
+    .footer-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 1024px) {
+    .footer-grid {
+      grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+    }
+    .footer-bottom {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
+</style>
