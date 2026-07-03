@@ -1,12 +1,12 @@
 @import 'tailwindcss';
 
 /* ============================================================
-   CYBERCLAIMS — DESIGN TOKENS
+   CYBERCLAIMS - DESIGN TOKENS
    Brand palette locked to brief (§2.1): purple / dark navy / white.
-   Extended tints & shades are derivatives only — no new primaries.
+   Extended tints & shades are derivatives only - no new primaries.
    ============================================================ */
 @theme {
-  /* — Purple scale (base 500 = #6B3FA0, the brand purple) — */
+  /* - Purple scale (base 500 = #6B3FA0, the brand purple) - */
   --color-purple-50: #f2ecf9;
   --color-purple-100: #e3d5f0;
   --color-purple-200: #c7abe1;
@@ -18,31 +18,31 @@
   --color-purple-800: #2f1c47;
   --color-purple-900: #1d1130;
 
-  /* — Dark navy scale (base = #1A1A2E) — */
+  /* - Dark navy scale (base = #1A1A2E) - */
   --color-navy: #1a1a2e;
   --color-navy-deep: #101020;
   --color-navy-700: #202038;
   --color-navy-600: #2a2a48;
   --color-navy-elevated: #232340;
 
-  /* — Neutrals — */
+  /* - Neutrals - */
   --color-ink: #14141f;
   --color-mist: #f5f4f9;
   --color-line: rgba(255, 255, 255, 0.08);
 
-  /* — Signature gradients & glow — */
+  /* - Signature gradients & glow - */
   --gradient-brand: linear-gradient(135deg, #6b3fa0 0%, #8b5bbd 100%);
   --gradient-depth: linear-gradient(160deg, #1a1a2e 0%, #101020 100%);
   --glow-purple: 0 0 60px rgba(139, 91, 189, 0.35);
 
-  /* — Typography — */
+  /* - Typography - */
   --font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
   --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
 
-  /* — Motion — */
+  /* - Motion - */
   --ease-out-brand: cubic-bezier(0.22, 1, 0.36, 1);
 
-  /* — Container — */
+  /* - Container - */
   --spacing-gutter: 1.5rem;
 }
 

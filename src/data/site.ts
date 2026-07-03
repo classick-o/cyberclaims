@@ -1,4 +1,4 @@
-// Central site data — copy is preserved verbatim from the live site (brief §1: keep copy & URLs).
+// Central site data - copy is preserved verbatim from the live site (brief §1: keep copy & URLs).
 
 export const CONTACT = {
   email: 'contact@cyberclaims.net',
@@ -18,7 +18,7 @@ export type Service = {
   href: string;
   blurb: string;
   icon: string; // key into IconMap
-  accent: string; // per-page accent (derivative of purple — no new primaries)
+  accent: string; // per-page accent (derivative of purple - no new primaries)
 };
 
 // All 10 services + URL Checker. URLs mirror the existing site structure.
@@ -83,7 +83,7 @@ export const SERVICES: Service[] = [
     title: 'Due Diligence Investigations',
     href: '/due-diligence-investigations/',
     blurb:
-      'Many people prefer to acquire or partner with an already established business — verify before you commit.',
+      'Many people prefer to acquire or partner with an already established business - verify before you commit.',
     icon: 'diligence',
     accent: '#7a4fb0',
   },
@@ -107,9 +107,9 @@ export const SERVICES: Service[] = [
 
 export const URL_CHECKER = { title: 'URL Checker', href: '/url-checker/', icon: 'url' };
 
-// Homepage stats — brief §4 wants animated counters (cases resolved, funds traced, countries).
+// Homepage stats - brief §4 wants animated counters (cases resolved, funds traced, countries).
 // NOTE: values below are PLACEHOLDERS pending real figures from TBS/Julia.
-// The live site currently shows "0" which harms credibility — do not ship these unverified.
+// The live site currently shows "0" which harms credibility - do not ship these unverified.
 export const STATS = [
   { value: 2400, suffix: '+', label: 'Cases Reviewed' },
   { value: 90000, prefix: '€', label: 'Recovered (single case)' },
@@ -117,15 +117,15 @@ export const STATS = [
   { value: 350, suffix: '+', label: 'Press Features' },
 ];
 
-// Sustainability metrics — preserved from the live site ("We prioritise Sustainability").
-// NOTE: live site shows 0 / 0 / 0 — placeholders below await real figures from TBS.
+// Sustainability metrics - preserved from the live site ("We prioritise Sustainability").
+// NOTE: live site shows 0 / 0 / 0 - placeholders below await real figures from TBS.
 export const SUSTAINABILITY = [
   { value: 1200, suffix: '+', label: 'Trees Planted', icon: 'tracing' },
   { value: 18500, suffix: ' kg', label: 'CO₂ Compensated', icon: 'globe' },
   { value: 900, suffix: '+', label: 'Happy Customers', icon: 'check' },
 ];
 
-// Partner / "Industry Allies" logos. Placeholder slots — client to supply real logos.
+// Partner / "Industry Allies" logos. Placeholder slots - client to supply real logos.
 export const PARTNERS = [
   'Ally One',
   'Ally Two',

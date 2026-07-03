@@ -4,7 +4,7 @@
 // so links resolve correctly both under a GitHub Pages sub-path (e.g. /cyberclaims/)
 // and on the final custom domain (base = '/').
 //
-// When base is '/', this is a NO-OP — it returns the path unchanged. That means when
+// When base is '/', this is a NO-OP - it returns the path unchanged. That means when
 // we move to the client's domain we simply drop the BASE_PATH env / workflow and every
 // link keeps working. Nothing in the codebase needs to be un-done.
 //
