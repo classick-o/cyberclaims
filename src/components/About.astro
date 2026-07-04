@@ -159,6 +159,23 @@ const points = [
       transform: translate(-50%, -50%);
     }
   }
+  /* center the copy on mobile & tablet (single-column layout) */
+  @media (max-width: 1023px) {
+    .about-copy {
+      text-align: center;
+    }
+    /* keep the checklist reading left-to-right, but center the block */
+    .about-points {
+      align-items: flex-start;
+      text-align: left;
+      width: fit-content;
+      max-width: 100%;
+      margin-inline: auto;
+    }
+    .about-cta {
+      justify-content: center;
+    }
+  }
   @media (min-width: 1024px) {
     .about-grid {
       grid-template-columns: 1fr 1fr;

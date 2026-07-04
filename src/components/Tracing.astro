@@ -131,6 +131,28 @@ import { link } from '../lib/paths';
       animation: none;
     }
   }
+  /* center the copy on mobile & tablet (single-column layout) */
+  @media (max-width: 1023px) {
+    .tracing-copy {
+      text-align: center;
+    }
+    .tracing-body {
+      margin-inline: auto;
+    }
+  }
+  /* keep the chart tidy on phones: smaller labels + fixed label height so a
+     wrapped label ("Exchange A") doesn't push its bar out of alignment */
+  @media (max-width: 640px) {
+    .tw-bars {
+      gap: 0.5rem;
+    }
+    .tw-bar label {
+      display: block;
+      min-height: 2.2em;
+      font-size: 0.56rem;
+      line-height: 1.15;
+    }
+  }
   @media (min-width: 1024px) {
     .tracing-grid {
       grid-template-columns: 0.9fr 1.1fr;

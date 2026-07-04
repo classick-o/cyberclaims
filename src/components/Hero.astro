@@ -23,7 +23,6 @@ import { link } from '../lib/paths';
       </p>
       <div class="hero-cta" data-reveal>
         <a href={link('/start-process/')} class="btn">Start Process</a>
-        <a href="#lead" class="btn btn-ghost">Free Case Review - 48h</a>
       </div>
       <div class="hero-trust" data-reveal>
         <span><span class="dot"></span> Dutch MOJ · POB {CONTACT.pob}</span>
@@ -238,6 +237,24 @@ import { link } from '../lib/paths';
   @media (max-width: 520px) {
     .field-row {
       grid-template-columns: 1fr;
+    }
+  }
+  /* center the copy on mobile & tablet (single-column layout) */
+  @media (max-width: 1023px) {
+    .hero-copy {
+      text-align: center;
+    }
+    .hero-title {
+      max-width: none;
+      margin-inline: auto;
+    }
+    .hero-sub {
+      max-width: 52ch;
+      margin-inline: auto;
+    }
+    .hero-cta,
+    .hero-trust {
+      justify-content: center;
     }
   }
   @media (min-width: 1024px) {
