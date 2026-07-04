@@ -25,19 +25,19 @@ import { link } from '../lib/paths';
             {
               SERVICES.map((s) => (
                 <a href={link(s.href)} class="mega-item" role="menuitem">
-                  <span class="mega-icon" style={`color:${s.accent}`}>
-                    <Icon name={s.icon} class="w-5 h-5" />
+                  <span class="mega-icon">
+                    <Icon name={s.icon} class="w-4 h-4" />
                   </span>
                   <span class="mega-text">
                     <span class="mega-title">{s.title}</span>
-                    <span class="mega-blurb">{s.blurb}</span>
+                    <span class="mega-blurb">{s.short}</span>
                   </span>
                 </a>
               ))
             }
           </div>
           <a href={link(URL_CHECKER.href)} class="mega-foot">
-            <Icon name="url" class="w-4 h-4" /> Free {URL_CHECKER.title} - verify a suspicious link
+            <Icon name="url" class="w-4 h-4" /> {URL_CHECKER.title} - verify a suspicious link
           </a>
         </div>
       </div>
@@ -77,13 +77,24 @@ import { link } from '../lib/paths';
     position: fixed;
     inset: 0 0 auto 0;
     z-index: 60;
-    transition: background 0.4s var(--ease-out-brand),
-      box-shadow 0.4s var(--ease-out-brand), backdrop-filter 0.4s;
   }
-  .site-header[data-at-top='false'] {
-    background: rgba(16, 16, 32, 0.82);
-    backdrop-filter: blur(14px);
+  /* Blurred bar background lives on a pseudo-element (NOT an ancestor of the
+     mega-menu), so it doesn't create a nested backdrop root that would break
+     the mega's own backdrop-filter. Both blurs now coexist. */
+  .site-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    background: rgba(15, 15, 28, 0.7);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: opacity 0.4s var(--ease-out-brand);
+  }
+  .site-header[data-at-top='false']::before {
+    opacity: 1;
   }
   .header-inner {
     display: flex;
@@ -138,37 +149,40 @@ import { link } from '../lib/paths';
   }
   .mega {
     position: absolute;
-    left: 50%;
-    top: calc(100% - 0.4rem);
-    transform: translateX(-50%) translateY(10px);
-    width: min(56rem, calc(100vw - 3rem));
-    padding: 1.1rem;
-    background: rgba(26, 26, 46, 0.96);
-    backdrop-filter: blur(20px);
+    left: 0;
+    right: 0;
+    margin-inline: auto;
+    top: calc(100% + 0.9rem); /* hidden: slightly lower */
+    width: min(42rem, calc(100vw - 3rem));
+    padding: 0.85rem;
+    background: rgba(18, 18, 32, 0.55);
+    /* NOTE: no `transform` here - it would disable backdrop-filter in Chromium */
+    backdrop-filter: blur(32px) saturate(150%);
+    -webkit-backdrop-filter: blur(32px) saturate(150%);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0.75rem;
+    border-radius: 0.7rem;
     box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.28s var(--ease-out-brand),
-      transform 0.28s var(--ease-out-brand), visibility 0.28s;
+      top 0.28s var(--ease-out-brand), visibility 0.28s;
   }
   .nav-has-mega:hover .mega,
   .nav-has-mega:focus-within .mega {
     opacity: 1;
     visibility: visible;
-    transform: translateX(-50%) translateY(0);
+    top: calc(100% + 0.3rem); /* visible: settle up */
   }
   .mega-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.35rem;
+    gap: 0.2rem;
   }
   .mega-item {
     display: flex;
-    gap: 0.75rem;
-    padding: 0.7rem 0.8rem;
-    border-radius: 0.75rem;
+    gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 0.6rem;
     text-decoration: none;
     transition: background 0.2s;
   }
@@ -177,37 +191,38 @@ import { link } from '../lib/paths';
   }
   .mega-icon {
     flex-shrink: 0;
-    width: 2.4rem;
-    height: 2.4rem;
+    width: 1.85rem;
+    height: 1.85rem;
     display: grid;
     place-items: center;
-    border-radius: 0.6rem;
+    border-radius: 0.5rem;
+    color: var(--color-purple-300);
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
   .mega-text {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.1rem;
   }
   .mega-title {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #fff;
   }
   .mega-blurb {
-    font-size: 0.78rem;
-    line-height: 1.35;
+    font-size: 0.7rem;
+    line-height: 1.3;
     color: rgba(255, 255, 255, 0.55);
   }
   .mega-foot {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-    padding: 0.7rem 0.85rem;
-    border-radius: 0.75rem;
-    font-size: 0.82rem;
+    gap: 0.45rem;
+    margin-top: 0.55rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 0.6rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: var(--color-purple-200);
     background: rgba(139, 91, 189, 0.1);

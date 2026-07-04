@@ -16,7 +16,8 @@ export const CONTACT = {
 export type Service = {
   title: string;
   href: string;
-  blurb: string;
+  blurb: string; // full description (used on service cards)
+  short: string; // one-line description (used in the mega-menu)
   icon: string; // key into IconMap
   accent: string; // per-page accent (derivative of purple - no new primaries)
 };
@@ -28,6 +29,7 @@ export const SERVICES: Service[] = [
     href: '/cryptocurrency-recovery/',
     blurb:
       'Using crypto currencies for transactions doesn’t guarantee complete immunity from online scammers and fraud.',
+    short: 'Recover assets lost to scams, theft and fraud.',
     icon: 'recovery',
     accent: '#8b5bbd',
   },
@@ -36,6 +38,7 @@ export const SERVICES: Service[] = [
     href: '/cryptocurrency-tracing/',
     blurb:
       'Assistance to victims of scams to trace cryptocurrencies sent to fraudulent entities, to identify cashout points.',
+    short: 'Trace stolen crypto to its cashout points.',
     icon: 'tracing',
     accent: '#a880d1',
   },
@@ -44,6 +47,7 @@ export const SERVICES: Service[] = [
     href: '/website-forensics/',
     blurb:
       'Uncover scam networks, digital forensics related to fraud or brand infringements.',
+    short: 'Uncover scam networks and fraud evidence.',
     icon: 'forensics',
     accent: '#7a4fb0',
   },
@@ -52,6 +56,7 @@ export const SERVICES: Service[] = [
     href: '/brand-protection/',
     blurb:
       'We all know that cyber attacks can be frustrating, leaving your intellectual property and trade secrets exposed.',
+    short: 'Shield your IP and brand from attacks.',
     icon: 'shield',
     accent: '#9c71f3',
   },
@@ -60,6 +65,7 @@ export const SERVICES: Service[] = [
     href: '/website-takedown/',
     blurb:
       'With increased advancement in the digital space, there’s no doubt about the insurmountable benefits and risks.',
+    short: 'Take down fraudulent, infringing sites.',
     icon: 'takedown',
     accent: '#6b3fa0',
   },
@@ -68,6 +74,7 @@ export const SERVICES: Service[] = [
     href: '/dispute-resolution-support/',
     blurb:
       'Dispute resolution support includes all the processes geared towards addressing disputes.',
+    short: 'Support through the full dispute process.',
     icon: 'dispute',
     accent: '#8b5bbd',
   },
@@ -76,6 +83,7 @@ export const SERVICES: Service[] = [
     href: '/consultancy-documentation-support/',
     blurb:
       'Employing the services of a consultant firm without proper documentation support is a costly mistake.',
+    short: 'Expert consultancy, done by the book.',
     icon: 'consultancy',
     accent: '#a880d1',
   },
@@ -84,6 +92,7 @@ export const SERVICES: Service[] = [
     href: '/due-diligence-investigations/',
     blurb:
       'Many people prefer to acquire or partner with an already established business - verify before you commit.',
+    short: 'Verify partners before you commit.',
     icon: 'diligence',
     accent: '#7a4fb0',
   },
@@ -92,6 +101,7 @@ export const SERVICES: Service[] = [
     href: '/social-media-investigation/',
     blurb:
       'Track, analyse and document social-media activity tied to fraud, impersonation and brand abuse.',
+    short: 'Track fraud and impersonation on social.',
     icon: 'social',
     accent: '#9c71f3',
   },
@@ -100,6 +110,7 @@ export const SERVICES: Service[] = [
     href: '/business-services/',
     blurb:
       'The business industry remains one of the most competitive industries in our modern world.',
+    short: 'Tailored services for competitive businesses.',
     icon: 'business',
     accent: '#6b3fa0',
   },
@@ -120,9 +131,9 @@ export const STATS = [
 // Sustainability metrics - preserved from the live site ("We prioritise Sustainability").
 // NOTE: live site shows 0 / 0 / 0 - placeholders below await real figures from TBS.
 export const SUSTAINABILITY = [
-  { value: 1200, suffix: '+', label: 'Trees Planted', icon: 'tracing' },
-  { value: 18500, suffix: ' kg', label: 'CO₂ Compensated', icon: 'globe' },
-  { value: 900, suffix: '+', label: 'Happy Customers', icon: 'check' },
+  { value: 1200, suffix: '+', label: 'Trees Planted', icon: 'leaf' },
+  { value: 18500, suffix: ' kg', label: 'CO₂ Compensated', icon: 'cloud' },
+  { value: 900, suffix: '+', label: 'Happy Customers', icon: 'smile' },
 ];
 
 // Partner / "Industry Allies" logos (sourced from the live site).

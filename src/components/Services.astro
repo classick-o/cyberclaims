@@ -121,10 +121,10 @@ import { link } from '../lib/paths';
       box-shadow 0.35s var(--ease-out-brand), border-color 0.35s;
   }
   .svc-card:hover {
-    transform: translateY(-8px);
-    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
-    box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.6),
-      0 0 40px -12px color-mix(in srgb, var(--accent) 45%, transparent);
+    transform: translateY(-4px);
+    border-color: rgba(139, 91, 189, 0.4);
+    box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.5),
+      0 0 22px -14px rgba(139, 91, 189, 0.45);
   }
   /* large faded watermark icon centered in card background */
   .svc-watermark {
@@ -142,8 +142,8 @@ import { link } from '../lib/paths';
       transform 0.5s var(--ease-out-brand);
   }
   .svc-card:hover .svc-watermark {
-    opacity: 0.16;
-    transform: translate(-50%, -50%) scale(1.06);
+    opacity: 0.12;
+    transform: translate(-50%, -50%) scale(1.03);
   }
   .svc-content {
     position: relative;
@@ -185,9 +185,9 @@ import { link } from '../lib/paths';
     position: absolute;
     left: 0;
     bottom: 0;
-    height: 3px;
+    height: 2px;
     width: 100%;
-    background: var(--accent);
+    background: var(--color-purple-400);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.4s var(--ease-out-brand);

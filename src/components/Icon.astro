@@ -40,6 +40,11 @@ const paths: Record<string, string> = {
   alert:
     '<path d="M12 3 2 20h20L12 3Z"/><path d="M12 9v5M12 17v.01"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  leaf: '<path d="M4 20c9 1 16-5 16-15-9-1-16 5-16 15Z"/><path d="M4 20c3-6 7-9 12-10"/>',
+  cloud:
+    '<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.4A3.5 3.5 0 0 1 18 18Z"/>',
+  smile:
+    '<circle cx="12" cy="12" r="9"/><path d="M8 14.5s1.4 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/>',
 };
 
 const d = paths[name] ?? paths.tracing;
