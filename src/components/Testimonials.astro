@@ -56,7 +56,7 @@ const rowB = TESTIMONIALS.filter((_, i) => i % 2 === 1);
       </div>
     </div>
     <div class="marquee">
-      <div class="marquee-track reverse">
+      <div class="marquee-track">
         {[...rowB, ...rowB].map((t) => (
           <figure class="glass testi-card">
             <blockquote>{t.quote}</blockquote>
@@ -178,29 +178,38 @@ const rowB = TESTIMONIALS.filter((_, i) => i % 2 === 1);
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  /* edge fades as overlays (a CSS mask here would create a backdrop root and
+     break the cards' backdrop-blur) */
+  .marquee-mask::before,
+  .marquee-mask::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 8%;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .marquee-mask::before {
+    left: 0;
+    background: linear-gradient(to right, var(--color-navy), transparent);
+  }
+  .marquee-mask::after {
+    right: 0;
+    background: linear-gradient(to left, var(--color-navy), transparent);
   }
   .marquee {
     overflow: hidden;
+    scrollbar-width: none;
+  }
+  .marquee::-webkit-scrollbar {
+    display: none;
   }
   .marquee-track {
     display: flex;
     gap: 1.25rem;
     width: max-content;
-    animation: scroll-x 48s linear infinite;
-  }
-  .marquee-track.reverse {
-    animation-direction: reverse;
-    animation-duration: 56s;
-  }
-  .marquee:hover .marquee-track {
-    animation-play-state: paused;
-  }
-  @keyframes scroll-x {
-    to {
-      transform: translateX(-50%);
-    }
   }
   .testi-card {
     flex: 0 0 auto;
@@ -209,6 +218,14 @@ const rowB = TESTIMONIALS.filter((_, i) => i % 2 === 1);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    /* real frosted glass: translucent + backdrop blur. Works now that the row
+       scrolls via JS (no transform) and the edge fade uses overlays (no mask) -
+       neither breaks backdrop-filter anymore. */
+    background: rgba(30, 30, 52, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
   .testi-card blockquote {
     font-size: 0.92rem;
@@ -253,11 +270,43 @@ const rowB = TESTIMONIALS.filter((_, i) => i % 2 === 1);
     color: #fff;
   }
   @media (prefers-reduced-motion: reduce) {
-    .marquee-track {
-      animation: none;
-    }
     .marquee {
       overflow-x: auto;
     }
   }
 </style>
+
+<script>
+  // JS-driven marquee (instead of a CSS transform) so the cards' backdrop-blur
+  // renders. Two rows scroll in opposite directions; seamless wrap on the
+  // duplicated content; pause on hover.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) {
+    const rows = document.querySelectorAll<HTMLElement>('.testi .marquee');
+    const speeds = [0.4, -0.35];
+    rows.forEach((row, i) => {
+      const track = row.querySelector<HTMLElement>('.marquee-track');
+      if (!track) return;
+      const items = track.children;
+      const mid = Math.floor(items.length / 2);
+      const unit = () => (items[mid] as HTMLElement)?.offsetLeft || 0;
+      let pos = speeds[i] < 0 ? unit() : 0;
+      let paused = false;
+      row.addEventListener('mouseenter', () => (paused = true));
+      row.addEventListener('mouseleave', () => (paused = false));
+      const step = () => {
+        if (!paused) {
+          const u = unit();
+          if (u > 0) {
+            pos += speeds[i];
+            if (pos >= u) pos -= u;
+            else if (pos < 0) pos += u;
+            row.scrollLeft = pos;
+          }
+        }
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+</script>

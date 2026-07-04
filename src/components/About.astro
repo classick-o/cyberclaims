@@ -38,99 +38,22 @@ const points = [
       </ul>
       <div class="about-cta">
         <a href={link('/about-us/')} class="btn">Read More</a>
-        <a href={link('/start-process/')} class="btn btn-ghost">Book a Consultation</a>
       </div>
     </div>
 
-    <!-- Animated blockchain-trace visual -->
+    <!-- Blockchain funds-flow trace visual -->
     <div class="about-visual" data-reveal>
-      <div class="glass trace-card">
-        <div class="trace-bg" aria-hidden="true"></div>
-        <div class="trace-head">Live trace · funds flow</div>
-        <svg class="trace-svg" viewBox="0 0 320 300" fill="none" aria-hidden="true">
-          <defs>
-            <radialGradient id="nodeGrad" cx="35%" cy="28%" r="80%">
-              <stop offset="0" stop-color="#3d2d63" />
-              <stop offset="1" stop-color="#1f1540" />
-            </radialGradient>
-            <radialGradient id="hubGrad" cx="35%" cy="26%" r="80%">
-              <stop offset="0" stop-color="#6e4bae" />
-              <stop offset="1" stop-color="#2c1c52" />
-            </radialGradient>
-            <radialGradient id="flagGrad" cx="35%" cy="28%" r="80%">
-              <stop offset="0" stop-color="#7d2331" />
-              <stop offset="1" stop-color="#3a1119" />
-            </radialGradient>
-            <linearGradient id="linkGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#c7abe1" stop-opacity="0.75" />
-              <stop offset="1" stop-color="#6b3fa0" stop-opacity="0.25" />
-            </linearGradient>
-          </defs>
-
-          <!-- Connections -->
-          <g stroke="url(#linkGrad)" stroke-width="1.4">
-            <path class="trace-line" d="M44 64 L152 112" />
-            <path class="trace-line" d="M152 112 L262 72" />
-            <path class="trace-line" d="M152 112 L120 200" />
-            <path class="trace-line" d="M120 200 L244 232" />
-            <path class="trace-line" d="M262 72 L244 232" />
-            <path class="trace-line" d="M44 64 L120 200" />
-          </g>
-
-          <!-- Wallet (source) -->
-          <g transform="translate(44 64)">
-            <circle class="node" r="14" />
-            <g class="node-icon">
-              <rect x="-6" y="-4" width="12" height="8" rx="1.6" />
-              <circle cx="3" cy="0" r="1.2" fill="currentColor" stroke="none" />
-            </g>
-          </g>
-          <!-- Hub: on-chain analysis -->
-          <g transform="translate(152 112)">
-            <circle class="halo" r="20" fill="none" stroke="#a880d1" stroke-width="1.4">
-              <animate attributeName="r" values="20;42" dur="2.8s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.45;0" dur="2.8s" repeatCount="indefinite" />
-            </circle>
-            <circle class="node node-hub" r="20" />
-            <g class="node-icon">
-              <circle cx="-2" cy="-2" r="5.5" />
-              <path d="M2.2 2.2 6.5 6.5" />
-            </g>
-          </g>
-          <!-- Exchange / VASP -->
-          <g transform="translate(262 72)">
-            <circle class="node" r="14" />
-            <g class="node-icon">
-              <path d="M-5.5 -2h9l-2.5-2.5M5.5 2h-9l2.5 2.5" />
-            </g>
-          </g>
-          <!-- Bridge / mixer -->
-          <g transform="translate(120 200)">
-            <circle class="node" r="15" />
-            <g class="node-icon">
-              <circle cx="-2.6" cy="0" r="3.4" />
-              <circle cx="2.6" cy="0" r="3.4" />
-            </g>
-          </g>
-          <!-- Cashout point (flagged) -->
-          <g transform="translate(244 232)">
-            <circle class="halo-flag" r="17" fill="none" stroke="#f87171" stroke-width="1.4">
-              <animate attributeName="r" values="17;34" dur="2.2s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.55;0" dur="2.2s" repeatCount="indefinite" />
-            </circle>
-            <circle class="node node-flag" r="17" />
-            <g class="node-icon node-icon-flag">
-              <path d="M0 -6v6" />
-              <path d="M0 4.4v.2" stroke-width="2.4" />
-            </g>
-          </g>
-        </svg>
-        <div class="trace-foot">
-          <span>Wallet clustered</span>
-          <span>Cashout point identified</span>
-        </div>
+      <div class="trace-frame">
+        <img
+          class="trace-img"
+          src={link('/funds-flow.webp')}
+          alt="Live blockchain funds-flow trace: wallet, exchange and mixer nodes linked to a flagged cashout point"
+          width="2048"
+          height="2048"
+          loading="lazy"
+        />
       </div>
-      <div class="glow-blob" style="background:#6b3fa0;width:20rem;height:20rem;top:20%;left:20%;opacity:0.3;z-index:-1;"></div>
+      <div class="glow-blob trace-glow" style="background:#6b3fa0;width:20rem;height:20rem;top:50%;left:50%;z-index:-1;"></div>
     </div>
   </div>
 </section>
@@ -152,7 +75,7 @@ const points = [
     min-width: 0;
   }
   .about-title {
-    margin: 1rem 0 1.4rem;
+    margin: 0 0 1.4rem;
   }
   .about-lead {
     font-size: 1.1rem;
@@ -198,86 +121,42 @@ const points = [
   .about-visual {
     position: relative;
   }
-  .trace-card {
-    position: relative;
-    padding: 1.5rem;
-    overflow: hidden;
-  }
-  /* premium backdrop: soft center glow + faint dot grid */
-  .trace-bg {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background-image:
-      radial-gradient(circle at 50% 42%, rgba(139, 91, 189, 0.22), transparent 60%),
-      radial-gradient(rgba(168, 128, 209, 0.09) 1px, transparent 1.4px);
-    background-size: 100% 100%, 22px 22px;
-  }
-  .trace-head,
-  .trace-svg,
-  .trace-foot {
+  .trace-frame {
     position: relative;
     z-index: 1;
+    width: 100%;
+    max-width: 38rem;
+    margin-inline: auto;
+    display: grid;
+    place-items: center;
   }
-  .trace-head {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 0.5rem;
-  }
-  .trace-svg {
+  .trace-img {
+    display: block;
     width: 100%;
     height: auto;
-    overflow: visible;
+    max-height: 38rem;
+    object-fit: contain;
   }
-  .trace-line {
-    stroke-dasharray: 6 6;
-    animation: dash 3s linear infinite;
+  /* subtle pulsing glow behind the illustration */
+  .trace-glow {
+    animation: trace-pulse 5s ease-in-out infinite;
   }
-  @keyframes dash {
-    to {
-      stroke-dashoffset: -24;
+  @keyframes trace-pulse {
+    0%,
+    100% {
+      opacity: 0.22;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      opacity: 0.42;
+      transform: translate(-50%, -50%) scale(1.12);
     }
   }
-  .node {
-    fill: url(#nodeGrad);
-    stroke: rgba(199, 171, 225, 0.5);
-    stroke-width: 1.4;
-    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
-  }
-  .node-hub {
-    fill: url(#hubGrad);
-    stroke: #d3bce8;
-    stroke-width: 1.8;
-    filter: drop-shadow(0 0 16px rgba(139, 91, 189, 0.6));
-  }
-  .node-flag {
-    fill: url(#flagGrad);
-    stroke: #f87171;
-    stroke-width: 1.6;
-    filter: drop-shadow(0 0 16px rgba(248, 113, 113, 0.55));
-  }
-  .node-icon {
-    color: #e6d9f5;
-    stroke: currentColor;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    fill: none;
-  }
-  .node-icon-flag {
-    color: #fca5a5;
-  }
-  .trace-foot {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 0.5rem;
-    font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.45);
-  }
   @media (prefers-reduced-motion: reduce) {
-    .trace-line,
-    .node-flag {
+    .trace-glow {
       animation: none;
+      opacity: 0.3;
+      transform: translate(-50%, -50%);
     }
   }
   @media (min-width: 1024px) {
