@@ -10,10 +10,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.6.1"
+    "astro": "^5.6.1",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.17",
+    "@types/three": "^0.185.0",
     "gsap": "^3.12.7",
     "tailwindcss": "^4.0.17"
   }

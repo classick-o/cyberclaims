@@ -55,7 +55,9 @@ const lines = Array.from({ length: N }, (_, i) => {
     mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
   }
   .waves svg {
-    width: 100%;
+    /* keep a minimum natural width so the wave field isn't squashed into steep
+       zig-zags on narrow (mobile) viewports; the overflow is clipped */
+    width: max(100%, 60rem);
     height: 100%;
     display: block;
   }

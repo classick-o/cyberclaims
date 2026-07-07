@@ -51,6 +51,18 @@ import { link } from '../lib/paths';
     gap: 1.5rem;
     margin-bottom: 2.75rem;
   }
+  /* on phones: stack the heading + button and keep the button at its natural
+     size (a flex row was stretching it to the heading's height) */
+  @media (max-width: 640px) {
+    .blogs-head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .blogs-head .btn {
+      align-self: flex-start;
+    }
+  }
   .blogs-head h2 {
     margin-top: 0.9rem;
   }

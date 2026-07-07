@@ -119,12 +119,9 @@ h1, h2, h3, h4 {
   line-height: 1.1;
 }
 
-/* Purple accent word inside headings */
+/* Purple accent word inside headings (solid colour, no gradient) */
 .accent {
-  background: linear-gradient(120deg, #a880d1, #6b3fa0);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--color-purple-300);
 }
 
 /* Eyebrow label */

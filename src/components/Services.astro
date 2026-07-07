@@ -57,7 +57,14 @@ const visualOf = (href: string): string => VISUALS[href] ?? '/service-visual.web
             style={`--accent:${s.accent}`}
             data-svc={s.href}
           >
-            <img class="sc-visual" src={link(visualOf(s.href))} alt="" aria-hidden="true" />
+            <img
+              class="sc-visual"
+              src={link(visualOf(s.href))}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+            />
             <div class="sc-panel-body">
               <h3 class="sc-panel-title">{s.title}</h3>
               <p class="sc-panel-blurb">{s.blurb}</p>
@@ -133,9 +140,11 @@ const visualOf = (href: string): string => VISUALS[href] ?? '/service-visual.web
     width: 2.1rem;
     height: 2.1rem;
     border-radius: 0.55rem;
-    color: var(--color-purple-300);
-    background: rgba(139, 91, 189, 0.14);
-    border: 1px solid rgba(139, 91, 189, 0.28);
+    /* solid purple chip; icon inherits the item's text color (white on hover) */
+    color: inherit;
+    background: var(--color-purple-500);
+    border: 1px solid transparent;
+    transition: color 0.25s;
   }
   .sc-item-text {
     flex: 1;

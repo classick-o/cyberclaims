@@ -109,6 +109,9 @@ const rowB = TESTIMONIALS.filter((_, i) => i % 2 === 1);
     width: 100%;
     height: 70%;
     opacity: 0.8;
+    /* fade the arcs out toward the bottom so the strokes don't end in a hard cut */
+    -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 92%);
+    mask-image: linear-gradient(to bottom, #000 45%, transparent 92%);
   }
   .testi-stars {
     position: absolute;

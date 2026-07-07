@@ -6,6 +6,15 @@ import { link } from '../lib/paths';
 
 <section class="hero">
   <canvas id="mesh" class="hero-mesh" aria-hidden="true"></canvas>
+  <div
+    class="hero-3d"
+    id="hero3d"
+    aria-hidden="true"
+    data-model={link('/models/scale.glb')}
+    data-draco={link('/draco/')}
+  >
+  </div>
+  <div class="hero-scrim" aria-hidden="true"></div>
   <div class="glow-blob hero-glow-1" style="background:#6b3fa0;width:38rem;height:38rem;top:-12rem;left:-10rem;"></div>
   <div class="glow-blob hero-glow-2" style="background:#8b5bbd;width:28rem;height:28rem;bottom:-10rem;right:-6rem;opacity:0.35;"></div>
 
@@ -30,8 +39,9 @@ import { link } from '../lib/paths';
       </div>
     </div>
 
-    <!-- Right: lead form -->
-    <div class="hero-form-wrap" id="lead" data-reveal>
+    <!-- Right: lead form (no data-reveal: an opacity<1 fade would disable the
+         form's backdrop-filter until the animation finished) -->
+    <div class="hero-form-wrap" id="lead">
       <div class="glass hero-form">
         <div class="form-head">
           <h2 class="form-title">Start your recovery</h2>
@@ -95,6 +105,50 @@ import { link } from '../lib/paths';
     z-index: 1;
     opacity: 0.6;
   }
+  /* 3D object: centered background layer, behind copy + form (grid is z-index 2) */
+  .hero-3d {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  /* soft neon halo behind the glass object */
+  .hero-3d::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40rem;
+    height: 40rem;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+      circle,
+      rgba(139, 91, 189, 0.22) 10%,
+      rgba(107, 63, 160, 0.08) 40%,
+      transparent 66%
+    );
+    filter: blur(40px);
+    pointer-events: none;
+  }
+  .hero-3d :global(canvas) {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  /* readability scrim: darkens the left (text) side, clears toward the object */
+  .hero-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      rgba(16, 16, 32, 0.94) 0%,
+      rgba(16, 16, 32, 0.82) 28%,
+      rgba(16, 16, 32, 0.35) 50%,
+      rgba(16, 16, 32, 0) 68%
+    );
+  }
   .hero-glow-1,
   .hero-glow-2 {
     z-index: 0;
@@ -112,15 +166,26 @@ import { link } from '../lib/paths';
   .hero-form-wrap {
     min-width: 0;
   }
+  /* keep the form a valid backdrop-filter root: a transform / will-change on the
+     wrapper disables the frosted blur over the 3D object, so reveal it via
+     opacity only (no transform) and drop the will-change hint */
+  .hero-form-wrap {
+    will-change: auto;
+  }
+  .hero-form-wrap[data-reveal] {
+    transform: none;
+  }
   .hero-title {
     margin: 1.4rem 0 1.5rem;
     max-width: 16ch;
+    text-shadow: 0 2px 18px rgba(16, 16, 32, 0.6);
   }
   .hero-sub {
     font-size: 1.05rem;
     line-height: 1.65;
     color: rgba(255, 255, 255, 0.72);
     max-width: 40ch;
+    text-shadow: 0 1px 12px rgba(16, 16, 32, 0.55);
   }
   .hero-sub strong {
     color: #fff;
@@ -155,6 +220,10 @@ import { link } from '../lib/paths';
   /* Form */
   .hero-form {
     padding: 1.75rem;
+    /* frost the 3D object sitting behind the form */
+    background: rgba(22, 22, 42, 0.62);
+    backdrop-filter: blur(26px) saturate(150%);
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
   }
   .form-head {
     margin-bottom: 1.3rem;
@@ -256,6 +325,23 @@ import { link } from '../lib/paths';
     .hero-trust {
       justify-content: center;
     }
+    /* single-column layout: darken from the TOP (where the copy sits) instead
+       of from the left */
+    .hero-scrim {
+      background: linear-gradient(
+        to bottom,
+        rgba(16, 16, 32, 0.94) 0%,
+        rgba(16, 16, 32, 0.82) 24%,
+        rgba(16, 16, 32, 0.35) 46%,
+        rgba(16, 16, 32, 0) 64%
+      );
+    }
+  }
+  /* smaller hero description (not the title) on phones */
+  @media (max-width: 767px) {
+    .hero-sub {
+      font-size: 0.9rem;
+    }
   }
   @media (min-width: 1024px) {
     .hero-grid {
@@ -341,5 +427,192 @@ import { link } from '../lib/paths';
       },
       { threshold: 0 }
     ).observe(canvas);
+  }
+</script>
+
+<script>
+  // Centered 3D object behind the hero (decorative). Draco GLB via three.js,
+  // subtle idle rotation + float + pointer parallax. Paused off-screen and
+  // fully static under prefers-reduced-motion. Silently no-ops if WebGL fails.
+  import * as THREE from 'three';
+  import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+  import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+  import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+
+  const mount = document.getElementById('hero3d');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (mount) {
+    const MODEL = mount.dataset.model!;
+    const DRACO = mount.dataset.draco!;
+
+    let renderer: THREE.WebGLRenderer | null = null;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: true,
+        powerPreference: 'high-performance',
+      });
+    } catch {
+      renderer = null;
+    }
+
+    if (renderer) {
+      const size = () => ({ w: mount.clientWidth, h: mount.clientHeight });
+      let { w, h } = size();
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.05;
+      mount.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
+      camera.position.set(0, 0, 6);
+
+      // subtle image-based reflections without shipping an HDRI
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.02).texture;
+
+      // purple-tinted lighting
+      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+      const key = new THREE.DirectionalLight(0xc9a6ff, 1.8);
+      key.position.set(3, 4, 5);
+      scene.add(key);
+      const rim = new THREE.DirectionalLight(0x8b5bbd, 1.2);
+      rim.position.set(-4, -1, -3);
+      scene.add(rim);
+
+      const holder = new THREE.Group();
+      scene.add(holder);
+
+      let model: THREE.Object3D | null = null;
+      let core: THREE.Group | null = null;
+      let baseMaxDim = 1;
+      let raf = 0;
+      let running = true;
+      const clock = new THREE.Clock();
+      const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
+      // base yaw so the object's broad face points at the camera
+      const BASE_Y = Math.PI / 2;
+      // smaller object on narrow (phone) viewports
+      const targetSize = () => (window.innerWidth < 600 ? 1.7 : 2.4);
+      const applyScale = () => {
+        if (core) core.scale.setScalar(targetSize() / baseMaxDim);
+      };
+
+      const draco = new DRACOLoader();
+      draco.setDecoderPath(DRACO);
+      const loader = new GLTFLoader();
+      loader.setDRACOLoader(draco);
+
+      // neon glass: see-through purple body (alpha) with a Fresnel emissive rim
+      // so the edges glow neon-purple; clearcoat + env add glossy highlights
+      const mat = new THREE.MeshPhysicalMaterial({
+        color: 0x6b3fa0,
+        metalness: 0.35,
+        roughness: 0.25,
+        transparent: true,
+        opacity: 0.6,
+        clearcoat: 1,
+        clearcoatRoughness: 0.15,
+        emissive: new THREE.Color(0x241145),
+        emissiveIntensity: 1,
+        envMapIntensity: 1.3,
+        depthWrite: false,
+      });
+      mat.onBeforeCompile = (shader) => {
+        shader.uniforms.uNeon = { value: new THREE.Color(0xc7abe1) };
+        shader.uniforms.uNeonPower = { value: 2.2 };
+        shader.uniforms.uNeonStrength = { value: 1.4 };
+        shader.fragmentShader =
+          'uniform vec3 uNeon;\nuniform float uNeonPower;\nuniform float uNeonStrength;\n' +
+          shader.fragmentShader.replace(
+            '#include <normal_fragment_begin>',
+            `#include <normal_fragment_begin>
+             float _fres = pow(1.0 - clamp(abs(dot(normalize(vViewPosition), normal)), 0.0, 1.0), uNeonPower);
+             totalEmissiveRadiance += uNeon * _fres * uNeonStrength;`
+          );
+      };
+
+      loader.load(MODEL, (gltf) => {
+        model = gltf.scene;
+        // swap the Tripo material for the brand material on every mesh
+        model.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh) m.material = mat;
+        });
+        // recenter + scale to a consistent on-screen size (smaller)
+        const box = new THREE.Box3().setFromObject(model);
+        const c = new THREE.Vector3();
+        const s = new THREE.Vector3();
+        box.getCenter(c);
+        box.getSize(s);
+        // recenter the object inside a pivot group whose origin IS the object
+        // center, then scale the GROUP — so every glow shell stays concentric
+        model.position.sub(c);
+        baseMaxDim = Math.max(s.x, s.y, s.z) || 1;
+        core = new THREE.Group();
+        core.add(model);
+        core.scale.setScalar(targetSize() / baseMaxDim);
+        holder.add(core);
+
+        draco.dispose();
+        render();
+      });
+
+      function render() {
+        const t = clock.getElapsedTime();
+        // ease pointer toward target
+        ptr.tx += (ptr.x - ptr.tx) * 0.05;
+        ptr.ty += (ptr.y - ptr.ty) * 0.05;
+        if (model) {
+          // gentle left-right sway (no full spin) + pointer parallax
+          holder.rotation.y = BASE_Y + Math.sin(t * 0.45) * 0.12 + ptr.tx * 0.3;
+          holder.rotation.x = -0.04 + ptr.ty * 0.18;
+          holder.position.y = Math.sin(t * 0.8) * 0.1;
+        }
+        renderer!.render(scene, camera);
+        if (running && !reduce) raf = requestAnimationFrame(render);
+      }
+
+      if (!reduce) {
+        window.addEventListener(
+          'pointermove',
+          (e) => {
+            ptr.x = (e.clientX / window.innerWidth - 0.5) * 2;
+            ptr.y = (e.clientY / window.innerHeight - 0.5) * 2;
+          },
+          { passive: true }
+        );
+      }
+
+      window.addEventListener('resize', () => {
+        const n = size();
+        w = n.w;
+        h = n.h;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer!.setSize(w, h);
+        applyScale();
+        if (reduce) render();
+      });
+
+      // pause the loop while the hero is off-screen
+      new IntersectionObserver(
+        ([e]) => {
+          running = e.isIntersecting;
+          if (running && !reduce) {
+            clock.getDelta();
+            render();
+          } else {
+            cancelAnimationFrame(raf);
+          }
+        },
+        { threshold: 0 }
+      ).observe(mount);
+    }
   }
 </script>
