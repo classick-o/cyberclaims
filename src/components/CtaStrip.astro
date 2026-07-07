@@ -8,11 +8,11 @@ import WaveLines from './WaveLines.astro';
   <div class="cta-inner glass">
     <WaveLines color="#ffffff" opacityBoost={2.4} />
     <div class="glow-blob" style="background:#6b3fa0;width:26rem;height:26rem;top:-8rem;right:-4rem;opacity:0.4;"></div>
-    <div class="wrap cta-content" data-reveal>
-      <h2 class="h-section cta-title">
+    <div class="wrap cta-content">
+      <h2 class="h-section cta-title" data-reveal>
         Have you been a victim of <span class="accent">crypto scams?</span>
       </h2>
-      <p class="cta-sub">We can help you trace &amp; freeze your assets. Act now.</p>
+      <p class="cta-sub" data-reveal>We can help you trace &amp; freeze your assets. Act now.</p>
       <div class="cta-actions">
         <a href={link('/start-process/')} class="btn">Start Process</a>
         <a href={link('/contact-us/')} class="btn btn-ghost">Contact Us</a>
@@ -46,10 +46,7 @@ import WaveLines from './WaveLines.astro';
     margin-inline: auto;
   }
   .cta-title .accent {
-    background: linear-gradient(120deg, #fff, #e3d5f0);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: #e3d5f0;
   }
   .cta-sub {
     margin: 1.1rem 0 2rem;
@@ -63,19 +60,22 @@ import WaveLines from './WaveLines.astro';
     justify-content: center;
   }
   .cta-actions .btn {
-    background: #fff;
-    color: var(--color-purple-700);
+    background: var(--color-navy);
+    color: #fff;
     box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
   }
   .cta-actions .btn:hover {
-    background: var(--color-mist);
+    background: var(--color-navy-deep);
   }
   .cta-actions .btn-ghost {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.14);
     color: #fff;
-    border-color: rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.45);
+    /* frosted: blur the purple strip + wave lines behind the button */
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
   }
   .cta-actions .btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.24);
   }
 </style>

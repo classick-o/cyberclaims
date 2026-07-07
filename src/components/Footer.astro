@@ -17,6 +17,8 @@ const resources = [
   { label: 'Terms and Conditions', href: '/terms-and-conditions/' },
   { label: 'Data Protection Addendum', href: '/data-protection-addendum/' },
 ];
+// map a phone region to its ISO flag file (UK uses the GB flag)
+const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
 ---
 
 <footer class="footer">
@@ -58,7 +60,17 @@ const resources = [
         <h4 class="footer-h">Contact</h4>
         <ul class="contact-list">
           {CONTACT.phones.map((p) => (
-            <li><span class="ct-region">{p.region}</span><a href={`tel:${p.number.replace(/\s/g, '')}`}>{p.number}</a></li>
+            <li>
+              <img
+                class="ct-flag"
+                src={link(`/flags/${flagOf(p.region)}.svg`)}
+                alt={p.region}
+                width="22"
+                height="22"
+                loading="lazy"
+              />
+              <a href={`tel:${p.number.replace(/\s/g, '')}`}>{p.number}</a>
+            </li>
           ))}
         </ul>
         <a class="contact-email" href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
@@ -158,11 +170,13 @@ const resources = [
     gap: 0.6rem;
     margin-bottom: 0.55rem;
   }
-  .ct-region {
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: var(--color-purple-300);
-    width: 1.5rem;
+  .ct-flag {
+    width: 1.4rem;
+    height: 1.4rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
   }
   .contact-email {
     display: inline-block;

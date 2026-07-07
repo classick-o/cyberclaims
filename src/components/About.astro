@@ -176,6 +176,12 @@ const points = [
       justify-content: center;
     }
   }
+  /* tighten the gap between copy and the visual on phones */
+  @media (max-width: 767px) {
+    .about-grid {
+      gap: 1rem;
+    }
+  }
   @media (min-width: 1024px) {
     .about-grid {
       grid-template-columns: 1fr 1fr;

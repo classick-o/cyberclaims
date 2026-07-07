@@ -11,7 +11,7 @@ import { link } from '../lib/paths';
       <div>
         <h2 class="h-section">Latest <span class="accent">blogs</span></h2>
       </div>
-      <a href={link('/news/')} class="btn btn-ghost">All news</a>
+      <a href={link('/news/')} class="btn">All news</a>
     </div>
 
     <div class="blogs-grid">
@@ -51,16 +51,18 @@ import { link } from '../lib/paths';
     gap: 1.5rem;
     margin-bottom: 2.75rem;
   }
-  /* on phones: stack the heading + button and keep the button at its natural
-     size (a flex row was stretching it to the heading's height) */
+  /* on phones: keep heading + button on the SAME row (button to the right),
+     centered vertically and compact so it doesn't blow up */
   @media (max-width: 640px) {
     .blogs-head {
-      flex-direction: column;
-      align-items: flex-start;
+      align-items: center;
       gap: 1rem;
     }
     .blogs-head .btn {
-      align-self: flex-start;
+      flex-shrink: 0;
+      align-self: center;
+      padding: 0.6rem 1.1rem;
+      font-size: 0.82rem;
     }
   }
   .blogs-head h2 {
