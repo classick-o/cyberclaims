@@ -131,9 +131,9 @@ export const STATS = [
 // Sustainability metrics - preserved from the live site ("We prioritise Sustainability").
 // NOTE: live site shows 0 / 0 / 0 - placeholders below await real figures from TBS.
 export const SUSTAINABILITY = [
-  { value: 1200, suffix: '+', label: 'Trees Planted', icon: 'leaf' },
-  { value: 18500, suffix: ' kg', label: 'CO₂ Compensated', icon: 'cloud' },
-  { value: 900, suffix: '+', label: 'Happy Customers', icon: 'smile' },
+  { value: 1511, suffix: '', label: 'Trees Planted', icon: 'leaf' },
+  { value: 57.45, suffix: ' kg', label: 'CO₂ Compensated', icon: 'cloud' },
+  { value: 1365, suffix: '', label: 'Happy Customers', icon: 'smile' },
 ];
 
 // Partner / "Industry Allies" logos (sourced from the live site).

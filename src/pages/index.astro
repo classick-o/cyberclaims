@@ -79,9 +79,16 @@ import CtaStrip from '../components/CtaStrip.astro';
 
   // ── Animated number counters (brief §5) ──
   const counters = document.querySelectorAll<HTMLElement>('.counter');
-  const fmt = (n: number) => n.toLocaleString('en-US');
   const runCounter = (el: HTMLElement) => {
-    const target = Number(el.dataset.target || '0');
+    const raw = el.dataset.target || '0';
+    const target = Number(raw);
+    // preserve the target's decimal places (e.g. 57.45 stays 57.45, not 57)
+    const dec = (raw.split('.')[1] || '').length;
+    const fmt = (n: number) =>
+      n.toLocaleString('en-US', {
+        minimumFractionDigits: dec,
+        maximumFractionDigits: dec,
+      });
     if (reduce) {
       el.textContent = fmt(target);
       return;
@@ -91,7 +98,7 @@ import CtaStrip from '../components/CtaStrip.astro';
     const tick = (now: number) => {
       const p = Math.min((now - start) / dur, 1);
       const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
-      el.textContent = fmt(Math.round(target * eased));
+      el.textContent = fmt(target * eased);
       if (p < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
