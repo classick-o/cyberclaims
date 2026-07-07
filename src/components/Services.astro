@@ -1,34 +1,83 @@
 ---
-// Services preview: horizontally scrollable glass cards with hover lift + accent line (brief §4/§5).
+// Services - interactive showcase: a list on the left drives a preview panel on
+// the right (hover / keyboard-focus to switch). Collapses to tappable cards on mobile.
 import Icon from './Icon.astro';
 import { SERVICES } from '../data/site';
 import { link } from '../lib/paths';
+
+// per-service preview visual (falls back to the default tiles image)
+const VISUALS: Record<string, string> = {
+  '/brand-protection/': '/sv-brand-protection.webp',
+  '/consultancy-documentation-support/': '/sv-consultancy.webp',
+  '/website-forensics/': '/sv-website-forensics.webp',
+  '/website-takedown/': '/sv-website-takedown.webp',
+  '/cryptocurrency-tracing/': '/sv-crypto-tracing.webp',
+  '/dispute-resolution-support/': '/sv-dispute.webp',
+  '/due-diligence-investigations/': '/sv-social-media.webp',
+  '/social-media-investigation/': '/sv-due-diligence.webp',
+  '/business-services/': '/sv-business.webp',
+};
+const visualOf = (href: string): string => VISUALS[href] ?? '/service-visual.webp';
 ---
 
 <section class="services">
-  <div class="wrap services-head">
-    <div data-reveal>
-      <h2 class="h-section">What we <span class="accent">investigate</span></h2>
-    </div>
-    <div class="services-nav" data-reveal>
-      <button class="rail-btn rail-prev" data-dir="-1" aria-label="Previous" disabled><Icon name="arrow" class="w-5 h-5" /></button>
-      <button class="rail-btn rail-next" data-dir="1" aria-label="Next"><Icon name="arrow" class="w-5 h-5" /></button>
-    </div>
+  <div class="wrap services-head" data-reveal>
+    <h2 class="h-section">What we <span class="accent">investigate</span></h2>
   </div>
 
-  <div class="rail-viewport">
-    <div class="rail no-scrollbar" id="services-rail" data-reveal>
+  <div class="wrap showcase">
+    <!-- Left: list -->
+    <ul class="sc-list">
       {
-        SERVICES.map((s) => (
-          <a href={link(s.href)} class="svc-card" style={`--accent:${s.accent}`}>
-            <span class="svc-watermark" aria-hidden="true"><Icon name={s.icon} class="w-full h-full" /></span>
-            <span class="svc-content">
-              <h3 class="svc-title">{s.title}</h3>
-              <p class="svc-blurb">{s.blurb}</p>
-              <span class="svc-more">Read more <Icon name="arrow" class="w-4 h-4" /></span>
-            </span>
-            <span class="svc-line"></span>
-          </a>
+        SERVICES.map((s, i) => (
+          <li>
+            <a
+              href={link(s.href)}
+              class={`sc-item${i === 0 ? ' is-active' : ''}`}
+              style={`--accent:${s.accent}`}
+            >
+              <span class="sc-item-icon"><Icon name={s.icon} class="w-4 h-4" /></span>
+              <span class="sc-item-text">
+                <span class="sc-item-title">{s.title}</span>
+                <span class="sc-item-blurb">{s.short}</span>
+              </span>
+              <span class="sc-item-arrow"><Icon name="arrow" class="w-full h-full" /></span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <!-- Right: preview (desktop/tablet) -->
+    <div class="sc-preview">
+      {
+        SERVICES.map((s, i) => (
+          <div
+            class={`sc-panel${i === 0 ? ' is-active' : ''}`}
+            style={`--accent:${s.accent}`}
+            data-svc={s.href}
+          >
+            <img class="sc-visual" src={link(visualOf(s.href))} alt="" aria-hidden="true" />
+            <div class="sc-panel-body">
+              <h3 class="sc-panel-title">{s.title}</h3>
+              <p class="sc-panel-blurb">{s.blurb}</p>
+              <a href={link(s.href)} class="sc-more">Explore service <Icon name="arrow" class="w-4 h-4" /></a>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- carousel progress dots (mobile / tablet only) -->
+    <div class="sc-dots">
+      {
+        SERVICES.map((s, i) => (
+          <button
+            type="button"
+            class={`sc-dot${i === 0 ? ' is-active' : ''}`}
+            data-dot={i}
+            aria-label={s.title}
+          />
         ))
       }
     </div>
@@ -41,191 +90,378 @@ import { link } from '../lib/paths';
     padding: 3rem 0;
     overflow: hidden;
   }
-  .services-head,
-  .rail-viewport {
-    position: relative;
-    z-index: 1;
-  }
   .services-head {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1.5rem;
     margin-bottom: 2.5rem;
   }
-  .services-head h2 {
-    margin-top: 0.9rem;
-  }
-  .services-nav {
-    display: none;
-    gap: 0.6rem;
-  }
-  .rail-btn {
-    width: 2.8rem;
-    height: 2.8rem;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #fff;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .rail-btn:hover {
-    background: var(--color-purple-500);
-    border-color: var(--color-purple-400);
-  }
-  /* left button points left */
-  .rail-prev :global(svg) {
-    transform: rotate(180deg);
-  }
-  /* disabled state (e.g. prev at start, next at end) */
-  .rail-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-  .rail-btn:disabled:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.12);
-  }
-
-  .rail-viewport {
-    max-width: 80rem;
-    margin-inline: auto;
-    padding-inline: var(--spacing-gutter);
-  }
-  .rail {
-    display: flex;
-    gap: 1.25rem;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding: 0.5rem 0 1.5rem;
-    scroll-padding-left: 0;
-  }
-  .svc-card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 auto;
-    width: 18rem;
-    padding: 1.25rem;
-    scroll-snap-align: start;
-    background: rgba(35, 35, 64, 0.5);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 0.75rem;
-    text-decoration: none;
-    overflow: hidden;
-    transition: transform 0.35s var(--ease-out-brand),
-      box-shadow 0.35s var(--ease-out-brand), border-color 0.35s;
-  }
-  .svc-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(139, 91, 189, 0.4);
-    box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.5),
-      0 0 22px -14px rgba(139, 91, 189, 0.45);
-  }
-  /* large faded watermark icon centered in card background */
-  .svc-watermark {
-    position: absolute;
-    top: 42%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 11rem;
-    height: 11rem;
-    color: var(--accent);
-    opacity: 0.1;
-    pointer-events: none;
-    z-index: 0;
-    transition: opacity 0.35s var(--ease-out-brand),
-      transform 0.5s var(--ease-out-brand);
-  }
-  .svc-card:hover .svc-watermark {
-    opacity: 0.12;
-    transform: translate(-50%, -50%) scale(1.03);
-  }
-  .svc-content {
+  .showcase {
     position: relative;
     z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  /* ---- list ---- */
+  .sc-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .sc-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.7rem;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.72);
+    border: 1px solid transparent;
+    transition: background 0.25s var(--ease-out-brand), color 0.25s,
+      border-color 0.25s;
+  }
+  .sc-item:hover,
+  .sc-item.is-active {
+    background: rgba(139, 91, 189, 0.1);
+    border-color: rgba(139, 91, 189, 0.3);
+    color: #fff;
+  }
+  .sc-item-icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 0.55rem;
+    color: var(--color-purple-300);
+    background: rgba(139, 91, 189, 0.14);
+    border: 1px solid rgba(139, 91, 189, 0.28);
+  }
+  .sc-item-text {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-width: 0;
   }
-  .svc-title {
-    font-size: 1.15rem;
-    color: #fff;
-    margin-bottom: 0.6rem;
-  }
-  .svc-blurb {
-    font-size: 0.88rem;
-    line-height: 1.55;
-    color: rgba(255, 255, 255, 0.58);
-    margin-bottom: 1.1rem;
-  }
-  .svc-more {
-    align-self: flex-start;
-    margin-top: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
+  .sc-item-title {
+    font-size: 0.95rem;
+    font-weight: 500;
     font-family: var(--font-display);
-    font-size: 0.82rem;
-    font-weight: 600;
+  }
+  .sc-item-blurb {
+    display: none;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.55);
+    margin-top: 0.15rem;
+  }
+  .sc-item-arrow {
+    display: block;
+    flex-shrink: 0;
+    width: 1.1rem;
+    height: 1.1rem;
     color: var(--color-purple-300);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.25s, transform 0.25s var(--ease-out-brand);
   }
-  .svc-more :global(svg) {
-    transition: transform 0.3s var(--ease-out-brand);
-  }
-  .svc-card:hover .svc-more :global(svg) {
-    transform: translateX(4px);
-  }
-  /* accent line appears at bottom on hover (brief §5) */
-  .svc-line {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    height: 2px;
-    width: 100%;
-    background: var(--color-purple-400);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.4s var(--ease-out-brand);
-  }
-  .svc-card:hover .svc-line {
-    transform: scaleX(1);
+  .sc-item:hover .sc-item-arrow,
+  .sc-item.is-active .sc-item-arrow {
+    opacity: 1;
+    transform: none;
   }
 
-  @media (min-width: 768px) {
-    .services-nav {
+  /* ---- preview ---- */
+  .sc-preview {
+    position: relative;
+    min-height: 24rem;
+    border-radius: 1rem;
+  }
+  .sc-panel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 2rem 2rem 3.5rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    text-decoration: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(1.015);
+    transition: opacity 0.4s var(--ease-out-brand),
+      transform 0.5s var(--ease-out-brand), visibility 0.4s;
+    background: linear-gradient(180deg, #1b1630, #0f0f1d);
+    border: 1px solid color-mix(in srgb, #8b5bbd 30%, transparent);
+  }
+  .sc-panel.is-active {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+  /* service visual, centered on the X axis in the top area, faded toward the text */
+  .sc-visual {
+    position: absolute;
+    top: -1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 96%;
+    max-width: 36rem;
+    height: auto;
+    pointer-events: none;
+    z-index: 0;
+  }
+  /* panel-fixed fade: guarantees the image fades out at the SAME vertical point
+     on every card, regardless of each image's own size/top offset */
+  .sc-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent 12%, #141224 58%, #0f0f1d 100%);
+  }
+  /* per-service visual position tweaks */
+  .sc-panel[data-svc='/brand-protection/'] .sc-visual {
+    top: -5rem;
+  }
+  .sc-panel[data-svc='/website-forensics/'] .sc-visual {
+    top: -7rem;
+    width: 108%;
+    max-width: 42rem;
+  }
+  .sc-panel[data-svc='/website-takedown/'] .sc-visual {
+    top: -7rem;
+    width: 108%;
+    max-width: 42rem;
+  }
+  .sc-panel[data-svc='/cryptocurrency-tracing/'] .sc-visual {
+    top: 0rem;
+    width: 138%;
+    max-width: 52rem;
+  }
+  .sc-panel[data-svc='/dispute-resolution-support/'] .sc-visual {
+    top: -1.5rem;
+    width: 136%;
+    max-width: 52rem;
+  }
+  .sc-panel[data-svc='/due-diligence-investigations/'] .sc-visual,
+  .sc-panel[data-svc='/social-media-investigation/'] .sc-visual,
+  .sc-panel[data-svc='/business-services/'] .sc-visual {
+    top: -1.5rem;
+    width: 144%;
+    max-width: 52rem;
+  }
+  .sc-panel-body {
+    position: relative;
+    z-index: 2;
+  }
+  .sc-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 0.7rem;
+  }
+  .sc-panel-icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.7rem;
+    color: #fff;
+    background: color-mix(in srgb, #8b5bbd 55%, transparent);
+    border: 1px solid color-mix(in srgb, #8b5bbd 60%, transparent);
+  }
+  .sc-panel-title {
+    font-size: 1.95rem;
+    color: #fff;
+    margin: 0 0 0.7rem;
+  }
+  .sc-panel-blurb {
+    font-size: 1.02rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+    max-width: 44ch;
+    margin-bottom: 1.4rem;
+  }
+  .sc-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    align-self: flex-start;
+    padding: 0.6rem 1.1rem;
+    border-radius: 0.6rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #fff;
+    background: var(--color-purple-500);
+    border: 1px solid transparent;
+    box-shadow: 0 8px 24px -8px rgba(107, 63, 160, 0.7);
+    transition: background 0.25s var(--ease-out-brand),
+      transform 0.25s var(--ease-out-brand),
+      box-shadow 0.25s var(--ease-out-brand);
+  }
+  .sc-more:hover {
+    background: var(--color-purple-400);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px -8px rgba(139, 91, 189, 0.85);
+  }
+
+  /* ---- desktop split ---- */
+  @media (min-width: 900px) {
+    .showcase {
+      grid-template-columns: 0.82fr 1.18fr;
+      gap: 1.5rem;
+      align-items: stretch;
+      /* unified frosted-glass panel behind the list + preview */
+      padding: 1rem;
+      border-radius: 1.25rem;
+      background: linear-gradient(160deg, rgba(35, 35, 64, 0.42), rgba(20, 20, 38, 0.38));
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    /* let the preview bleed out of the panel so it reads as a layer emerging
+       from underneath it (extends top/bottom/right, lifted with a shadow) */
+    .sc-preview {
+      min-height: 26rem;
+      position: relative;
+      z-index: 2;
+      margin: -2rem -2rem -2rem 0;
+    }
+    .sc-panel {
+      box-shadow: 0 34px 70px -34px rgba(0, 0, 0, 0.75);
+    }
+  }
+
+  /* ---- carousel progress dots (hidden on desktop) ---- */
+  .sc-dots {
+    display: none;
+  }
+  .sc-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+    cursor: pointer;
+    transition: background 0.3s var(--ease-out-brand),
+      width 0.3s var(--ease-out-brand);
+  }
+  .sc-dot.is-active {
+    width: 1.5rem;
+    background: var(--color-purple-400);
+  }
+
+  /* ---- mobile / tablet: list hidden, preview becomes a swipe carousel ---- */
+  @media (max-width: 899px) {
+    .sc-list {
+      display: none;
+    }
+    .showcase {
+      gap: 1rem;
+    }
+    .sc-preview {
       display: flex;
+      min-height: 0;
+      gap: 0.85rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .sc-preview::-webkit-scrollbar {
+      display: none;
+    }
+    .sc-panel {
+      position: relative;
+      inset: auto;
+      flex: 0 0 100%;
+      min-height: 30rem;
+      scroll-snap-align: center;
+      /* carousel slides are all shown; scroll (not hover) drives the view */
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.8);
+      /* tighter side padding + smaller bottom so text/button sit lower */
+      padding: 1.5rem 1.25rem 2rem;
+    }
+    /* smaller type on mobile */
+    .sc-panel-title {
+      font-size: 1.6rem;
+    }
+    .sc-panel-blurb {
+      font-size: 0.9rem;
+      margin-bottom: 1.1rem;
+    }
+    /* push these visuals lower on mobile only */
+    .sc-panel[data-svc='/brand-protection/'] .sc-visual {
+      top: -2rem;
+    }
+    .sc-panel[data-svc='/website-forensics/'] .sc-visual {
+      top: -3.5rem;
+    }
+    .sc-panel[data-svc='/website-takedown/'] .sc-visual {
+      top: -3.5rem;
+    }
+    .sc-dots {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
     }
   }
 </style>
 
 <script>
-  const rail = document.getElementById('services-rail');
-  const prev = document.querySelector<HTMLButtonElement>('.rail-prev');
-  const next = document.querySelector<HTMLButtonElement>('.rail-next');
+  // Hover / focus on a list item drives the preview panel (desktop & tablet).
+  const items = Array.from(document.querySelectorAll<HTMLElement>('.sc-item'));
+  const panels = Array.from(document.querySelectorAll<HTMLElement>('.sc-panel'));
+  const activate = (i: number) => {
+    items.forEach((el, idx) => el.classList.toggle('is-active', idx === i));
+    panels.forEach((el, idx) => el.classList.toggle('is-active', idx === i));
+  };
+  items.forEach((el, i) => {
+    el.addEventListener('mouseenter', () => activate(i));
+    el.addEventListener('focus', () => activate(i));
+  });
 
-  // Enable/disable arrows based on scroll position.
-  function updateNav() {
-    if (!rail || !prev || !next) return;
-    const atStart = rail.scrollLeft <= 2;
-    const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 2;
-    prev.disabled = atStart;
-    next.disabled = atEnd;
+  // Mobile / tablet carousel: sync progress dots with scroll position, and
+  // let a dot tap scroll its panel into view. (On desktop the preview never
+  // scrolls, so these listeners stay dormant.)
+  const preview = document.querySelector<HTMLElement>('.sc-preview');
+  const dots = Array.from(document.querySelectorAll<HTMLElement>('.sc-dot'));
+  if (preview && dots.length) {
+    const setActiveDot = () => {
+      const center = preview.scrollLeft + preview.clientWidth / 2;
+      let best = 0,
+        bestDist = Infinity;
+      panels.forEach((p, i) => {
+        const c = p.offsetLeft + p.offsetWidth / 2;
+        const dist = Math.abs(c - center);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = i;
+        }
+      });
+      dots.forEach((d, i) => d.classList.toggle('is-active', i === best));
+    };
+    preview.addEventListener('scroll', setActiveDot, { passive: true });
+    dots.forEach((d, i) => {
+      d.addEventListener('click', () => {
+        const p = panels[i];
+        preview.scrollTo({
+          left: p.offsetLeft - (preview.clientWidth - p.offsetWidth) / 2,
+          behavior: 'smooth',
+        });
+      });
+    });
   }
-
-  [prev, next].forEach((btn) =>
-    btn?.addEventListener('click', () => {
-      const dir = Number(btn.dataset.dir) || 1;
-      // scroll by ~one card width so paging feels natural
-      rail?.scrollBy({ left: dir * 320, behavior: 'smooth' });
-    })
-  );
-
-  rail?.addEventListener('scroll', updateNav, { passive: true });
-  window.addEventListener('resize', updateNav);
-  updateNav();
 </script>
