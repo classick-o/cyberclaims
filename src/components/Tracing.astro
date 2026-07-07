@@ -58,6 +58,11 @@ import { link } from '../lib/paths';
   }
   .tw-card {
     padding: 1.75rem;
+    /* same frosted treatment as the hero form: more opaque so it reads as a
+       solid frosted panel even where GPU blur is weak/unavailable */
+    background: rgba(22, 22, 42, 0.62);
+    backdrop-filter: blur(26px) saturate(150%);
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
   }
   .tw-row {
     display: flex;

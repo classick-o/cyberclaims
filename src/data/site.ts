@@ -235,16 +235,16 @@ export const LATEST_BLOGS: BlogCard[] = [
 
 // A representative slice of the "over 350 news sites" press wall.
 export const PRESS = [
-  'The Chronicle Journal',
-  'Minyanville',
-  'My Mother Lode',
-  'Financial Content',
-  'The Punxsutawney Spirit',
-  'The Pilot News',
-  'The Saline Courier',
-  'KTTC',
-  'MarketMinute',
-  'The Evening Leader',
-  'SM Daily Press',
-  'Big Spring Herald',
+  { name: 'The Chronicle Journal', url: 'https://markets.chroniclejournal.com/chroniclejournal/news/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
+  { name: 'Minyanville', url: 'https://finance.minyanville.com/minyanville/news/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
+  { name: 'My Mother Lode', url: 'https://money.mymotherlode.com/clarkebroadcasting.mymotherlode/news/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
+  { name: 'Financial Content', url: 'https://markets.financialcontent.com/franklincredit/news/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
+  { name: 'The Punxsutawney Spirit', url: 'https://business.punxsutawneyspirit.com/punxsutawneyspirit/news/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
+  { name: 'The Pilot News', url: 'https://business.thepilotnews.com/thepilotnews/news/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
+  { name: 'The Saline Courier', url: 'https://business.bentoncourier.com/bentoncourier/news/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
+  { name: 'KTTC', url: 'https://kttc.marketminute.com/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
+  { name: 'MarketMinute', url: 'https://fwnbc.marketminute.com/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
+  { name: 'The Evening Leader', url: 'https://business.theeveningleader.com/theeveningleader/news/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
+  { name: 'SM Daily Press', url: 'https://business.smdailypress.com/smdailypress/news/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
+  { name: 'Big Spring Herald', url: 'https://business.bigspringherald.com/bigspringherald/news/article/marketersmedia-2025-7-7-international-cybercrime-firm-cyberclaims-recovers-90000-from-cryptocurrency-fraud-case' },
 ];

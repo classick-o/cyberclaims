@@ -15,7 +15,7 @@ import { PRESS } from '../data/site';
   <div class="press-marquee-mask">
     <div class="press-track">
       {[...PRESS, ...PRESS].map((p) => (
-        <span class="press-logo">{p}</span>
+        <a class="press-logo" href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a>
       ))}
     </div>
   </div>
@@ -72,10 +72,14 @@ import { PRESS } from '../data/site';
     white-space: nowrap;
     color: rgba(255, 255, 255, 0.4);
     transition: color 0.3s;
-    cursor: default;
+    text-decoration: none;
   }
   .press-logo:hover {
     color: #fff;
+  }
+  /* pause the marquee on hover so the links are easy to click */
+  .press-track:hover {
+    animation-play-state: paused;
   }
   .press-verify {
     text-align: center;
