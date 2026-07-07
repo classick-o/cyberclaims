@@ -28,7 +28,11 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      # `npm install` (not `npm ci`): Tailwind v4 → rolldown → a wasm binding
+      # pulls a cross-platform optional dep (@emnapi) that resolves to different
+      # versions on Windows (dev) vs Linux (CI), so strict `npm ci` fails on lock
+      # drift. `npm install` reconciles it and builds reliably.
+      - run: npm install --no-audit --no-fund
       - name: Build
         run: npm run build
         env:
