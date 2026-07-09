@@ -497,8 +497,10 @@ import { link } from '../lib/paths';
       const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
       // base yaw so the object's broad face points at the camera
       const BASE_Y = Math.PI / 2;
-      // smaller object on narrow (phone) viewports
-      const targetSize = () => (window.innerWidth < 600 ? 1.7 : 2.4);
+      // smaller object + lifted higher on narrow (phone) viewports
+      const isPhone = () => window.innerWidth < 600;
+      const targetSize = () => (isPhone() ? 1.25 : 2.4);
+      const offsetY = () => (isPhone() ? 0.75 : 0);
       const applyScale = () => {
         if (core) core.scale.setScalar(targetSize() / baseMaxDim);
       };
@@ -572,7 +574,7 @@ import { link } from '../lib/paths';
           // gentle left-right sway (no full spin) + pointer parallax
           holder.rotation.y = BASE_Y + Math.sin(t * 0.45) * 0.12 + ptr.tx * 0.3;
           holder.rotation.x = -0.04 + ptr.ty * 0.18;
-          holder.position.y = Math.sin(t * 0.8) * 0.1;
+          holder.position.y = offsetY() + Math.sin(t * 0.8) * 0.045;
         }
         renderer!.render(scene, camera);
         if (running && !reduce) raf = requestAnimationFrame(render);
