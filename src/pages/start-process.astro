@@ -1,0 +1,512 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import Aurora from '../components/Aurora.astro';
+import CtaStrip from '../components/CtaStrip.astro';
+import Icon from '../components/Icon.astro';
+
+const amounts = [
+  '1,000 - 5,000',
+  '5,000 - 10,000',
+  '10,000 - 20,000',
+  '20,000 - 50,000',
+  '50,000 - 100,000',
+  '100,000 +',
+];
+const steps = [
+  { label: 'Contact', icon: 'user' },
+  { label: 'Amount', icon: 'coins' },
+  { label: 'Incident', icon: 'alert' },
+  { label: 'Confirm', icon: 'check' },
+];
+---
+
+<Layout
+  title="Start Process - Cyberclaims"
+  description="File a complaint with Cyberclaims. Answer as detailed as possible and receive a response within 24-72 business hours."
+>
+  <PageHero
+    eyebrow="File a complaint"
+    title="Start Process"
+    intro={[
+      'Please fill the form below to file a complaint. Please answer as detailed as possible.',
+    ]}
+    image="/start-process-hero.webp"
+    imageAlt="A checklist tile linked to document, review and verification steps"
+    imageMaxWidth="26rem"
+    imageMaxWidthMobile="20rem"
+    ctaHref="/contact-us/"
+    ctaLabel="Contact Us"
+  />
+
+  <section class="sp">
+    <Aurora />
+    <div class="wrap sp-inner">
+      <!-- stepper -->
+      <ol class="sp-steps" aria-hidden="true">
+        {
+          steps.map((s, i) => (
+            <li class={`sp-dot${i === 0 ? ' is-active' : ''}`} data-dot={i + 1}>
+              <span class="sp-dot-ic">
+                <Icon name={s.icon} class="w-6 h-6" />
+              </span>
+              <span class="sp-dot-label">{s.label}</span>
+            </li>
+          ))
+        }
+      </ol>
+
+      <form class="glass sp-form" id="spForm" novalidate>
+        <!-- Step 1 -->
+        <div class="sp-panel is-active" data-step="1">
+          <h2 class="sp-h">Contact details</h2>
+          <div class="field">
+            <input type="text" name="full_name" required placeholder=" " />
+            <label>Full Name</label>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <input type="email" name="email" required placeholder=" " />
+              <label>Email</label>
+            </div>
+            <div class="field">
+              <input type="tel" name="phone" required placeholder=" " />
+              <label>Phone</label>
+            </div>
+          </div>
+          <div class="field">
+            <input type="text" name="country" required placeholder=" " />
+            <label>Country of Residence</label>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="sp-panel" data-step="2">
+          <h2 class="sp-h">Amount lost</h2>
+          <div class="sp-radios">
+            {
+              amounts.map((a, i) => (
+                <label class="sp-radio">
+                  <input type="radio" name="amount" value={a} required={i === 0} />
+                  <span>{a}</span>
+                </label>
+              ))
+            }
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="sp-panel" data-step="3">
+          <h2 class="sp-h">Incident information</h2>
+          <div class="field-row">
+            <div class="field">
+              <input type="text" name="platform_name" required placeholder=" " />
+              <label>Platform Name</label>
+            </div>
+            <div class="field">
+              <input type="text" name="platform_website" required placeholder=" " />
+              <label>Platform Website</label>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <input type="date" name="first_transaction" required />
+              <label class="static">Date of First Transaction</label>
+            </div>
+            <div class="field">
+              <input type="date" name="last_transaction" required />
+              <label class="static">Date of Last Transaction</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="sp-panel" data-step="4">
+          <h2 class="sp-h">Confirmation</h2>
+          <p class="sp-confirm">
+            Almost there! Please review all the information and click “Submit” to send off your
+            complaint and receive a response from us within 24-72 business hours.
+          </p>
+        </div>
+
+        <div class="sp-nav">
+          <button type="button" class="btn btn-ghost sp-back" hidden>Back</button>
+          <button type="button" class="btn sp-next">Next</button>
+          <button type="submit" class="btn sp-submit" hidden>Submit</button>
+        </div>
+
+        <p class="sp-legal">
+          Protected by CAPTCHA. Your details are confidential and reviewed by certified experts.
+        </p>
+      </form>
+
+      <!-- Success state (revealed after submit) -->
+      <div class="glass sp-success" id="spSuccess" hidden>
+        <span class="sp-success-icon"><Icon name="check" class="w-full h-full" /></span>
+        <h2 class="sp-success-h">Your complaint has been submitted</h2>
+        <p class="sp-success-p">
+          Thank you - our team will review the details you provided and respond within 24-72
+          business hours.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <CtaStrip />
+</Layout>
+
+<style>
+  .sp {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-navy);
+    padding: 3.5rem 0 4rem;
+  }
+  /* the aurora is taller than this section, so `overflow:hidden` cuts it while
+     it is still lit - fade the last stretch back to navy to hide that seam */
+  .sp::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 12rem;
+    background: linear-gradient(to bottom, transparent, var(--color-navy));
+    pointer-events: none;
+    z-index: 0;
+  }
+  .sp-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 46rem;
+    margin-inline: auto;
+  }
+
+  /* ---- stepper ---- */
+  .sp-steps {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin: 0 0 1.5rem;
+    position: relative;
+  }
+  /* The dots are the flex items (labels are absolutely positioned), so
+     `space-between` lands the outer two flush with the container's edges and
+     spaces all four evenly across the form's full width. */
+  .sp-steps::before {
+    content: '';
+    position: absolute;
+    /* half the dot's size: the line meets the outer dots at their centres */
+    top: 1.5rem;
+    left: 1.5rem;
+    right: 1.5rem;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 0;
+  }
+  .sp-dot {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    /* room for the absolutely-positioned label below the dot */
+    padding-bottom: 1.6rem;
+  }
+  /* pending: a deep, muted purple */
+  .sp-dot-ic {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    color: var(--color-purple-300);
+    background: var(--color-purple-800);
+    border: 1px solid var(--color-purple-700);
+    transition: color 0.3s var(--ease-out-brand),
+      background 0.3s var(--ease-out-brand),
+      border-color 0.3s var(--ease-out-brand),
+      box-shadow 0.3s var(--ease-out-brand);
+  }
+  .sp-dot-label {
+    position: absolute;
+    top: 3.4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 0.02em;
+  }
+  /* the end labels hug the container edge instead of overflowing it */
+  .sp-dot:first-child .sp-dot-label {
+    left: 0;
+    transform: none;
+  }
+  .sp-dot:last-child .sp-dot-label {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+  /* current step: mid purple with a ring, so it reads as "in progress" */
+  .sp-dot.is-active .sp-dot-ic {
+    color: #fff;
+    background: var(--color-purple-500);
+    border-color: var(--color-purple-300);
+    box-shadow: 0 0 0 5px rgba(139, 91, 189, 0.18);
+  }
+  /* completed: light purple */
+  .sp-dot.is-done .sp-dot-ic {
+    color: #fff;
+    background: var(--color-purple-400);
+    border-color: var(--color-purple-200);
+  }
+  .sp-dot.is-active .sp-dot-label,
+  .sp-dot.is-done .sp-dot-label {
+    color: #fff;
+  }
+
+  /* ---- form ---- */
+  .sp-form {
+    padding: 2rem;
+  }
+  .sp-panel {
+    display: none;
+    flex-direction: column;
+    gap: 0.9rem;
+    animation: sp-fade 0.35s var(--ease-out-brand);
+  }
+  .sp-panel.is-active {
+    display: flex;
+  }
+  @keyframes sp-fade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  .sp-h {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: #fff;
+    margin: 0 0 0.4rem;
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+    min-width: 0;
+  }
+  .field {
+    position: relative;
+    min-width: 0;
+  }
+  .field input {
+    width: 100%;
+    min-width: 0;
+    padding: 0.95rem 0.9rem 0.35rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.7rem;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .field input[type='date'] {
+    padding-top: 1.35rem;
+    color-scheme: dark;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--color-purple-400);
+    background: rgba(139, 91, 189, 0.08);
+  }
+  .field label {
+    position: absolute;
+    left: 0.9rem;
+    top: 0.85rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.45);
+    pointer-events: none;
+    transition: all 0.18s var(--ease-out-brand);
+  }
+  .field label.static,
+  .field input:focus + label,
+  .field input:not(:placeholder-shown) + label {
+    top: 0.32rem;
+    font-size: 0.68rem;
+    color: var(--color-purple-300);
+  }
+  .sp-radios {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+  .sp-radio {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.8rem 1rem;
+    border-radius: 0.7rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+  .sp-radio input {
+    accent-color: var(--color-purple-500);
+  }
+  .sp-radio:has(input:checked) {
+    border-color: var(--color-purple-400);
+    background: rgba(139, 91, 189, 0.14);
+    color: #fff;
+  }
+  .sp-confirm {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.7;
+    font-size: 0.95rem;
+  }
+
+  /* nav */
+  .sp-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.85rem;
+    margin-top: 1.75rem;
+  }
+  .sp-back {
+    margin-right: auto;
+  }
+  .sp-next,
+  .sp-submit {
+    margin-left: auto;
+  }
+  .sp-legal {
+    margin-top: 1rem;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+  }
+
+  /* success */
+  .sp-success {
+    padding: 2.75rem 2rem;
+    text-align: center;
+  }
+  .sp-success-icon {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: 0 auto 1.2rem;
+    padding: 0.85rem;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--color-purple-500);
+    box-shadow: var(--glow-purple);
+  }
+  .sp-success-h {
+    font-size: 1.5rem;
+    color: #fff;
+    margin: 0 0 0.7rem;
+  }
+  .sp-success-p {
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.65;
+    max-width: 34ch;
+    margin-inline: auto;
+  }
+
+  @media (max-width: 560px) {
+    .field-row,
+    .sp-radios {
+      grid-template-columns: 1fr;
+    }
+    .sp-dot-label {
+      display: none;
+    }
+    /* the padding only existed to make room for the label */
+    .sp-dot {
+      padding-bottom: 0;
+    }
+  }
+  /* tighter card on phones - 2rem of inset eats the narrow viewport */
+  @media (max-width: 640px) {
+    .sp-form {
+      padding: 1.35rem 1.1rem 1.5rem;
+    }
+    .sp-panel {
+      gap: 0.7rem;
+    }
+    .sp-nav {
+      margin-top: 1.35rem;
+    }
+  }
+</style>
+
+<script>
+  const form = document.getElementById('spForm') as HTMLFormElement | null;
+  const success = document.getElementById('spSuccess');
+  if (form && success) {
+    const panels = Array.from(form.querySelectorAll<HTMLElement>('.sp-panel'));
+    const dots = Array.from(document.querySelectorAll<HTMLElement>('.sp-dot'));
+    const back = form.querySelector<HTMLButtonElement>('.sp-back')!;
+    const next = form.querySelector<HTMLButtonElement>('.sp-next')!;
+    const submit = form.querySelector<HTMLButtonElement>('.sp-submit')!;
+    const last = panels.length - 1;
+    let step = 0;
+
+    // `scroll` is false for the initial paint: the hero is full-height on mobile,
+    // so scrolling the first panel into view would skip straight past it on load
+    const show = (n: number, scroll = true) => {
+      step = Math.max(0, Math.min(last, n));
+      panels.forEach((p, i) => p.classList.toggle('is-active', i === step));
+      dots.forEach((d, i) => {
+        d.classList.toggle('is-active', i === step);
+        d.classList.toggle('is-done', i < step);
+      });
+      back.hidden = step === 0;
+      next.hidden = step === last;
+      submit.hidden = step !== last;
+      if (scroll) panels[step].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    // validate only the inputs inside the current step before advancing
+    const stepValid = () => {
+      const inputs = panels[step].querySelectorAll<HTMLInputElement>(
+        'input, select, textarea'
+      );
+      for (const el of inputs) {
+        if (!el.checkValidity()) {
+          el.reportValidity();
+          return false;
+        }
+      }
+      return true;
+    };
+
+    next.addEventListener('click', () => {
+      if (stepValid()) show(step + 1);
+    });
+    back.addEventListener('click', () => show(step - 1));
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      // no backend yet - just acknowledge locally
+      form.hidden = true;
+      document.querySelector<HTMLElement>('.sp-steps')?.setAttribute('hidden', '');
+      success.hidden = false;
+      success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    show(0, false);
+  }
+</script>

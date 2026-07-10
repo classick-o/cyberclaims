@@ -1,5 +1,6 @@
 ---
 // "Hello, We Are Cyberclaims" - split section: copy left, animated blockchain-trace SVG right.
+import Aurora from './Aurora.astro';
 import Icon from './Icon.astro';
 import { link } from '../lib/paths';
 
@@ -11,6 +12,7 @@ const points = [
 ---
 
 <section class="about">
+  <Aurora />
   <div class="wrap about-grid">
     <div class="about-copy" data-reveal>
       <h2 class="h-section about-title">
@@ -63,6 +65,14 @@ const points = [
     position: relative;
     padding: 3rem 0;
     background: transparent;
+  }
+  /* No `overflow:hidden` here: this section shares the .about-block gradient with
+     RecoveryCta below, so there is no solid colour to fade a clipped edge back
+     into. Letting the aurora spill downward lets its own mask finish the fade,
+     and RecoveryCta paints over it afterwards. */
+  .about > .wrap {
+    position: relative;
+    z-index: 1;
   }
   .about-grid {
     display: grid;

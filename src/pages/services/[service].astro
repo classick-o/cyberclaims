@@ -1,0 +1,1255 @@
+---
+// Individual service page - lives at /services/<slug>/
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Aurora from '../../components/Aurora.astro';
+import CtaStrip from '../../components/CtaStrip.astro';
+import Icon from '../../components/Icon.astro';
+import ServicesRail from '../../components/ServicesRail.astro';
+import { SERVICES } from '../../data/site';
+import { SERVICE_CONTENT, SERVICE_IMAGE } from '../../data/services-content';
+import { link } from '../../lib/paths';
+
+export function getStaticPaths() {
+  return SERVICES.map((s) => ({
+    params: { service: s.href.replace(/^\/|\/$/g, '') },
+    props: { service: s },
+  }));
+}
+
+const { service } = Astro.props;
+const content = SERVICE_CONTENT[service.href];
+const image = SERVICE_IMAGE[service.href];
+const intro = content?.intro ?? [service.blurb];
+
+// A palette of visually distinct icons so each card in a "cards" section gets a
+// different glyph (cycled by index).
+const CARD_ICONS = [
+  'shield',
+  'lock',
+  'alert',
+  'globe',
+  'forensics',
+  'tracing',
+  'social',
+  'press',
+  'clock',
+  'business',
+];
+
+// 3D glossy artwork for the recurring "techniques" bento cards, keyed by term.
+// A bento section whose every item has artwork renders the rich image cards.
+const BENTO_IMG: Record<string, string> = {
+  'Cluster Analysis': '/bento/cluster-analysis.webp',
+  'Attribution Data': '/bento/attribution-data.webp',
+  'KYC Information Requests': '/bento/kyc-information.webp',
+  'KYC Requests': '/bento/kyc-information.webp',
+  'Subpoena Targets': '/bento/subpoena.webp',
+  'Network Forensics': '/bento/network-forensics.webp',
+  'Cryptocurrency Forensics': '/bento/crypto-forensics.webp',
+  'Fraudulent Pattern Analysis': '/bento/fraudulent-pattern.webp',
+  'Email Forensics': '/bento/email-forensics.webp',
+  'Mobile Phone Forensics': '/bento/mobile-forensics.webp',
+};
+---
+
+<Layout title={`${service.title} - Cyberclaims`} description={service.blurb}>
+  <PageHero
+    eyebrow={content?.eyebrow ?? 'Our Services'}
+    title={service.title}
+    intro={intro}
+    image={image}
+    imageAlt={service.title}
+    fixedHeight
+    fullHeightMobile
+    scrollHint
+  />
+
+  {
+    service.href === '/due-diligence-investigations/' ? (
+      <section class="svc-body dd">
+        <Aurora />
+        <div class="wrap dd-inner">
+          <div class="dd-sec">
+            <h2 class="dd-h">
+              What are these <span class="accent">due diligence investigations?</span>
+            </h2>
+            <p class="dd-lead">
+              These are investigations carried out to examine every potential financial and
+              legal risk about a company’s assets. This is done to ensure that any form of
+              investment is beneficial to the investors. A proper due diligence investigation
+              procedure can protect you from venturing into the wrong business venture - which
+              is why you need to hire the best due diligence investigators for your procedure.
+              Areas we cover include:
+            </p>
+            <div class="dd-areas">
+              {[
+                'Information Technology capabilities',
+                'Business sustainability',
+                'Environmental considerations',
+                'Financial information',
+                'Legal reviews',
+                'Company’s existing customers and partnership relations',
+              ].map((a) => (
+                <span class="dd-area">
+                  <span class="dd-area-ic">
+                    <Icon name="check" class="w-4 h-4" />
+                  </span>
+                  {a}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div class="dd-sec">
+            <h2 class="dd-h">
+              How is this even possible? <span class="accent">What techniques are applied?</span>
+            </h2>
+            <p class="dd-lead">
+              In order to execute these tasks, Cyberclaims specialize in tracing the following
+              types of information that would be of great help to the investigating unit:
+            </p>
+            <div class="svc-bento img count-3">
+              <article class="bento-ic">
+                <span class="bento-ic-glow" aria-hidden="true"></span>
+                <img class="bento-ic-img" src={link('/bento/cluster-analysis.webp')} alt="" aria-hidden="true" loading="lazy" />
+                <div class="bento-ic-body">
+                  <h3 class="bento-ic-term">Cluster Analysis</h3>
+                  <p class="bento-ic-desc">
+                    Cluster analysis is a method that aims to deanonymize blockchain data, linking
+                    together different wallets belonging to the same user. This also enables one to
+                    determine whether any of the linked addresses have a UTXO.
+                  </p>
+                </div>
+              </article>
+              <article class="bento-ic">
+                <span class="bento-ic-glow" aria-hidden="true"></span>
+                <img class="bento-ic-img" src={link('/bento/attribution-data.webp')} alt="" aria-hidden="true" loading="lazy" />
+                <div class="bento-ic-body">
+                  <h3 class="bento-ic-term">Attribution Data</h3>
+                  <p class="bento-ic-desc">
+                    This will aid the investigation processes by analyzing ownership attribution
+                    information for numerous accounts, also with the aim of deanonymizing blockchain
+                    addresses.
+                  </p>
+                </div>
+              </article>
+              <article class="bento-ic">
+                <span class="bento-ic-glow" aria-hidden="true"></span>
+                <img class="bento-ic-img" src={link('/bento/subpoena.webp')} alt="" aria-hidden="true" loading="lazy" />
+                <div class="bento-ic-body">
+                  <h3 class="bento-ic-term">Subpoena Targets</h3>
+                  <p class="bento-ic-desc">
+                    Through this, all cryptocurrency companies that comply with Anti-Money Laundering
+                    (AML) and Know Your Customer (KYC) regulations can get identifying information for
+                    their customers who own wallet addresses.
+                  </p>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="dd-sec">
+            <h2 class="dd-h">
+              6 vital pieces of information from <span class="accent">due diligence</span>
+            </h2>
+            <div class="dd-grid6">
+              {[
+                { n: '01', t: 'Company’s Information', d: 'Important company information that helps you make an informed decision about purchasing - company owners, shareholders, employee benefits, bylaws and more.' },
+                { n: '02', t: 'Product and Services', d: 'Information about the company’s current and future products and services and how they compare to the company’s competitors.' },
+                { n: '03', t: 'Customers’ Information', d: 'Very important, as it helps you know the capability of the company’s customer base.' },
+                { n: '04', t: 'Physical, Technology & IP Assets', d: 'You get to know if the company owns any of these assets and how they would be utilized to your advantage.' },
+                { n: '05', t: 'Legal Issues', d: 'Laws and regulations that apply to the company and its industry, insurance policies, litigation history, license of operation, and more.' },
+                { n: '06', t: 'Finances', d: 'Financial standings of the company such as gross profit margin, debt, future capital expenditure, and so on.' },
+              ].map((it) => (
+                <div class="dd-num-card">
+                  <div class="dd-num-head">
+                    <span class="dd-num">{it.n}</span>
+                    <h3 class="dd-card-h">{it.t}</h3>
+                  </div>
+                  <p class="dd-card-p">{it.d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div class="dd-sec">
+            <h2 class="dd-h">
+              Why is due diligence <span class="accent">necessary for entrepreneurs?</span>
+            </h2>
+            <div class="dd-split">
+              <div class="dd-persp">
+                <span class="dd-persp-tag">For sellers</span>
+                <p class="dd-card-p">
+                  From a seller’s perspective, due diligence investigations help the seller know
+                  more about their company’s financial information, so they can decipher the actual
+                  market value of the company that is about to be sold and make maximum profit from
+                  the sale.
+                </p>
+              </div>
+              <div class="dd-persp">
+                <span class="dd-persp-tag">For buyers</span>
+                <p class="dd-card-p">
+                  From the buyer’s perspective, due diligence investigations help them understand
+                  what they stand to gain or lose after a potential purchase. It gives them full
+                  confidence that they are moving in the right direction and have all the
+                  information needed to make the best purchasing decisions.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="dd-sec">
+            <h2 class="dd-h">Why we are the <span class="accent">best fit</span></h2>
+            <p class="dd-lead">
+              When conducting due diligence investigations on a target business, our primary aim
+              has always been to assess its affairs before making any final decision. At
+              Cyberclaims, we go the extra mile to ensure that you make the best decisions when you
+              consider acquiring or partnering with an already established company. How we operate
+              to achieve the desired result involves:
+            </p>
+            <ol class="dd-steps">
+              {[
+                'Gathering and organizing an easily accessible data structure.',
+                'Reviewing the target company’s business practices and structures.',
+                'Sizing up the target company’s major competitors.',
+                'Analyzing the management and shareowners of the target company.',
+                'Informing our customers of what they should expect from such an acquisition.',
+                'Examining long and short-term risks.',
+              ].map((s, i) => (
+                <li class="dd-step">
+                  <span class="dd-step-num">{i + 1}</span>
+                  <p>{s}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
+    ) : content ? (
+      <section class="svc-body">
+        <Aurora />
+        <div class="wrap svc-body-inner">
+          {content.sections.map((sec) => (
+            <div class="svc-section" data-reveal>
+              {sec.heading && <h2 class="svc-h">{sec.heading}</h2>}
+              {sec.blocks.map((b) =>
+                b.type === 'p' ? (
+                  <p class="svc-p">{b.text}</p>
+                ) : b.type === 'list' ? (
+                  <ul
+                    class={`svc-list ${b.layout === 'stack' ? 'is-stack' : 'is-row'}${b.grid ? ' is-tpl' : ''}`}
+                    style={
+                      b.grid
+                        ? `--svc-grid:${b.grid}`
+                        : b.cols
+                          ? `--svc-cols:${b.cols}`
+                          : undefined
+                    }
+                  >
+                    {b.items.map((it) => (
+                      <li class="svc-li">
+                        <span class="svc-li-ic">
+                          <Icon name="check" class="w-4 h-4" />
+                        </span>
+                        <span>{it}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : b.layout === 'cards' ? (
+                  (() => {
+                    // the longest-text card becomes a tall feature on the right (bento)
+                    const tallIdx = b.items.reduce(
+                      (m, x, j, a) => (x.text.length > a[m].text.length ? j : m),
+                      0
+                    );
+                    return (
+                      <div
+                        class={`svc-cards bento n${b.items.length}`}
+                        style={b.grid ? `--svc-card-grid:${b.grid}` : undefined}
+                      >
+                        {b.items.map((d, i) => (
+                          <div class={`svc-card${i === tallIdx ? ' is-tall' : ''}`}>
+                            <div class="svc-card-head">
+                              <span class="svc-card-ic">
+                                <Icon name={CARD_ICONS[i % CARD_ICONS.length]} class="w-5 h-5" />
+                              </span>
+                              <h3 class="svc-card-term">{d.term}</h3>
+                            </div>
+                            <p class="svc-card-text">{d.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()
+                ) : b.items.every((d) => BENTO_IMG[d.term]) ? (
+                  <div
+                    class={`svc-bento img ${b.centerImage ? 'logo6' : `count-${b.items.length}`}`}
+                  >
+                    {(b.centerImage
+                      ? [
+                          ...b.items
+                            .slice(0, Math.ceil(b.items.length / 2))
+                            .map((d) => ({ d, logo: '' })),
+                          { d: null, logo: b.centerImage },
+                          ...b.items
+                            .slice(Math.ceil(b.items.length / 2))
+                            .map((d) => ({ d, logo: '' })),
+                        ]
+                      : b.items.map((d) => ({ d, logo: '' }))
+                    ).map((t) =>
+                      t.logo ? (
+                        <div class="bento-ic is-logo">
+                          <span class="bento-ic-glow" aria-hidden="true" />
+                          <img
+                            class="bento-logo-img"
+                            src={link(t.logo)}
+                            alt="Cyberclaims"
+                            loading="lazy"
+                          />
+                        </div>
+                      ) : (
+                        <article class="bento-ic">
+                          <span class="bento-ic-glow" aria-hidden="true" />
+                          <img
+                            class="bento-ic-img"
+                            src={link(BENTO_IMG[t.d.term])}
+                            alt=""
+                            aria-hidden="true"
+                            loading="lazy"
+                          />
+                          <div class="bento-ic-body">
+                            <h3 class="bento-ic-term">{t.d.term}</h3>
+                            <p class="bento-ic-desc">{t.d.text}</p>
+                          </div>
+                        </article>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <div class={`svc-bento bento-${b.items.length}`}>
+                    {b.items.map((d) => (
+                      <div class="svc-bento-card">
+                        <h3 class="svc-bento-term">{d.term}</h3>
+                        <p class="svc-bento-text">{d.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    ) : null
+  }
+
+  <ServicesRail lead="Explore other" accent="services" exclude={service.href} />
+
+  <CtaStrip />
+</Layout>
+
+<style>
+  .svc-body {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-navy);
+    /* aurora glows from the top; the first heading sits over its brighter part */
+    padding: 4.5rem 0 3.5rem;
+  }
+  /* dithered fade: tiny dots grow denser toward the bottom and dissolve into
+     the darker "Explore other services" section below */
+  .svc-body::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 22rem;
+    background-image:
+      radial-gradient(var(--color-navy-deep) 1.2px, transparent 1.6px),
+      linear-gradient(to bottom, transparent 20%, var(--color-navy-deep));
+    background-size: 5px 5px, 100% 100%;
+    background-position: bottom;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 90%);
+    mask-image: linear-gradient(to bottom, transparent, #000 90%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .svc-body-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 66rem;
+  }
+  @media (max-width: 640px) {
+    .svc-body {
+      padding-top: 4rem;
+    }
+  }
+
+  /* ===== bespoke Due Diligence layout ===== */
+  .svc-body.dd {
+    padding-top: 4.5rem;
+  }
+  .dd-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 70rem;
+  }
+  .dd-sec {
+    margin-bottom: 3.75rem;
+  }
+  .dd-sec:last-child {
+    margin-bottom: 0;
+  }
+  .dd-h {
+    font-size: clamp(1.5rem, 3vw, 2.15rem);
+    line-height: 1.15;
+    color: #fff;
+    margin: 0 auto 1.1rem;
+    max-width: 40ch;
+    text-align: center;
+  }
+  .dd-lead {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.8;
+    max-width: none;
+    margin: 0 0 1.7rem;
+    text-align: center;
+  }
+  /* areas we cover */
+  .dd-areas {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+  .dd-area {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: 0.75rem;
+    /* frosted glass */
+    background: rgba(30, 30, 52, 0.4);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 0.95rem;
+    transition: border-color 0.3s, transform 0.3s var(--ease-out-brand);
+  }
+  .dd-area:hover {
+    border-color: rgba(139, 91, 189, 0.4);
+    transform: translateY(-2px);
+  }
+  .dd-area-ic {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    color: var(--color-purple-300);
+    background: rgba(139, 91, 189, 0.16);
+  }
+  @media (min-width: 640px) {
+    .dd-areas {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  /* technique cards */
+  .dd-tech {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .dd-card {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background: rgba(35, 35, 64, 0.4);
+    border: 1px solid rgba(139, 91, 189, 0.2);
+    transition: border-color 0.3s, transform 0.3s var(--ease-out-brand);
+  }
+  .dd-card:hover {
+    border-color: rgba(139, 91, 189, 0.45);
+    transform: translateY(-4px);
+  }
+  .dd-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 0.9rem;
+  }
+  .dd-card-ic {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 0.65rem;
+    color: #fff;
+    background: var(--color-purple-500);
+  }
+  .dd-card-h {
+    font-size: 1.1rem;
+    color: #fff;
+    margin: 0 0 0.5rem;
+  }
+  .dd-card-head .dd-card-h {
+    margin: 0;
+  }
+  .dd-card-p {
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.65;
+    font-size: 0.95rem;
+    margin: 0;
+  }
+  @media (min-width: 860px) {
+    .dd-tech {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  /* numbered 6-grid */
+  .dd-grid6 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+  .dd-num-card {
+    position: relative;
+    padding: 0.95rem 1.05rem 1rem;
+    border-radius: 0.9rem;
+    background: rgba(35, 35, 64, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: border-color 0.3s, transform 0.3s var(--ease-out-brand);
+  }
+  .dd-num-card:hover {
+    border-color: rgba(139, 91, 189, 0.4);
+    transform: translateY(-4px);
+  }
+  .dd-num-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .dd-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--color-purple-400);
+    opacity: 0.7;
+  }
+  .dd-num-head .dd-card-h {
+    margin: 0;
+    font-size: 1rem;
+  }
+  .dd-num-card .dd-card-p {
+    font-size: 0.86rem;
+  }
+  @media (min-width: 640px) {
+    .dd-grid6 {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 960px) {
+    .dd-grid6 {
+      grid-template-columns: repeat(3, 1fr);
+      row-gap: 2.5rem;
+    }
+    /* explicit snake placement: row 1 left-to-right, row 2 right-to-left, so
+       4 sits directly below 3 and the whole chain stays connected */
+    .dd-num-card:nth-child(1) {
+      grid-area: 1 / 1;
+    }
+    .dd-num-card:nth-child(2) {
+      grid-area: 1 / 2;
+    }
+    .dd-num-card:nth-child(3) {
+      grid-area: 1 / 3;
+    }
+    .dd-num-card:nth-child(4) {
+      grid-area: 2 / 3;
+    }
+    .dd-num-card:nth-child(5) {
+      grid-area: 2 / 2;
+    }
+    .dd-num-card:nth-child(6) {
+      grid-area: 2 / 1;
+    }
+    /* base: horizontal dashed connector to the right, vertically centred */
+    .dd-num-card::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -1.75rem;
+      width: 1.75rem;
+      height: 2px;
+      transform: translateY(-50%);
+      background: repeating-linear-gradient(
+        90deg,
+        var(--color-purple-400) 0 6px,
+        transparent 6px 12px
+      );
+      background-size: 24px 2px;
+      opacity: 0.7;
+      animation: dd-dash 0.8s linear infinite;
+    }
+    /* 3 -> 4 : vertical connector down to the card below */
+    .dd-num-card:nth-child(3)::after {
+      top: auto;
+      bottom: -2.5rem;
+      right: 50%;
+      width: 2px;
+      height: 2.5rem;
+      transform: translateX(50%);
+      background: repeating-linear-gradient(
+        0deg,
+        var(--color-purple-400) 0 6px,
+        transparent 6px 12px
+      );
+      background-size: 2px 24px;
+      animation: dd-dash-v 0.8s linear infinite;
+    }
+    /* 4 -> 5 and 5 -> 6 flow leftwards */
+    .dd-num-card:nth-child(4)::after,
+    .dd-num-card:nth-child(5)::after {
+      right: auto;
+      left: -1.75rem;
+      animation-direction: reverse;
+    }
+    /* last card: no connector */
+    .dd-num-card:nth-child(6)::after {
+      display: none;
+    }
+  }
+  @keyframes dd-dash {
+    to {
+      background-position: 24px 0;
+    }
+  }
+  @keyframes dd-dash-v {
+    to {
+      background-position: 0 24px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dd-num-card::after {
+      animation: none;
+    }
+  }
+  /* seller / buyer split */
+  .dd-split {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .dd-persp {
+    padding: 1.25rem 1.35rem;
+    border-radius: 1rem;
+    background: linear-gradient(160deg, rgba(139, 91, 189, 0.12), rgba(35, 35, 64, 0.35));
+    border: 1px solid rgba(139, 91, 189, 0.22);
+  }
+  .dd-persp-tag {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.98rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-purple-300);
+    margin-bottom: 0.7rem;
+  }
+  @media (min-width: 760px) {
+    .dd-split {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  /* process steps */
+  .dd-steps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+  }
+  .dd-step {
+    position: relative;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 0.5rem 0;
+  }
+  .dd-step-num {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #fff;
+    background: var(--color-purple-500);
+    z-index: 1;
+  }
+  .dd-step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 1.1rem;
+    top: 2.2rem;
+    bottom: -0.5rem;
+    width: 2px;
+    background: rgba(139, 91, 189, 0.3);
+  }
+  .dd-step p {
+    color: rgba(255, 255, 255, 0.78);
+    line-height: 1.6;
+    margin: 0.4rem 0;
+  }
+  .svc-section {
+    margin-bottom: 3.5rem;
+  }
+  .svc-section:last-child {
+    margin-bottom: 0;
+  }
+  .svc-h {
+    font-size: clamp(1.5rem, 3vw, 2.15rem);
+    line-height: 1.15;
+    color: #fff;
+    margin: 0 auto 1.2rem;
+    max-width: 42ch;
+    text-align: center;
+  }
+  .svc-p {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.8;
+    max-width: none;
+    margin: 0 0 1rem;
+    text-align: center;
+  }
+  /* lists as check pills */
+  .svc-list {
+    list-style: none;
+    display: grid;
+    gap: 0.7rem;
+    margin: 1.5rem 0;
+  }
+  /* row lists become N columns (default 3, override via --svc-cols); stacked
+     lists are always one full-width item per row */
+  .svc-list.is-row {
+    grid-template-columns: 1fr;
+  }
+  .svc-list.is-stack {
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 560px) {
+    .svc-list.is-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 820px) {
+    .svc-list.is-row {
+      grid-template-columns: repeat(var(--svc-cols, 3), 1fr);
+    }
+    .svc-list.is-row.is-tpl {
+      grid-template-columns: var(--svc-grid);
+    }
+  }
+  .svc-li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.75rem;
+    background: rgba(35, 35, 64, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.5;
+    transition: border-color 0.3s, transform 0.3s var(--ease-out-brand);
+  }
+  /* stacked (long) items read better with the tick pinned to the top */
+  .svc-list.is-stack .svc-li {
+    align-items: flex-start;
+  }
+  .svc-li:hover {
+    border-color: rgba(139, 91, 189, 0.4);
+    transform: translateY(-2px);
+  }
+  .svc-li-ic {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    color: var(--color-purple-300);
+    background: rgba(139, 91, 189, 0.16);
+  }
+
+  /* ===== icon cards (icon inline with title, varied glyphs) ===== */
+  .svc-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 1.6rem 0;
+  }
+  .svc-card {
+    padding: 1.15rem 1.3rem;
+    border-radius: 1rem;
+    background: rgba(35, 35, 64, 0.4);
+    border: 1px solid rgba(139, 91, 189, 0.2);
+    transition: border-color 0.3s, transform 0.3s var(--ease-out-brand);
+  }
+  .svc-card:hover {
+    border-color: rgba(139, 91, 189, 0.45);
+    transform: translateY(-4px);
+  }
+  .svc-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 0.9rem;
+  }
+  .svc-card-ic {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 0.65rem;
+    color: #fff;
+    background: var(--color-purple-500);
+  }
+  .svc-card-term {
+    font-size: 1.1rem;
+    color: #fff;
+    margin: 0;
+  }
+  .svc-card-text {
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.65;
+    font-size: 0.95rem;
+    margin: 0;
+  }
+  @media (min-width: 760px) {
+    .svc-cards {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 980px) {
+    .svc-cards {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    /* bento: the longest card is a tall feature in the right column */
+    .svc-cards.bento {
+      grid-auto-flow: row dense;
+    }
+    .svc-cards.bento.n3 {
+      grid-template-columns: var(--svc-card-grid, 1fr 1fr);
+    }
+    .svc-cards.bento .svc-card.is-tall {
+      grid-column: -2 / -1;
+      grid-row: span 2;
+    }
+    .svc-cards.bento.n4 .svc-card:last-child:not(.is-tall) {
+      grid-column: 1 / 3;
+    }
+  }
+
+  /* ===== bento tiles (no icon - an image can be dropped in later) ===== */
+  .svc-bento {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 1.6rem 0;
+  }
+  .svc-bento-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background: rgba(35, 35, 64, 0.4);
+    border: 1px solid rgba(139, 91, 189, 0.2);
+    transition: border-color 0.3s, transform 0.3s var(--ease-out-brand);
+  }
+  .svc-bento-card:hover {
+    border-color: rgba(139, 91, 189, 0.45);
+    transform: translateY(-4px);
+  }
+  .svc-bento-term {
+    font-size: 1.15rem;
+    color: #fff;
+    margin: 0 0 0.6rem;
+  }
+  .svc-bento-text {
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.65;
+    font-size: 0.95rem;
+    margin: 0;
+  }
+  @media (min-width: 640px) {
+    .svc-bento.bento-3 {
+      grid-template-columns: 1.25fr 1fr;
+    }
+    /* big feature tile on the left, two stacked on the right */
+    .svc-bento.bento-3 .svc-bento-card:nth-child(1) {
+      grid-row: 1 / 3;
+    }
+  }
+  @media (min-width: 900px) {
+    .svc-bento.bento-4 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .svc-bento.bento-4 .svc-bento-card:nth-child(1),
+    .svc-bento.bento-4 .svc-bento-card:nth-child(4) {
+      grid-column: span 2;
+    }
+    .svc-bento.bento-5 {
+      grid-template-columns: repeat(6, 1fr);
+    }
+    .svc-bento.bento-5 .svc-bento-card:nth-child(1),
+    .svc-bento.bento-5 .svc-bento-card:nth-child(2),
+    .svc-bento.bento-5 .svc-bento-card:nth-child(3) {
+      grid-column: span 2;
+    }
+    .svc-bento.bento-5 .svc-bento-card:nth-child(4),
+    .svc-bento.bento-5 .svc-bento-card:nth-child(5) {
+      grid-column: span 3;
+    }
+  }
+
+  /* ===== image bento (glossy 3D artwork + hover text reveal) ===== */
+  .svc-bento.img {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 1.6rem 0;
+  }
+
+  /* ---- mobile: the bento collapses into a swipeable, snapping carousel ---- */
+  @media (max-width: 767px) {
+    .svc-bento.img {
+      display: flex;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+      gap: 0.85rem;
+      /* room for the cards' hover lift + shadow */
+      padding: 0.25rem 0;
+    }
+    .svc-bento.img::-webkit-scrollbar {
+      display: none;
+    }
+    .svc-bento.img .bento-ic {
+      flex: 0 0 86%;
+      scroll-snap-align: center;
+    }
+    /* the logo tile carries no content of its own - drop it from the carousel */
+    .svc-bento.img .bento-ic.is-logo {
+      display: none;
+    }
+  }
+  /* dots are injected by the script below, so they need global (unscoped) rules */
+  :global(.bento-dots) {
+    display: none;
+  }
+  @media (max-width: 767px) {
+    :global(.bento-dots) {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.4rem;
+      margin: 0.35rem 0 1.6rem;
+    }
+    :global(.bento-dot) {
+      width: 0.45rem;
+      height: 0.45rem;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.24);
+      transition: width 0.3s var(--ease-out-brand), background 0.3s var(--ease-out-brand);
+    }
+    :global(.bento-dot.is-active) {
+      width: 1.4rem;
+      background: var(--color-purple-300);
+    }
+  }
+  @media (min-width: 560px) {
+    .svc-bento.img.count-4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 640px) {
+    /* count-3 bento: a wide feature tile on top, two beneath it */
+    .svc-bento.img.count-3 {
+      grid-template-columns: 1fr 1fr;
+    }
+    .svc-bento.img.count-3 .bento-ic:nth-child(1) {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (min-width: 900px) {
+    /* count-4 bento: top row 60/40, bottom row 50/50 (gap sits nearer centre) */
+    .svc-bento.img.count-4 {
+      grid-template-columns: repeat(10, 1fr);
+    }
+    .svc-bento.img.count-4 .bento-ic:nth-child(1) {
+      grid-column: span 6;
+    }
+    .svc-bento.img.count-4 .bento-ic:nth-child(2) {
+      grid-column: span 4;
+    }
+    .svc-bento.img.count-4 .bento-ic:nth-child(3),
+    .svc-bento.img.count-4 .bento-ic:nth-child(4) {
+      grid-column: span 5;
+    }
+  }
+  /* logo6 bento: row 1 = three equal cards, row 2 = wide | narrow logo | wide */
+  @media (min-width: 560px) {
+    .svc-bento.img.logo6 {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 900px) {
+    /* masonry: 2 wide cards on top; below, two tall side cards flank a middle
+       column holding the logo (small, centred) above one more card */
+    .svc-bento.img.logo6 {
+      grid-template-columns: repeat(6, 1fr);
+    }
+    /* row 1 - two wide cards */
+    .svc-bento.img.logo6 .bento-ic:nth-child(1) {
+      grid-row: 1;
+      grid-column: 1 / 4;
+    }
+    .svc-bento.img.logo6 .bento-ic:nth-child(2) {
+      grid-row: 1;
+      grid-column: 4 / 7;
+    }
+    /* left tall card */
+    .svc-bento.img.logo6 .bento-ic:nth-child(3) {
+      grid-row: 2 / 4;
+      grid-column: 1 / 3;
+    }
+    /* centred logo tile */
+    .svc-bento.img.logo6 .bento-ic:nth-child(4) {
+      grid-row: 2;
+      grid-column: 3 / 5;
+    }
+    /* card beneath the logo */
+    .svc-bento.img.logo6 .bento-ic:nth-child(5) {
+      grid-row: 3;
+      grid-column: 3 / 5;
+    }
+    /* right tall card */
+    .svc-bento.img.logo6 .bento-ic:nth-child(6) {
+      grid-row: 2 / 4;
+      grid-column: 5 / 7;
+    }
+    /* tall side cards get a larger image so they don't read as half-empty */
+    .svc-bento.img.logo6 .bento-ic:nth-child(3) .bento-ic-img,
+    .svc-bento.img.logo6 .bento-ic:nth-child(6) .bento-ic-img {
+      width: 15.5rem;
+      height: 15.5rem;
+    }
+    /* LEFT tall card: image on top, text pinned to the bottom */
+    .svc-bento.img.logo6 .bento-ic:nth-child(3) .bento-ic-img {
+      top: 2.5rem;
+    }
+    .svc-bento.img.logo6 .bento-ic:nth-child(3) .bento-ic-body {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 1.6rem 1.4rem;
+      background: linear-gradient(to top, #12101f 32%, transparent 64%);
+    }
+    /* RIGHT tall card: inverted - text on top, image at the bottom (mirror of left) */
+    /* flip the card's ambient glow to the bottom (opposite of the left card) */
+    .svc-bento.img.logo6 .bento-ic:nth-child(6) {
+      background:
+        radial-gradient(120% 80% at 50% 100%, rgba(107, 63, 160, 0.28), transparent 60%),
+        linear-gradient(0deg, #1c1636, #12101f);
+    }
+    .svc-bento.img.logo6 .bento-ic:nth-child(6) .bento-ic-glow {
+      top: auto;
+      bottom: 1.5rem;
+    }
+    .svc-bento.img.logo6 .bento-ic:nth-child(6) .bento-ic-img {
+      top: auto;
+      bottom: 2.5rem;
+    }
+    .svc-bento.img.logo6 .bento-ic:nth-child(6) .bento-ic-body {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 1.6rem 1.4rem;
+      /* same soft fade as the left card, just mirrored top-to-bottom */
+      background: linear-gradient(to bottom, #12101f 32%, transparent 64%);
+    }
+  }
+  /* the logo tile: no text, artwork centred, glow behind it */
+  .bento-ic.is-logo {
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    min-height: 12rem;
+  }
+  .bento-ic.is-logo .bento-ic-glow {
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .bento-logo-img {
+    position: relative;
+    z-index: 1;
+    width: auto;
+    max-width: 82%;
+    max-height: 12rem;
+    filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.45));
+  }
+  .bento-ic {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 1.1rem;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(107, 63, 160, 0.28), transparent 60%),
+      linear-gradient(180deg, #1c1636, #12101f);
+    border: 1px solid rgba(139, 91, 189, 0.22);
+    transition: border-color 0.4s, box-shadow 0.4s;
+  }
+  .bento-ic:hover {
+    border-color: rgba(139, 91, 189, 0.5);
+    box-shadow: 0 22px 44px -26px rgba(0, 0, 0, 0.6);
+  }
+  /* soft glow puddle behind the artwork */
+  .bento-ic-glow {
+    position: absolute;
+    top: 1.5rem;
+    left: 50%;
+    width: 12rem;
+    height: 12rem;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(139, 91, 189, 0.5), transparent 65%);
+    filter: blur(16px);
+    opacity: 0.7;
+    pointer-events: none;
+    transition: opacity 0.55s var(--ease-out-brand),
+      transform 0.55s var(--ease-out-brand);
+  }
+  /* the artwork stays fixed in place - only the text below animates */
+  .bento-ic-img {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    width: 12.5rem;
+    height: 12.5rem;
+    object-fit: contain;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 1;
+    filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.45));
+  }
+  /* the subpoena artwork is a wide row of small tiles - scale it up */
+  .bento-ic-img[src$='subpoena.webp'] {
+    width: 15.5rem;
+  }
+  /* text sits below the fixed artwork zone and shows in full (static) */
+  .bento-ic-body {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    padding: 13.5rem 1.4rem 1.6rem;
+    /* fixed-length veil: transparent over the whole artwork zone, solid only
+       under the text - so it never grows with the card height */
+    background: linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(10.5rem - 6px),
+      #12101f 13rem
+    );
+  }
+  .bento-ic-term {
+    font-size: 1.15rem;
+    color: #fff;
+    margin: 0 0 0.5rem;
+  }
+  .bento-ic-desc {
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.8rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+</style>
+
+<script>
+  // Mobile-only pagination dots for the image bento carousels. Dots are derived
+  // from the cards that are actually visible, so the hidden logo tile in the
+  // `logo6` bento is skipped without special-casing it here.
+  const MOBILE = window.matchMedia('(max-width: 767px)');
+
+  document.querySelectorAll<HTMLElement>('.svc-bento.img').forEach((rail) => {
+    const dots = document.createElement('div');
+    dots.className = 'bento-dots';
+    dots.setAttribute('role', 'tablist');
+    dots.setAttribute('aria-label', 'Carousel pagination');
+    rail.after(dots);
+
+    const cards = () =>
+      (Array.from(rail.children) as HTMLElement[]).filter((c) => c.offsetParent !== null);
+
+    const sync = () => {
+      const list = cards();
+      const buttons = Array.from(dots.children) as HTMLElement[];
+      if (!buttons.length) return;
+      const mid = rail.scrollLeft + rail.clientWidth / 2;
+      let best = 0;
+      let bestDist = Infinity;
+      list.forEach((c, i) => {
+        const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid);
+        if (d < bestDist) {
+          bestDist = d;
+          best = i;
+        }
+      });
+      buttons.forEach((b, i) => {
+        const active = i === best;
+        b.classList.toggle('is-active', active);
+        b.setAttribute('aria-selected', String(active));
+      });
+    };
+
+    const build = () => {
+      dots.textContent = '';
+      // above the breakpoint the bento is a real grid - no carousel, no dots
+      if (!MOBILE.matches) return;
+      cards().forEach((_, i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'bento-dot';
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-label', `Show card ${i + 1}`);
+        b.addEventListener('click', () => {
+          const c = cards()[i];
+          if (!c) return;
+          rail.scrollTo({
+            left: c.offsetLeft - (rail.clientWidth - c.offsetWidth) / 2,
+            behavior: 'smooth',
+          });
+        });
+        dots.appendChild(b);
+      });
+      sync();
+    };
+
+    rail.addEventListener('scroll', sync, { passive: true });
+    MOBILE.addEventListener('change', build);
+    window.addEventListener('resize', sync);
+    build();
+  });
+</script>

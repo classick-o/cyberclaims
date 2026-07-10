@@ -3,7 +3,7 @@
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
 import { SERVICES, CONTACT } from '../data/site';
-import { link } from '../lib/paths';
+import { link, serviceUrl } from '../lib/paths';
 
 const quickLinks = [
   { label: 'About Us', href: '/about-us/' },
@@ -39,7 +39,7 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
       <div class="footer-col">
         <h4 class="footer-h">Services</h4>
         <ul>
-          {SERVICES.slice(0, 8).map((s) => <li><a href={link(s.href)}>{s.title}</a></li>)}
+          {SERVICES.slice(0, 8).map((s) => <li><a href={link(serviceUrl(s.href))}>{s.title}</a></li>)}
         </ul>
       </div>
 

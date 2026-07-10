@@ -308,6 +308,18 @@ import { link } from '../lib/paths';
       grid-template-columns: 1fr;
     }
   }
+  /* tighter card on phones - 1.75rem of inset eats the narrow viewport */
+  @media (max-width: 640px) {
+    .hero-form {
+      padding: 1.25rem 1.1rem 1.4rem;
+    }
+    .form-head {
+      margin-bottom: 1rem;
+    }
+    .lead-form {
+      gap: 0.7rem;
+    }
+  }
   /* center the copy on mobile & tablet (single-column layout) */
   @media (max-width: 1023px) {
     .hero-copy {
@@ -432,8 +444,8 @@ import { link } from '../lib/paths';
 
 <script>
   // Centered 3D object behind the hero (decorative). Draco GLB via three.js,
-  // subtle idle rotation + float + pointer parallax. Paused off-screen and
-  // fully static under prefers-reduced-motion. Silently no-ops if WebGL fails.
+  // continuous 360deg yaw + gentle float, no pointer tracking. Paused off-screen
+  // and fully static under prefers-reduced-motion. Silently no-ops if WebGL fails.
   import * as THREE from 'three';
   import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
   import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
@@ -494,13 +506,14 @@ import { link } from '../lib/paths';
       let raf = 0;
       let running = true;
       const clock = new THREE.Clock();
-      const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
       // base yaw so the object's broad face points at the camera
       const BASE_Y = Math.PI / 2;
+      // one full revolution every 24s
+      const SPIN = (Math.PI * 2) / 24;
       // smaller object + lifted higher on narrow (phone) viewports
       const isPhone = () => window.innerWidth < 600;
       const targetSize = () => (isPhone() ? 1.25 : 2.4);
-      const offsetY = () => (isPhone() ? 0.75 : 0);
+      const offsetY = () => (isPhone() ? 1.15 : 0);
       const applyScale = () => {
         if (core) core.scale.setScalar(targetSize() / baseMaxDim);
       };
@@ -517,7 +530,7 @@ import { link } from '../lib/paths';
         metalness: 0.35,
         roughness: 0.25,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.85,
         clearcoat: 1,
         clearcoatRoughness: 0.15,
         emissive: new THREE.Color(0x241145),
@@ -553,7 +566,7 @@ import { link } from '../lib/paths';
         box.getCenter(c);
         box.getSize(s);
         // recenter the object inside a pivot group whose origin IS the object
-        // center, then scale the GROUP — so every glow shell stays concentric
+        // center, then scale the GROUP - so every glow shell stays concentric
         model.position.sub(c);
         baseMaxDim = Math.max(s.x, s.y, s.z) || 1;
         core = new THREE.Group();
@@ -567,28 +580,14 @@ import { link } from '../lib/paths';
 
       function render() {
         const t = clock.getElapsedTime();
-        // ease pointer toward target
-        ptr.tx += (ptr.x - ptr.tx) * 0.05;
-        ptr.ty += (ptr.y - ptr.ty) * 0.05;
         if (model) {
-          // gentle left-right sway (no full spin) + pointer parallax
-          holder.rotation.y = BASE_Y + Math.sin(t * 0.45) * 0.12 + ptr.tx * 0.3;
-          holder.rotation.x = -0.04 + ptr.ty * 0.18;
+          // continuous 360deg spin, plus the same gentle float as before
+          holder.rotation.y = BASE_Y + t * SPIN;
+          holder.rotation.x = -0.04;
           holder.position.y = offsetY() + Math.sin(t * 0.8) * 0.045;
         }
         renderer!.render(scene, camera);
         if (running && !reduce) raf = requestAnimationFrame(render);
-      }
-
-      if (!reduce) {
-        window.addEventListener(
-          'pointermove',
-          (e) => {
-            ptr.x = (e.clientX / window.innerWidth - 0.5) * 2;
-            ptr.y = (e.clientY / window.innerHeight - 0.5) * 2;
-          },
-          { passive: true }
-        );
       }
 
       window.addEventListener('resize', () => {

@@ -1,0 +1,351 @@
+---
+// Reusable inner-page hero (matches the homepage aesthetic, no 3D object).
+// Shows the provided image, or an icon "placeholder" so it's clear an image
+// still needs to be created/placed there.
+import Icon from './Icon.astro';
+import { link } from '../lib/paths';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  intro?: string[];
+  image?: string;
+  imageAlt?: string;
+  placeholderIcon?: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+  fixedHeight?: boolean; // opt into the shared tall-hero height + vertical centring
+  imageMaxWidth?: string; // cap the artwork; squarer images need a smaller value
+  imageMaxWidthMobile?: string; // separate cap below 1024px, where the art bleeds
+  fullHeightMobile?: boolean; // below 1024px, make the hero fill the screen
+  scrollHint?: boolean; // below 1024px, show an animated "scroll down" cue
+}
+const {
+  eyebrow,
+  title,
+  intro = [],
+  image,
+  imageAlt = '',
+  placeholderIcon = 'press',
+  ctaHref = '/start-process/',
+  ctaLabel = 'Start Process',
+  fixedHeight = false,
+  imageMaxWidth = '34rem',
+  imageMaxWidthMobile,
+  fullHeightMobile = false,
+  scrollHint = false,
+} = Astro.props;
+
+// Below 1024px a real image becomes a backdrop behind the copy. Never do this to
+// the dashed placeholder - it only reads as a stacked block.
+const bleed = Boolean(image);
+
+const imgVars = [
+  `--ph-img-max:${imageMaxWidth}`,
+  imageMaxWidthMobile ? `--ph-img-max-sm:${imageMaxWidthMobile}` : '',
+]
+  .filter(Boolean)
+  .join(';');
+---
+
+<section
+  class={`page-hero${fixedHeight ? ' is-fixed' : ''}${bleed ? ' is-bleed' : ''}${
+    bleed && fullHeightMobile ? ' is-tall' : ''
+  }`}
+>
+  <div
+    class="glow-blob ph-glow-1"
+    style="background:#6b3fa0;width:34rem;height:34rem;top:-12rem;left:-8rem;opacity:0.4;"
+  >
+  </div>
+  <div
+    class="glow-blob ph-glow-2"
+    style="background:#8b5bbd;width:26rem;height:26rem;bottom:-10rem;right:-6rem;opacity:0.3;"
+  >
+  </div>
+
+  <div class="wrap ph-grid">
+    <div class="ph-copy" data-reveal>
+      <h1 class="h-display ph-title">{title}</h1>
+      {intro.map((p) => <p class="ph-intro">{p}</p>)}
+      <div class="ph-cta">
+        <a href={link(ctaHref)} class="btn">
+          {ctaLabel} <Icon name="arrow" class="w-4 h-4" />
+        </a>
+      </div>
+    </div>
+
+    <div class="ph-visual" data-reveal>
+      {
+        image ? (
+          <img class="ph-img" src={link(image)} alt={imageAlt} style={imgVars} />
+        ) : (
+          <div class="ph-placeholder" role="img" aria-label="Image placeholder">
+            <span class="ph-ph-icon">
+              <Icon name={placeholderIcon} class="w-full h-full" />
+            </span>
+            <span class="ph-ph-label">Image placeholder</span>
+          </div>
+        )
+      }
+    </div>
+  </div>
+
+  {
+    scrollHint && (
+      <div class="ph-scroll" aria-hidden="true">
+        <span class="ph-mouse">
+          <span class="ph-wheel" />
+        </span>
+        <svg
+          class="ph-chev"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </div>
+    )
+  }
+</section>
+
+<style>
+  .page-hero {
+    position: relative;
+    padding: 8.5rem 0 3.5rem;
+    background: var(--gradient-depth);
+    overflow: hidden;
+  }
+  .ph-grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    align-items: center;
+  }
+  .ph-copy,
+  .ph-visual {
+    min-width: 0;
+  }
+  .ph-title {
+    margin: 1.1rem 0 1.3rem;
+  }
+  .ph-intro {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+    max-width: 46ch;
+  }
+  .ph-cta {
+    margin-top: 1.75rem;
+  }
+
+  /* image */
+  .ph-img {
+    display: block;
+    width: 100%;
+    max-width: var(--ph-img-max, 34rem);
+    height: auto;
+    margin-inline: auto;
+  }
+  /* placeholder frame (shown where a real image still needs to be added) */
+  .ph-placeholder {
+    display: grid;
+    place-items: center;
+    gap: 0.6rem;
+    aspect-ratio: 4 / 3;
+    max-width: 30rem;
+    margin-inline: auto;
+    border: 1.5px dashed rgba(139, 91, 189, 0.5);
+    border-radius: 1rem;
+    background: rgba(139, 91, 189, 0.06);
+    color: var(--color-purple-300);
+  }
+  .ph-ph-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    opacity: 0.8;
+  }
+  .ph-ph-label {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* ---- animated "scroll down" cue (mobile only, see the media query below) ---- */
+  .ph-scroll {
+    display: none;
+    position: absolute;
+    left: 50%;
+    bottom: 1.6rem;
+    transform: translateX(-50%);
+    /* above the is-bleed scrim (z-index 1) */
+    z-index: 3;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    pointer-events: none;
+  }
+  .ph-mouse {
+    position: relative;
+    width: 1.55rem;
+    height: 2.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-radius: 1rem;
+  }
+  /* the wheel dot falls, fades, and repeats */
+  .ph-wheel {
+    position: absolute;
+    top: 0.42rem;
+    left: 50%;
+    width: 0.26rem;
+    height: 0.55rem;
+    border-radius: 2px;
+    background: var(--color-purple-200);
+    transform: translateX(-50%);
+    animation: ph-wheel 1.9s var(--ease-out-brand) infinite;
+  }
+  @keyframes ph-wheel {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, 0);
+    }
+    25% {
+      opacity: 1;
+    }
+    75% {
+      opacity: 0;
+      transform: translate(-50%, 0.85rem);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, 0.85rem);
+    }
+  }
+  .ph-chev {
+    color: rgba(255, 255, 255, 0.5);
+    animation: ph-chev 1.9s var(--ease-out-brand) infinite;
+  }
+  @keyframes ph-chev {
+    0%,
+    100% {
+      transform: translateY(-2px);
+      opacity: 0.35;
+    }
+    50% {
+      transform: translateY(2px);
+      opacity: 0.9;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ph-wheel,
+    .ph-chev {
+      animation: none;
+    }
+  }
+
+  /* center copy on mobile & tablet */
+  @media (max-width: 1023px) {
+    .ph-scroll {
+      display: flex;
+    }
+    .ph-copy {
+      text-align: center;
+    }
+    .ph-intro {
+      max-width: 54ch;
+      margin-inline: auto;
+    }
+    .ph-cta {
+      display: flex;
+      justify-content: center;
+    }
+
+    /* `is-bleed`: instead of stacking image-then-copy, the artwork fills the hero
+       and the copy sits on top of it, over a scrim that keeps the text legible */
+    .page-hero.is-bleed {
+      display: grid;
+      align-content: center;
+      /* tall enough to breathe without taking the whole screen (that's `is-tall`) */
+      min-height: 46rem;
+    }
+    /* only the service detail heroes run the full screen height */
+    .page-hero.is-bleed.is-tall {
+      min-height: 100vh;
+      /* svh so mobile browser chrome doesn't push the hero taller than the screen */
+      min-height: 100svh;
+    }
+    .page-hero.is-bleed .ph-grid {
+      /* drop the base `position:relative; z-index:2` so .ph-visual anchors to
+         .page-hero instead of the grid - that's what lets the artwork and scrim
+         cover the hero edge to edge, past the wrap's gutters and the section's
+         padding. Stacking is handled per-child below. */
+      position: static;
+      z-index: auto;
+      /* the section supplies the height now */
+      min-height: 0;
+      gap: 0;
+      align-content: center;
+    }
+    .page-hero.is-bleed .ph-visual {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      display: grid;
+      place-items: center;
+    }
+    .page-hero.is-bleed .ph-img {
+      width: 100%;
+      /* replace the desktop --ph-img-max cap with the mobile one (default: none,
+         i.e. the artwork spans the hero's full width) */
+      max-width: var(--ph-img-max-sm, none);
+      height: 100%;
+      object-fit: contain;
+      /* sit the artwork high in the hero rather than centred in it */
+      object-position: center 18%;
+    }
+    /* the scrim covers the whole hero, not just the image box */
+    .page-hero.is-bleed::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(16, 16, 32, 0.4) 0%,
+        rgba(16, 16, 32, 0.58) 45%,
+        rgba(16, 16, 32, 0.72) 100%
+      );
+    }
+    .page-hero.is-bleed .ph-copy {
+      position: relative;
+      z-index: 2;
+    }
+  }
+  @media (min-width: 1024px) {
+    .page-hero {
+      padding: 9.5rem 0 4.5rem;
+    }
+    .ph-grid {
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 4rem;
+    }
+    /* opted-in heroes all get the same height, content vertically centred */
+    .page-hero.is-fixed {
+      min-height: 39rem;
+      padding: 5.25rem 0 2.5rem;
+      display: grid;
+      align-content: center;
+    }
+  }
+</style>

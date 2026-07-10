@@ -1,0 +1,128 @@
+---
+// Site-wide fraud warning (present on every page of the live site, above the footer).
+import { CONTACT } from '../data/site';
+import { link } from '../lib/paths';
+---
+
+<aside class="imp" role="note">
+  <div class="wrap">
+    <div class="imp-card" data-reveal>
+      <div class="imp-art">
+        <span class="imp-glow" aria-hidden="true"></span>
+        <img
+          class="imp-img"
+          src={link('/notice/beware.webp')}
+          alt=""
+          aria-hidden="true"
+          width="220"
+          height="220"
+          loading="lazy"
+        />
+      </div>
+      <div class="imp-text">
+        <h3 class="imp-title">Beware of Impersonators!</h3>
+        <p>
+          We have been alerted that individuals are impersonating CyberClaims representatives
+          to deceive victims. Scammers may call, pretending to be us, and direct you to our site.
+        </p>
+        <p>
+          <strong>All emails, contracts, and payment requests will come strictly from
+            @cyberclaims.net.</strong>
+        </p>
+        <p>
+          If you’re unsure, verify with us at
+          <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>. Stay vigilant and stay safe.
+        </p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<style>
+  .imp {
+    background: var(--color-navy-deep);
+    padding: 2rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .imp-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+    padding: 1.75rem 2rem;
+    border-radius: 1.1rem;
+    overflow: hidden;
+    background:
+      radial-gradient(80% 130% at 0% 50%, rgba(240, 170, 60, 0.16), transparent 60%),
+      linear-gradient(180deg, rgba(240, 170, 60, 0.08), rgba(240, 170, 60, 0.03));
+    border: 1px solid rgba(240, 170, 60, 0.28);
+  }
+
+  /* artwork */
+  .imp-art {
+    position: relative;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 8.5rem;
+    height: 8.5rem;
+  }
+  .imp-glow {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 8rem;
+    height: 8rem;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(240, 170, 60, 0.55), transparent 65%);
+    filter: blur(16px);
+    pointer-events: none;
+  }
+  .imp-img {
+    position: relative;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 12px 22px rgba(120, 70, 10, 0.5));
+  }
+
+  /* text */
+  .imp-text {
+    min-width: 0;
+  }
+  .imp-title {
+    font-size: 1.2rem;
+    color: #f4c47a;
+    margin: 0 0 0.55rem;
+  }
+  .imp-text p {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.6;
+    font-size: 0.92rem;
+    margin: 0 0 0.5rem;
+  }
+  .imp-text p:last-child {
+    margin-bottom: 0;
+  }
+  .imp-text strong {
+    color: #fff;
+    font-weight: 600;
+  }
+  .imp-text a {
+    color: #f4c47a;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  @media (max-width: 640px) {
+    .imp-card {
+      flex-direction: column;
+      text-align: center;
+      gap: 1rem;
+      padding: 1.75rem 1.4rem;
+    }
+    .imp-art {
+      width: 7rem;
+      height: 7rem;
+    }
+  }
+</style>

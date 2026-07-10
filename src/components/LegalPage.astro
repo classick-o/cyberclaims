@@ -1,0 +1,145 @@
+---
+// Shared layout for the footer legal pages (Cookie/Privacy/Terms/DPA).
+// Renders a slim hero + a styled prose article. Pass the body via the slot.
+import Layout from '../layouts/Layout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  effective?: string;
+}
+const { title, description, effective } = Astro.props;
+---
+
+<Layout title={`${title} - Cyberclaims`} description={description}>
+  <header class="legal-hero">
+    <div class="glow-blob" style="background:#6b3fa0;width:30rem;height:30rem;top:-12rem;left:-6rem;opacity:0.35;"></div>
+    <div class="wrap legal-hero-inner" data-reveal>
+      <h1 class="h-display legal-title">{title}</h1>
+      {effective && <p class="legal-effective">{effective}</p>}
+    </div>
+  </header>
+
+  <section class="legal">
+    <article class="wrap legal-prose" data-reveal>
+      <slot />
+    </article>
+  </section>
+</Layout>
+
+<style>
+  .legal-hero {
+    position: relative;
+    padding: 8.5rem 0 2.5rem;
+    background: var(--gradient-depth);
+    overflow: hidden;
+  }
+  .legal-hero-inner {
+    position: relative;
+    z-index: 2;
+  }
+  .legal-title {
+    margin: 0;
+  }
+  .legal-effective {
+    margin: 1rem 0 0;
+    color: var(--color-purple-300);
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+  }
+  @media (min-width: 1024px) {
+    .legal-hero {
+      padding: 9.5rem 0 3rem;
+    }
+  }
+
+  .legal {
+    background: var(--color-navy);
+    padding: 2.5rem 0 4rem;
+  }
+  .legal-prose {
+    max-width: 52rem;
+    color: rgba(255, 255, 255, 0.74);
+    line-height: 1.75;
+  }
+  /* headings */
+  .legal-prose :global(h2) {
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+    color: #fff;
+    margin: 2.6rem 0 0.9rem;
+    line-height: 1.2;
+  }
+  .legal-prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .legal-prose :global(h3) {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    color: #fff;
+    margin: 1.8rem 0 0.6rem;
+  }
+  .legal-prose :global(p) {
+    margin: 0 0 1rem;
+  }
+  .legal-prose :global(strong) {
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 600;
+  }
+  .legal-prose :global(a) {
+    color: var(--color-purple-300);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .legal-prose :global(ul),
+  .legal-prose :global(ol) {
+    margin: 0 0 1.2rem;
+    padding-left: 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .legal-prose :global(li) {
+    line-height: 1.65;
+  }
+  .legal-prose :global(li::marker) {
+    color: var(--color-purple-400);
+  }
+  /* section divider */
+  .legal-prose :global(hr) {
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 2.4rem 0;
+  }
+  /* tables (used by the DPA sub-processor annex) */
+  .legal-prose :global(.legal-table-wrap) {
+    overflow-x: auto;
+    margin: 0 0 1.4rem;
+  }
+  .legal-prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    min-width: 34rem;
+  }
+  .legal-prose :global(th),
+  .legal-prose :global(td) {
+    text-align: left;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    vertical-align: top;
+  }
+  .legal-prose :global(th) {
+    background: rgba(139, 91, 189, 0.14);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  .legal-prose :global(.legal-note) {
+    padding: 1.1rem 1.3rem;
+    border-radius: 0.8rem;
+    background: rgba(139, 91, 189, 0.08);
+    border: 1px solid rgba(139, 91, 189, 0.22);
+    margin: 0 0 1.4rem;
+  }
+</style>

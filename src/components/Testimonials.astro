@@ -1,5 +1,6 @@
 ---
 // Testimonials - two auto-scrolling marquee rows (pause on hover). Frosted cards.
+import ArcGlow from './ArcGlow.astro';
 import { TESTIMONIALS } from '../data/site';
 
 const initials = (n: string) =>
@@ -13,29 +14,7 @@ const rowB = TESTIMONIALS.filter((_, i) => i % 2 === 1);
 
 <section class="testi">
   <!-- Ambient background: top glow + concentric arcs + sparkles -->
-  <div class="testi-bg" aria-hidden="true">
-    <div class="testi-glow"></div>
-    <svg class="testi-arcs" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMin slice">
-      <g fill="none" stroke="rgba(168,128,209,0.16)" stroke-width="1">
-        <circle cx="600" cy="-40" r="220" />
-        <circle cx="600" cy="-40" r="360" />
-        <circle cx="600" cy="-40" r="500" />
-        <circle cx="600" cy="-40" r="650" />
-      </g>
-    </svg>
-    <div class="testi-stars">
-      <span class="star" style="top:10%;left:14%;--s:11px;--d:0s"></span>
-      <span class="star" style="top:26%;left:32%;--s:8px;--d:1.2s"></span>
-      <span class="star" style="top:18%;left:72%;--s:13px;--d:0.6s"></span>
-      <span class="star" style="top:38%;left:86%;--s:9px;--d:2s"></span>
-      <span class="star" style="top:12%;left:52%;--s:10px;--d:1.6s"></span>
-      <span class="star" style="top:52%;left:60%;--s:12px;--d:0.3s"></span>
-      <span class="star" style="top:44%;left:8%;--s:9px;--d:2.4s"></span>
-      <span class="star" style="top:64%;left:78%;--s:10px;--d:1s"></span>
-      <span class="star" style="top:34%;left:46%;--s:8px;--d:0.9s"></span>
-      <span class="star" style="top:8%;left:90%;--s:12px;--d:1.8s"></span>
-    </div>
-  </div>
+  <ArcGlow />
 
   <div class="wrap testi-head" data-reveal>
     <h2 class="h-section">Trusted by people we’ve <span class="accent">helped recover</span></h2>
@@ -77,91 +56,6 @@ const rowB = TESTIMONIALS.filter((_, i) => i % 2 === 1);
     padding: 3rem 0;
     background: var(--color-navy);
     overflow: hidden;
-  }
-
-  /* ---- ambient background ---- */
-  .testi-bg {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  /* glow originating from the TOP of the section, fading downward */
-  .testi-glow {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 130%;
-    height: 90%;
-    background: radial-gradient(
-      ellipse 55% 100% at 50% 0%,
-      rgba(139, 91, 189, 0.4),
-      rgba(107, 63, 160, 0.14) 38%,
-      transparent 68%
-    );
-  }
-  .testi-arcs {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 70%;
-    opacity: 0.8;
-    /* fade the arcs out toward the bottom so the strokes don't end in a hard cut */
-    -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 92%);
-    mask-image: linear-gradient(to bottom, #000 45%, transparent 92%);
-  }
-  .testi-stars {
-    position: absolute;
-    inset: 0;
-  }
-  /* 4-point sparkle */
-  .star {
-    position: absolute;
-    width: var(--s, 10px);
-    height: var(--s, 10px);
-    animation: twinkle 3.2s ease-in-out infinite;
-    animation-delay: var(--d, 0s);
-  }
-  .star::before,
-  .star::after {
-    content: '';
-    position: absolute;
-    background: rgba(206, 182, 230, 0.85);
-    border-radius: 2px;
-  }
-  .star::before {
-    left: 50%;
-    top: 0;
-    width: 1.5px;
-    height: 100%;
-    transform: translateX(-50%);
-  }
-  .star::after {
-    top: 50%;
-    left: 0;
-    height: 1.5px;
-    width: 100%;
-    transform: translateY(-50%);
-  }
-  @keyframes twinkle {
-    0%,
-    100% {
-      opacity: 0.2;
-      transform: scale(0.7);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .star {
-      animation: none;
-      opacity: 0.7;
-    }
   }
 
   .testi-head {

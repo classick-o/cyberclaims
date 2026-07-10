@@ -116,3 +116,47 @@ import { SUSTAINABILITY } from '../data/site';
     }
   }
 </style>
+
+<script>
+  // Animated number counters. Lives here rather than on a page, so the figures
+  // count up wherever this section is rendered (homepage, URL checker, ...).
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const runCounter = (el: HTMLElement) => {
+    const raw = el.dataset.target || '0';
+    const target = Number(raw);
+    // preserve the target's decimal places (e.g. 57.45 stays 57.45, not 57)
+    const dec = (raw.split('.')[1] || '').length;
+    const fmt = (n: number) =>
+      n.toLocaleString('en-US', {
+        minimumFractionDigits: dec,
+        maximumFractionDigits: dec,
+      });
+    if (reduce) {
+      el.textContent = fmt(target);
+      return;
+    }
+    const dur = 1600;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      el.textContent = fmt(target * eased);
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+
+  const cio = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          runCounter(e.target as HTMLElement);
+          cio.unobserve(e.target);
+        }
+      });
+    },
+    { threshold: 0.5 }
+  );
+  document.querySelectorAll<HTMLElement>('.sus .counter').forEach((c) => cio.observe(c));
+</script>

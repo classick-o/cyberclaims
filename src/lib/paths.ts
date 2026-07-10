@@ -18,3 +18,11 @@ export function link(path: string): string {
   const p = path.startsWith('/') ? path : `/${path}`;
   return `${base}${p}`;
 }
+
+// Service detail pages live under /services/<slug>/. The service `href` in the
+// data (e.g. '/cryptocurrency-tracing/') stays the internal key for image/content
+// maps; this turns it into the actual page URL.
+export function serviceUrl(href: string): string {
+  return `/services${href}`;
+}
+

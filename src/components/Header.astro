@@ -3,7 +3,7 @@
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
 import { SERVICES, URL_CHECKER } from '../data/site';
-import { link } from '../lib/paths';
+import { link, serviceUrl } from '../lib/paths';
 ---
 
 <header id="site-header" class="site-header" data-at-top="true">
@@ -15,16 +15,16 @@ import { link } from '../lib/paths';
       <a href={link('/about-us/')} class="nav-link">About Us</a>
 
       <div class="nav-has-mega">
-        <button class="nav-link nav-trigger" aria-expanded="false" aria-haspopup="true">
+        <a href={link('/services/')} class="nav-link nav-trigger" aria-haspopup="true">
           Our Services
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6" /></svg>
-        </button>
+        </a>
 
         <div class="mega" role="menu">
           <div class="mega-grid">
             {
               SERVICES.map((s) => (
-                <a href={link(s.href)} class="mega-item" role="menuitem">
+                <a href={link(serviceUrl(s.href))} class="mega-item" role="menuitem">
                   <span class="mega-icon">
                     <Icon name={s.icon} class="w-4 h-4" />
                   </span>
@@ -58,10 +58,26 @@ import { link } from '../lib/paths';
     <nav class="mobile-nav" aria-label="Mobile">
       <a href={link('/')}>Home</a>
       <a href={link('/about-us/')}>About Us</a>
-      <details>
-        <summary>Our Services</summary>
+      <details class="mobile-details">
+        <summary>
+          <span>Our Services</span>
+          <svg
+            class="mobile-chevron"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m6 9 6 6 6-6"></path>
+          </svg>
+        </summary>
         <div class="mobile-services">
-          {SERVICES.map((s) => <a href={link(s.href)}>{s.title}</a>)}
+          {SERVICES.map((s) => <a href={link(serviceUrl(s.href))}>{s.title}</a>)}
           <a href={link(URL_CHECKER.href)}>{URL_CHECKER.title}</a>
         </div>
       </details>
@@ -285,6 +301,10 @@ import { link } from '../lib/paths';
   }
   .mobile-drawer.open {
     max-height: 90vh;
+    /* the page can't scroll while the menu is open, so let the menu itself
+       scroll if its links overflow a short viewport */
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .mobile-nav {
     display: flex;
@@ -301,6 +321,30 @@ import { link } from '../lib/paths';
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     cursor: pointer;
   }
+  /* drop the native disclosure triangle (both the modern and the WebKit marker) */
+  .mobile-nav summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    list-style: none;
+  }
+  .mobile-nav summary::-webkit-details-marker {
+    display: none;
+  }
+  .mobile-chevron {
+    flex-shrink: 0;
+    color: var(--color-purple-300);
+    transition: transform 0.3s var(--ease-out-brand);
+  }
+  .mobile-details[open] .mobile-chevron {
+    transform: rotate(180deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-chevron {
+      transition: none;
+    }
+  }
   .mobile-services {
     display: flex;
     flex-direction: column;
@@ -315,6 +359,30 @@ import { link } from '../lib/paths';
   .mobile-cta {
     margin-top: 1rem;
     justify-content: center;
+  }
+
+  /* ---- page state while the mobile drawer is open ---- */
+  /* Freeze the page behind the menu. This must sit on <html>, not <body>: global
+     css sets `html { overflow-x: hidden }`, so the viewport's scrollport is the
+     root element and body's overflow no longer propagates up to it. */
+  :global(html.nav-open) {
+    overflow: hidden;
+  }
+  /* Blur + disable everything except the header itself. Targeting body's other
+     children (main, the notice band, the footer) rather than a wrapper keeps the
+     header - and the drawer inside it - perfectly sharp. */
+  :global(body > *:not(#site-header)) {
+    transition: filter 0.35s var(--ease-out-brand);
+  }
+  :global(body.nav-open > *:not(#site-header)) {
+    filter: blur(6px);
+    pointer-events: none;
+    user-select: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(body > *:not(#site-header)) {
+      transition: none;
+    }
   }
 
   @media (min-width: 1024px) {
@@ -349,14 +417,19 @@ import { link } from '../lib/paths';
 
   const burger = document.getElementById('burger')!;
   const drawer = document.getElementById('mobile-drawer')!;
-  burger.addEventListener('click', () => {
-    const open = drawer.classList.toggle('open');
+
+  // `nav-open` blurs the page (on <body>) and freezes its scroll (on <html>)
+  const setOpen = (open: boolean) => {
+    drawer.classList.toggle('open', open);
+    document.body.classList.toggle('nav-open', open);
+    document.documentElement.classList.toggle('nav-open', open);
     burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  };
+
+  burger.addEventListener('click', () => setOpen(!drawer.classList.contains('open')));
+  drawer.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) setOpen(false);
   });
-  drawer.querySelectorAll('a').forEach((a) =>
-    a.addEventListener('click', () => {
-      drawer.classList.remove('open');
-      burger.setAttribute('aria-expanded', 'false');
-    })
-  );
 </script>

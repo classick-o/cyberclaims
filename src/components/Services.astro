@@ -3,7 +3,7 @@
 // the right (hover / keyboard-focus to switch). Collapses to tappable cards on mobile.
 import Icon from './Icon.astro';
 import { SERVICES } from '../data/site';
-import { link } from '../lib/paths';
+import { link, serviceUrl } from '../lib/paths';
 
 // per-service preview visual (falls back to the default tiles image)
 const VISUALS: Record<string, string> = {
@@ -32,7 +32,7 @@ const visualOf = (href: string): string => VISUALS[href] ?? '/service-visual.web
         SERVICES.map((s, i) => (
           <li>
             <a
-              href={link(s.href)}
+              href={link(serviceUrl(s.href))}
               class={`sc-item${i === 0 ? ' is-active' : ''}`}
               style={`--accent:${s.accent}`}
             >
@@ -68,7 +68,7 @@ const visualOf = (href: string): string => VISUALS[href] ?? '/service-visual.web
             <div class="sc-panel-body">
               <h3 class="sc-panel-title">{s.title}</h3>
               <p class="sc-panel-blurb">{s.blurb}</p>
-              <a href={link(s.href)} class="sc-more">Explore service <Icon name="arrow" class="w-4 h-4" /></a>
+              <a href={link(serviceUrl(s.href))} class="sc-more">Explore service <Icon name="arrow" class="w-4 h-4" /></a>
             </div>
           </div>
         ))
