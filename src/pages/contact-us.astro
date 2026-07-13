@@ -4,6 +4,7 @@ import PageHero from '../components/PageHero.astro';
 import Aurora from '../components/Aurora.astro';
 import CtaStrip from '../components/CtaStrip.astro';
 import Icon from '../components/Icon.astro';
+import Turnstile from '../components/Turnstile.astro';
 import { CONTACT } from '../data/site';
 import { link } from '../lib/paths';
 
@@ -91,9 +92,11 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
     <div class="wrap">
       <div class="contact-form-wrap" data-reveal>
         <div class="glass contact-form">
-          <h2 class="cf-title">Send us a message</h2>
-          <p class="cf-note">Free case review · 48-hour response</p>
-          <form class="lead-form" method="post" action="/api/lead" novalidate>
+          <div id="contactFormHead">
+            <h2 class="cf-title">Send us a message</h2>
+            <p class="cf-note">Free case review · 48-hour response</p>
+          </div>
+          <form class="lead-form" id="contactForm" method="post" action="/api/lead" novalidate>
             <div class="field">
               <input type="text" name="full_name" required placeholder=" " />
               <label>Full Name</label>
@@ -116,11 +119,30 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
               <textarea name="message" rows="4" required placeholder=" "></textarea>
               <label>Message</label>
             </div>
+            <input
+              class="hp"
+              type="text"
+              name="_honey"
+              tabindex="-1"
+              autocomplete="off"
+              aria-hidden="true"
+            />
+            <Turnstile />
+            <p class="form-status" data-form-status role="alert" hidden></p>
             <button type="submit" class="btn cf-submit">Start Process</button>
             <p class="cf-legal">
               Protected by CAPTCHA. Your details are confidential and reviewed by certified experts.
             </p>
           </form>
+
+          <div class="cf-success" id="contactSuccess" hidden>
+            <span class="cf-success-icon"><Icon name="check" class="w-full h-full" /></span>
+            <h2 class="cf-title">We have your details</h2>
+            <p class="cf-success-p">
+              A certified investigator will review your case and respond within 48 hours.
+              Everything you sent us is confidential.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -326,6 +348,33 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
     color: rgba(255, 255, 255, 0.4);
     text-align: center;
   }
+
+  /* Replaces the form in place after a successful submit. */
+  .cf-success {
+    text-align: center;
+    padding: 1.5rem 0.5rem 1rem;
+  }
+  .cf-success-icon {
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    margin: 0 auto 1.1rem;
+    padding: 0.8rem;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--color-purple-500);
+    box-shadow: var(--glow-purple);
+  }
+  .cf-success-p {
+    margin-top: 0.7rem;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 40ch;
+    margin-inline: auto;
+  }
+
   @media (max-width: 520px) {
     .field-row {
       grid-template-columns: 1fr;
@@ -344,3 +393,20 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
     }
   }
 </style>
+
+<script>
+  import { initLeadForm } from '../lib/lead-form';
+
+  const form = document.getElementById('contactForm') as HTMLFormElement | null;
+  const head = document.getElementById('contactFormHead');
+  const success = document.getElementById('contactSuccess');
+
+  if (form && head && success) {
+    initLeadForm(form, 'contact', () => {
+      form.hidden = true;
+      head.hidden = true;
+      success.hidden = false;
+      success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+</script>

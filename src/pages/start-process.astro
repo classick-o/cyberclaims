@@ -4,6 +4,7 @@ import PageHero from '../components/PageHero.astro';
 import Aurora from '../components/Aurora.astro';
 import CtaStrip from '../components/CtaStrip.astro';
 import Icon from '../components/Icon.astro';
+import Turnstile from '../components/Turnstile.astro';
 
 const amounts = [
   '1,000 - 5,000',
@@ -56,7 +57,7 @@ const steps = [
         }
       </ol>
 
-      <form class="glass sp-form" id="spForm" novalidate>
+      <form class="glass sp-form" id="spForm" method="post" action="/api/lead" novalidate>
         <!-- Step 1 -->
         <div class="sp-panel is-active" data-step="1">
           <h2 class="sp-h">Contact details</h2>
@@ -127,7 +128,18 @@ const steps = [
             Almost there! Please review all the information and click “Submit” to send off your
             complaint and receive a response from us within 24-72 business hours.
           </p>
+          <Turnstile />
         </div>
+
+        <input
+          class="hp"
+          type="text"
+          name="_honey"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+        />
+        <p class="form-status sp-status" data-form-status role="alert" hidden></p>
 
         <div class="sp-nav">
           <button type="button" class="btn btn-ghost sp-back" hidden>Back</button>
@@ -384,6 +396,9 @@ const steps = [
   .sp-submit {
     margin-left: auto;
   }
+  .sp-status {
+    margin-top: 1.5rem;
+  }
   .sp-legal {
     margin-top: 1rem;
     font-size: 0.72rem;
@@ -449,6 +464,8 @@ const steps = [
 </style>
 
 <script>
+  import { initLeadForm } from '../lib/lead-form';
+
   const form = document.getElementById('spForm') as HTMLFormElement | null;
   const success = document.getElementById('spSuccess');
   if (form && success) {
@@ -494,13 +511,11 @@ const steps = [
     });
     back.addEventListener('click', () => show(step - 1));
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
-      // no backend yet - just acknowledge locally
+    // Until now this form called preventDefault() and revealed the success panel
+    // without sending anything anywhere — telling fraud victims their complaint was
+    // filed while dropping every field on the floor. It now posts to /api/lead, and
+    // the panel is only shown once the API confirms the lead was stored.
+    initLeadForm(form, 'start_process', () => {
       form.hidden = true;
       document.querySelector<HTMLElement>('.sp-steps')?.setAttribute('hidden', '');
       success.hidden = false;

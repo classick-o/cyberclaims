@@ -1,0 +1,65 @@
+// One process: Express owns /api, Astro renders everything else.
+//
+// This is why the forms can keep posting to the relative /api/lead they already have
+// in their markup — no CORS, no cross-domain URL hardcoded in a component (TBSBV has
+// `https://www.app.tbsbv.com/api/leads` written into Contact.astro), and later the
+// admin's session cookie is same-origin for free.
+
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import express from 'express';
+import { env } from './src/config/env.js';
+import { api } from './src/app.js';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const CLIENT_DIR = join(ROOT, 'dist', 'client');
+const SERVER_ENTRY = join(ROOT, 'dist', 'server', 'entry.mjs');
+
+const app = express();
+
+// The COUNT of proxies in front of us, never `true`: with `true`, anyone can forge
+// X-Forwarded-For and the rate limiter becomes decoration.
+app.set('trust proxy', env.TRUST_PROXY);
+app.disable('x-powered-by');
+
+app.use('/api', api);
+
+if (existsSync(CLIENT_DIR)) {
+  // Astro content-hashes everything under /_astro, so it can be cached forever.
+  app.use('/_astro', express.static(join(CLIENT_DIR, '_astro'), { maxAge: '1y', immutable: true }));
+
+  // Prerendered HTML + whatever came from public/. These keep their filenames across
+  // deploys, so they must revalidate — an immutable index.html would pin visitors to
+  // the previous release.
+  app.use(
+    express.static(CLIENT_DIR, {
+      setHeaders(res, path) {
+        res.setHeader(
+          'Cache-Control',
+          path.endsWith('.html')
+            ? 'public, max-age=0, must-revalidate'
+            : 'public, max-age=3600'
+        );
+      },
+    })
+  );
+}
+
+if (existsSync(SERVER_ENTRY)) {
+  // Astro takes what's left. Today that's nothing — every page prerenders — but this
+  // is the hook the blog will hang off once /news/* sets `prerender = false`.
+  // pathToFileURL because Node refuses a bare Windows path in a dynamic import.
+  const { handler } = await import(pathToFileURL(SERVER_ENTRY).href);
+  app.use(handler);
+} else {
+  console.warn(
+    '\nNo Astro build found in dist/ — running API-only.\n' +
+      '  npm run dev     Astro dev server on :4321, proxying /api to this process\n' +
+      '  npm run build && npm start   serve the built site from this process\n'
+  );
+}
+
+app.listen(env.PORT, () => {
+  console.log(`Cyberclaims on http://localhost:${env.PORT}  [${env.NODE_ENV}]`);
+});

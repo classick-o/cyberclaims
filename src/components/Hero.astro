@@ -2,6 +2,8 @@
 // Homepage hero (brief §4): full-bleed dark, animated particle mesh bg, headline left, lead form right.
 import { CONTACT } from '../data/site';
 import { link } from '../lib/paths';
+import Icon from './Icon.astro';
+import Turnstile from './Turnstile.astro';
 ---
 
 <section class="hero">
@@ -43,11 +45,11 @@ import { link } from '../lib/paths';
          form's backdrop-filter until the animation finished) -->
     <div class="hero-form-wrap" id="lead">
       <div class="glass hero-form">
-        <div class="form-head">
+        <div class="form-head" id="heroFormHead">
           <h2 class="form-title">Start your recovery</h2>
           <p class="form-note">Free case review · 48-hour response</p>
         </div>
-        <form class="lead-form" method="post" action="/api/lead" novalidate>
+        <form class="lead-form" id="heroForm" method="post" action="/api/lead" novalidate>
           <div class="field">
             <input type="text" name="full_name" required placeholder=" " />
             <label>Full Name</label>
@@ -76,11 +78,30 @@ import { link } from '../lib/paths';
             <textarea name="message" rows="3" required placeholder=" "></textarea>
             <label>Message</label>
           </div>
+          <input
+            class="hp"
+            type="text"
+            name="_honey"
+            tabindex="-1"
+            autocomplete="off"
+            aria-hidden="true"
+          />
+          <Turnstile />
+          <p class="form-status" data-form-status role="alert" hidden></p>
           <button type="submit" class="btn form-submit">Start Process</button>
           <p class="form-legal">
             Protected by CAPTCHA. Your details are confidential and reviewed by certified experts.
           </p>
         </form>
+
+        <div class="form-success" id="heroSuccess" hidden>
+          <span class="form-success-icon"><Icon name="check" class="w-full h-full" /></span>
+          <h2 class="form-title">We have your details</h2>
+          <p class="form-success-p">
+            A certified investigator will review your case and respond within 48 hours.
+            Everything you sent us is confidential.
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -301,6 +322,31 @@ import { link } from '../lib/paths';
     line-height: 1.5;
     color: rgba(255, 255, 255, 0.4);
     text-align: center;
+  }
+
+  /* Replaces the form in place after a successful submit - no navigation, so the
+     hero (and the 3D object behind the glass) stays put. */
+  .form-success {
+    text-align: center;
+    padding: 1.5rem 0.5rem 1rem;
+  }
+  .form-success-icon {
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    margin: 0 auto 1.1rem;
+    padding: 0.8rem;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--color-purple-500);
+    box-shadow: var(--glow-purple);
+  }
+  .form-success-p {
+    margin-top: 0.7rem;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.7);
   }
 
   @media (max-width: 520px) {
@@ -615,5 +661,21 @@ import { link } from '../lib/paths';
         { threshold: 0 }
       ).observe(mount);
     }
+  }
+</script>
+
+<script>
+  import { initLeadForm } from '../lib/lead-form';
+
+  const form = document.getElementById('heroForm') as HTMLFormElement | null;
+  const head = document.getElementById('heroFormHead');
+  const success = document.getElementById('heroSuccess');
+
+  if (form && head && success) {
+    initLeadForm(form, 'hero', () => {
+      form.hidden = true;
+      head.hidden = true;
+      success.hidden = false;
+    });
   }
 </script>

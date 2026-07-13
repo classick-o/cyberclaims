@@ -1,0 +1,29 @@
+# Local MySQL for development. `npm run db:up`, then `npm run migrate`.
+#
+# Production runs on the host's MySQL (Hostinger, or whatever the VPS decision lands
+# on). The SQL is written to work on MariaDB too — no JSON_* functions — so this
+# staying on MySQL 8 doesn't paint us into a corner.
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: cyberclaims-mysql
+    restart: unless-stopped
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cyberclaims
+      MYSQL_USER: cyberclaims
+      MYSQL_PASSWORD: cyberclaims
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-uroot', '-proot']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql-data:

@@ -241,3 +241,31 @@ h1, h2, h3, h4 {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ============================================================
+   LEAD FORMS (hero, contact, start-process)
+   ============================================================ */
+
+/* Honeypot. Off-screen rather than display:none - a bot that skips hidden fields
+   still fills this one, and a screen reader never reaches it (aria-hidden +
+   tabindex=-1 on the input itself). */
+.hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Inline submit error, shown above the button. */
+.form-status {
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fca5a5;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  text-align: center;
+}

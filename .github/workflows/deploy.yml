@@ -1,9 +1,17 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages (preview only)
 
-# Builds the Astro site and publishes it to GitHub Pages on every push to main.
-# BASE_PATH is set automatically to the repo name, so the site works under
-# username.github.io/<repo>/. To move to a custom domain later: add public/CNAME
-# with the domain and delete this workflow (base falls back to '/').
+# ⚠️ PREVIEW ONLY — this is no longer the production deploy.
+#
+# The site now has a backend (Express + MySQL, see backend/). GitHub Pages is
+# static-only, so on Pages the pages render but /api/lead does not exist and the
+# forms cannot submit. This workflow survives purely as a visual preview of main
+# until the hosting decision lands; then it gets replaced by a deploy to that host.
+#
+# It also only works while every route is still prerendered. The moment /news/*
+# sets `prerender = false`, Pages can no longer serve the site at all.
+#
+# BASE_PATH is set automatically to the repo name, so the preview works under
+# username.github.io/<repo>/.
 
 on:
   push:
@@ -40,7 +48,10 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          # With an adapter configured, Astro splits its output: prerendered HTML and
+          # assets go to dist/client, the SSR entrypoint to dist/server. Pages wants
+          # only the former.
+          path: ./dist/client
 
   deploy:
     needs: build

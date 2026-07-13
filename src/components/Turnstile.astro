@@ -1,0 +1,26 @@
+---
+// Cloudflare Turnstile widget. Renders nothing when PUBLIC_TURNSTILE_SITEKEY is
+// unset, which keeps local dev frictionless — the backend skips verification in the
+// same case. Production refuses to boot without the key pair.
+//
+// Turnstile injects a hidden <input name="cf-turnstile-response"> into the enclosing
+// <form>, so the token rides along in the FormData with no extra wiring.
+const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITEKEY;
+---
+
+{
+  sitekey && (
+    <>
+      <div class="cf-turnstile" data-sitekey={sitekey} data-theme="dark" />
+      <script is:inline async defer src="https://challenges.cloudflare.com/turnstile/v0/api.js" />
+    </>
+  )
+}
+
+<style>
+  .cf-turnstile {
+    display: flex;
+    justify-content: center;
+    min-height: 65px;
+  }
+</style>
