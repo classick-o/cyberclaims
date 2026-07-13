@@ -31,15 +31,33 @@ export default function RichText({ value, onChange, onPickImage, placeholder }) 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
-      // The CSS has always styled `p.is-editor-empty::before` to show a hint — but that
+      // The CSS has always styled `.is-editor-empty::before` to show a hint — but that
       // class comes from this extension, which was never installed. The placeholder had
       // simply never appeared.
+      //
+      // showOnlyCurrent: false so the Q and A hints are visible before you click into
+      // them — they read as fields, and an empty field with no hint is just a gap. But
+      // that means EVERY empty node would get a placeholder, so anything without a
+      // useful hint returns '' and draws nothing.
       Placeholder.configure({
         includeChildren: true,
-        placeholder: ({ node }) => {
-          if (node.type.name === 'faqQuestion') return 'The question a reader would actually ask…';
-          if (node.type.name === 'heading') return 'Heading';
-          return placeholder ?? 'Write the article…';
+        showOnlyCurrent: false,
+        placeholder: ({ node, editor }) => {
+          if (node.type.name === 'faqQuestion') {
+            return 'The question a reader would actually ask…';
+          }
+
+          // Only the very first block gets the article hint. Otherwise every empty
+          // paragraph in a half-written article shouts "Write the article…" at you.
+          if (editor.state.doc.firstChild === node) return placeholder ?? 'Write the article…';
+
+          // Everything else draws nothing — except the Q&A answer, whose hint comes
+          // from CSS. The obvious way to do it here would be to resolve `pos` and check
+          // whether the parent is a faqItem, but the decoration is computed against the
+          // INCOMING doc while `editor.state.doc` is still the previous one, so that
+          // lookup resolves against the wrong tree mid-transaction. The stylesheet
+          // already knows the shape (`.faq-q + *`); let it say so.
+          return '';
         },
       }),
       Link.configure({ openOnClick: false, autolink: true }),

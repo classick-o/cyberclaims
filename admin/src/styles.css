@@ -1045,14 +1045,24 @@ input[type='color']::-webkit-color-swatch {
   color: var(--danger);
 }
 
-/* Q and A gutter markers, so the shape of the block is legible at a glance. */
+/* Q and A gutter markers.
+ *
+ * ::after, NOT ::before — and that is load-bearing. An element has exactly one ::before,
+ * and Tiptap's Placeholder extension draws into ::before too. With the markers there,
+ * the two collided: the placeholder won the cascade, inherited the marker's
+ * position:absolute and its 1.35rem width, and rendered "The question a reader would
+ * actually ask" as a one-character-wide vertical column stacked over the answer.
+ *
+ * The markers are absolutely positioned, so ::after looks identical — and it leaves
+ * ::before free for the placeholder, which genuinely needs it.
+ */
 .faq-q,
 .faq-item-body > *:not(.faq-q) {
   position: relative;
   padding-left: 1.9rem;
 }
-.faq-q::before,
-.faq-item-body > .faq-q + *::before {
+.faq-q::after,
+.faq-item-body > .faq-q + *::after {
   position: absolute;
   left: 0;
   top: 0.05rem;
@@ -1065,29 +1075,24 @@ input[type='color']::-webkit-color-swatch {
   font-size: 0.68rem;
   font-weight: 700;
 }
-.faq-q::before {
+.faq-q::after {
   content: 'Q';
   background: var(--purple-500);
   color: #fff;
 }
-.faq-item-body > .faq-q + *::before {
+.faq-item-body > .faq-q + *::after {
   content: 'A';
   background: rgba(255, 255, 255, 0.08);
   color: var(--purple-200);
 }
 .faq-q {
+  min-height: 1.6rem;
+  outline: none;
   margin-bottom: 0.5rem;
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 1rem;
   color: #fff;
-}
-.faq-mark {
-  display: none; /* the ::before marker draws it; the span stays for older node views */
-}
-.faq-q-text {
-  min-height: 1.5rem;
-  outline: none;
 }
 .faq-item-body > *:not(.faq-q) {
   color: rgba(255, 255, 255, 0.75);
@@ -1095,7 +1100,9 @@ input[type='color']::-webkit-color-swatch {
   line-height: 1.7;
 }
 
-/* Tiptap's Placeholder extension marks empty nodes; this is what draws the hint. */
+/* A real placeholder, not a label: float + height:0 takes it out of flow, so the caret
+ * sits at the start of the line rather than after the hint. Click anywhere in the field
+ * and you type straight over it; it vanishes on the first character. */
 .tt-editor .is-empty::before,
 .tt-editor .is-editor-empty::before {
   content: attr(data-placeholder);
@@ -1103,4 +1110,78 @@ input[type='color']::-webkit-color-swatch {
   height: 0;
   pointer-events: none;
   color: var(--faint);
+  font-weight: 400;
+}
+/* The question field is display-weight; its hint should not be. */
+.tt-editor .faq-q.is-empty::before {
+  font-family: var(--font-sans);
+}
+/* The answer's hint. Written here rather than in the Placeholder config because the
+   extension computes decorations against the incoming document while editor.state.doc
+   is still the previous one — so "is this paragraph inside a faqItem?" cannot be asked
+   reliably from there. The selector already knows. */
+.tt-editor .faq-item-body > .faq-q + .is-empty::before {
+  content: 'The answer.';
+}
+
+/* ── tag input (keywords) ───────────────────────────────────────────────────── */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.6rem;
+  padding: 0.4rem 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.6rem;
+  cursor: text;
+  transition: border-color 0.2s, background 0.2s;
+}
+.tags:focus-within {
+  border-color: var(--purple-400);
+  background: rgba(139, 91, 189, 0.08);
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.3rem 0.22rem 0.6rem;
+  border-radius: 999px;
+  background: var(--purple-500);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.tag-x {
+  display: grid;
+  place-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.tag-x:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+.tag-input {
+  flex: 1;
+  min-width: 7rem;
+  padding: 0.25rem 0.2rem;
+  background: transparent;
+  border: 0;
+  color: var(--mist);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+}
+.tag-input:focus {
+  outline: none;
+  background: transparent;
 }

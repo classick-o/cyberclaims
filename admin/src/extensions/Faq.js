@@ -150,16 +150,16 @@ export const FaqQuestion = Node.create({
       const dom = document.createElement('div');
       dom.className = 'faq-q';
 
-      const mark = document.createElement('span');
-      mark.className = 'faq-mark';
-      mark.textContent = 'Q';
-      mark.contentEditable = 'false';
-
-      const content = document.createElement('div');
-      content.className = 'faq-q-text';
-
-      dom.append(mark, content);
-      return { dom, contentDOM: content };
+      // contentDOM IS dom — one element, not a wrapper around an inner span.
+      //
+      // Tiptap's Placeholder decorates the node's OUTER element. With a separate inner
+      // content div, the `is-empty` class and `data-placeholder` landed on the wrapper
+      // while the text lived in the child, so the hint had nowhere sensible to draw and
+      // the CSS never matched it.
+      //
+      // The "Q" badge is a ::after pseudo-element, not a child, so it costs contentDOM
+      // nothing — ProseMirror still sees an element containing only the question text.
+      return { dom, contentDOM: dom };
     };
   },
 });

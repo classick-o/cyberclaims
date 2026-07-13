@@ -96,17 +96,19 @@ Astro.response.headers.set(
           <>
             {showFeatured && (
               <a href={link(`/news/${featured!.slug}/`, locale)} class="news-feat" data-reveal>
-                {featured!.cover_path ? (
-                  <img
-                    class="news-feat-img"
-                    src={featured!.cover_path}
-                    srcset={srcset(featured!.cover_variants)}
-                    sizes="(min-width: 1000px) 55vw, 100vw"
-                    alt={featured!.cover_alt ?? ''}
-                  />
-                ) : (
-                  <span class="news-feat-ph" aria-hidden="true" />
-                )}
+                <span class="news-feat-media">
+                  {featured!.cover_path ? (
+                    <img
+                      class="news-feat-img"
+                      src={featured!.cover_path}
+                      srcset={srcset(featured!.cover_variants)}
+                      sizes="(min-width: 1000px) 50vw, 100vw"
+                      alt={featured!.cover_alt ?? ''}
+                    />
+                  ) : (
+                    <span class="news-feat-ph" aria-hidden="true" />
+                  )}
+                </span>
                 <div class="news-feat-body">
                   {featured!.category_name && (
                     <span
@@ -297,11 +299,29 @@ Astro.response.headers.set(
     transform: translateY(-3px);
     border-color: var(--color-purple-400);
   }
+  /* The image is taken OUT of flow, inside a wrapper.
+   *
+   * As a plain grid item it set its own height from its intrinsic aspect ratio — a
+   * 1200x800 cover across half a 1280px container is 400px tall, and the grid row grew
+   * to match, dragging the (much shorter) text column out with it. The card ended up
+   * dominated by an enormous picture with the headline floating in a sea of nothing.
+   *
+   * With the image absolutely positioned, the wrapper contributes no intrinsic height:
+   * the row is sized by the TEXT, and the picture simply fills whatever that leaves,
+   * with min/max-height keeping it in a sane band. */
+  .news-feat-media {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+  }
   .news-feat-img,
   .news-feat-ph {
+    position: absolute;
+    inset: 0;
     display: block;
     width: 100%;
-    aspect-ratio: 16 / 9;
+    height: 100%;
     object-fit: cover;
   }
   .news-feat-ph {
@@ -309,7 +329,7 @@ Astro.response.headers.set(
     opacity: 0.35;
   }
   .news-feat-body {
-    padding: 1.75rem;
+    padding: 2rem 2.25rem;
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
@@ -388,13 +408,15 @@ Astro.response.headers.set(
   }
   @media (min-width: 1000px) {
     .news-feat {
-      grid-template-columns: 1.15fr 1fr;
+      grid-template-columns: 1fr 1fr;
     }
-    .news-feat-img,
-    .news-feat-ph {
-      height: 100%;
+    /* The wrapper stretches to the row (which the text now defines) and stays inside a
+       sane band — no more 900px-tall hero picture. */
+    .news-feat-media {
       aspect-ratio: auto;
-      min-height: 22rem;
+      height: 100%;
+      min-height: 17rem;
+      max-height: 22rem;
     }
     .news-grid {
       grid-template-columns: repeat(3, 1fr);

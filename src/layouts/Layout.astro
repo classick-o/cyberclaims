@@ -94,28 +94,51 @@ const path =
 <script>
   // Site-wide scroll-reveal (fade/slide-up) so [data-reveal] works on every page.
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const revealEls = document.querySelectorAll<HTMLElement>('[data-reveal]');
-  if (reduce) {
-    revealEls.forEach((el) => el.classList.add('is-visible'));
-  } else {
-    const onIntersect: IntersectionObserverCallback = (entries, observer) => {
-      entries.forEach((e, i) => {
-        if (e.isIntersecting) {
-          const el = e.target as HTMLElement;
-          el.style.transitionDelay = `${Math.min(i * 60, 240)}ms`;
-          el.classList.add('is-visible');
-          observer.unobserve(el);
-        }
-      });
-    };
-    const observe = (threshold: number) =>
-      new IntersectionObserver(onIntersect, { threshold, rootMargin: '0px 0px -8% 0px' });
-    const normal = observe(0.12);
-    // An element taller than the viewport can never show 12% of itself at once,
-    // so it would stay at opacity:0 forever. Reveal those on first contact.
-    const tall = observe(0);
-    revealEls.forEach((el) =>
-      (el.offsetHeight > window.innerHeight * 0.75 ? tall : normal).observe(el)
-    );
-  }
+
+  const onIntersect: IntersectionObserverCallback = (entries, observer) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        const el = e.target as HTMLElement;
+        el.style.transitionDelay = `${Math.min(i * 60, 240)}ms`;
+        el.classList.add('is-visible');
+        observer.unobserve(el);
+      }
+    });
+  };
+  const observe = (threshold: number) =>
+    new IntersectionObserver(onIntersect, { threshold, rootMargin: '0px 0px -8% 0px' });
+
+  const normal = observe(0.12);
+  // An element taller than the viewport can never show 12% of itself at once,
+  // so it would stay at opacity:0 forever. Reveal those on first contact.
+  const tall = observe(0);
+
+  const watch = (el: HTMLElement) => {
+    if (el.dataset.revealWatched) return;
+    el.dataset.revealWatched = '1';
+    if (reduce) {
+      el.classList.add('is-visible');
+      return;
+    }
+    (el.offsetHeight > window.innerHeight * 0.75 ? tall : normal).observe(el);
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(watch);
+
+  // Content that arrives AFTER this script has run must be picked up too.
+  //
+  // The homepage's article strip is a server island: Astro fetches it and injects it
+  // into the page once this script is long done. Everything inside it carries
+  // [data-reveal], which starts at opacity: 0 — so it was sitting in the DOM at its
+  // full height, permanently invisible, because nothing was ever watching for it.
+  // A whole section of the homepage, gone, with a 520px hole where it should have been.
+  new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (!(node instanceof HTMLElement)) continue;
+        if (node.hasAttribute('data-reveal')) watch(node);
+        node.querySelectorAll<HTMLElement>('[data-reveal]').forEach(watch);
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
 </script>

@@ -4,6 +4,7 @@ import { get, post, put } from '../api.js';
 import { LOCALES, DEFAULT_LOCALE } from '../locales.js';
 import RichText from '../components/RichText.jsx';
 import MediaPicker from '../components/MediaPicker.jsx';
+import TagInput from '../components/TagInput.jsx';
 
 const emptyTranslation = () => ({
   title: '',
@@ -262,21 +263,15 @@ export default function PostEditor() {
             </div>
             <div className="field" style={{ marginBottom: 0 }}>
               <label htmlFor="keywords">Keywords</label>
-              <input
+              <TagInput
                 id="keywords"
-                type="text"
-                value={(t.keywords ?? []).join(', ')}
-                onChange={(e) =>
-                  setT({
-                    keywords: e.target.value
-                      .split(',')
-                      .map((k) => k.trim())
-                      .filter(Boolean),
-                  })
-                }
+                value={t.keywords ?? []}
+                onChange={(keywords) => setT({ keywords })}
                 placeholder="coinbase, wallet security, self-custody"
               />
-              <div className="hint">Comma separated. Used in the article's structured data.</div>
+              <div className="hint">
+                Enter or a comma adds one. Used in the article's structured data.
+              </div>
             </div>
           </div>
         </div>
