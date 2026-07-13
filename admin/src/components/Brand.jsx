@@ -57,10 +57,4 @@ export const Icons = {
       <path d="M17 11h4M19 9v4" />
     </Svg>
   ),
-  newsletter: (
-    <Svg>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3.5 7 7.4 5.3a2 2 0 0 0 2.2 0L20.5 7" />
-    </Svg>
-  ),
 };

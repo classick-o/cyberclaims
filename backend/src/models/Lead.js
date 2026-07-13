@@ -1,4 +1,5 @@
 import { pool } from '../config/database.js';
+import { toLimit, toOffset } from '../services/pagination.js';
 
 export class Lead {
   static async create({
@@ -63,7 +64,7 @@ export class Lead {
 
     const [rows] = await pool.query(
       `SELECT * FROM leads ${clause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-      [...params, Number(limit), Number(offset)]
+      [...params, toLimit(limit), toOffset(offset)]
     );
     const [[{ total }]] = await pool.query(
       `SELECT COUNT(*) AS total FROM leads ${clause}`,

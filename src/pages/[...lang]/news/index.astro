@@ -1,6 +1,6 @@
 ---
 // /news/ — the magazine listing (brief §4): featured hero card, category tabs,
-// reading time, excerpts, newsletter strip.
+// reading time, excerpts.
 //
 // SSR, not prerendered: the articles come from the database and publishing has to be
 // instant. The queries go through an in-process cache that is dropped on any write,
@@ -11,12 +11,12 @@
 export const prerender = false;
 
 import Layout from '../../../layouts/Layout.astro';
+import PageHero from '../../../components/PageHero.astro';
 import Aurora from '../../../components/Aurora.astro';
 import CtaStrip from '../../../components/CtaStrip.astro';
-import Newsletter from '../../../components/Newsletter.astro';
-import Icon from '../../../components/Icon.astro';
+import Cover from '../../../components/Cover.astro';
 import { link } from '../../../lib/paths';
-import { Post, Category, cached, srcset, type PostCard } from '../../../lib/content';
+import { Post, Category, cached, type PostCard } from '../../../lib/content';
 import { localeFromUrl } from '../../../i18n/config';
 import { useTranslations, formatDate } from '../../../i18n';
 
@@ -25,23 +25,59 @@ const t = useTranslations(locale);
 
 const activeCategory = Astro.url.searchParams.get('category');
 
-const [featured, posts, categories] = (await Promise.all([
-  cached(`featured:${locale}`, () => Post.findFeatured(locale)),
-  cached(`posts:${locale}:${activeCategory ?? ''}`, () =>
-    Post.findPublished(locale, { categorySlug: activeCategory, limit: 30 })
+// Articles arrive fifteen at a time.
+//
+// "Load more" is a real link to ?page=N, not a button. It works with JavaScript off,
+// a crawler can walk the archive, and the reader can middle-click it — and the script
+// at the bottom then upgrades it into an append-in-place, so nobody actually navigates.
+// A button that only exists in JS would have made every article past the fifteenth
+// reachable only from the sitemap.
+const PAGE_SIZE = 15;
+const page = Math.max(1, Math.trunc(Number(Astro.url.searchParams.get('page'))) || 1);
+
+const featured = (await cached(`featured:${locale}`, () =>
+  Post.findFeatured(locale)
+)) as PostCard | null;
+
+// The featured article headlines the page, so it must not appear in the grid at all —
+// not just on page 1. Excluded from the query rather than filtered from the results,
+// so every page is a full fifteen and the offsets keep lining up.
+// Only when no filter is active, though: a filtered view is a plain list, and a hero
+// card there would be claiming "featured" about a category, not about the site.
+const showFeatured = !activeCategory && featured;
+const excludeId = showFeatured ? featured!.id : null;
+
+// One row over the page size, purely to answer "is there a next page?" without a
+// second COUNT(*) query. The extra row is dropped before rendering.
+const [batch, categories] = (await Promise.all([
+  cached(`posts:${locale}:${activeCategory ?? ''}:${page}`, () =>
+    Post.findPublished(locale, {
+      categorySlug: activeCategory,
+      excludeId,
+      limit: PAGE_SIZE + 1,
+      offset: (page - 1) * PAGE_SIZE,
+    })
   ),
   cached(`cats:${locale}`, () => Category.listWithPosts(locale)),
 ])) as [
-  PostCard | null,
   PostCard[],
   { id: number; name: string; slug: string; color: string | null; post_count: number }[],
 ];
 
-// The featured article headlines the page, so it must not appear again in the grid
-// below. Only when no filter is active, though: a filtered view is a plain list, and
-// a hero card there would be claiming "featured" about a category, not the site.
-const showFeatured = !activeCategory && featured;
-const rest = showFeatured ? posts.filter((p) => p.id !== featured!.id) : posts;
+const rest = batch.slice(0, PAGE_SIZE);
+const hasMore = batch.length > PAGE_SIZE;
+
+const pageUrl = (n: number) => {
+  const qs = new URLSearchParams();
+  if (activeCategory) qs.set('category', activeCategory);
+  if (n > 1) qs.set('page', String(n));
+  const q = qs.toString();
+  return `${link('/news/', locale)}${q ? `?${q}` : ''}`;
+};
+
+// Page 2 and beyond are the same articles a reader can already reach by pressing the
+// button — indexing them separately would compete with /news/ for the same content.
+const noindex = page > 1;
 
 // SSR + CDN. Publishing drops the in-process cache instantly, so the only staleness a
 // reader can see is whatever a CDN in front of us chooses to hold — and s-maxage
@@ -50,64 +86,68 @@ Astro.response.headers.set(
   'Cache-Control',
   'public, max-age=0, s-maxage=300, stale-while-revalidate=86400'
 );
+if (noindex) Astro.response.headers.set('X-Robots-Tag', 'noindex, follow');
 ---
 
 <Layout
   title="News - Cyberclaims"
-  description="Analysis, case notes and warnings from the Cyberclaims investigation team."
+  description="Guides, scam reviews and security research from the Cyberclaims investigation team."
   path="/news/"
   locale={locale}
 >
-  <section class="news-hero">
-    <Aurora />
-    <div class="wrap">
-      <span class="eyebrow" data-reveal>{t('news.eyebrow')}</span>
-      <h1 class="h-display news-h" data-reveal>{t('news.title')}</h1>
-      <p class="news-intro" data-reveal>{t('news.intro')}</p>
-
-      {
-        categories.length > 0 && (
-          <nav class="news-tabs" aria-label="Categories" data-reveal>
-            <a href={link('/news/', locale)} class={`news-tab${!activeCategory ? ' is-active' : ''}`}>
-              {t('news.allCategories')}
+  {/* The same hero every other page has — artwork, intro and the Start Process button.
+      Rewriting this page for SSR replaced it with a bare title, which quietly cost /news/
+      its picture, its copy and its only call to action. The category filters slot in
+      underneath, where they were. */}
+  <PageHero
+    title={t('news.title')}
+    intro={[t('news.intro')]}
+    image="/news-hero.webp"
+    imageAlt={t('news.imageAlt')}
+    imageWidth={1100}
+    imageHeight={1023}
+    imageMaxWidth="24rem"
+    imageMaxWidthMobile="17rem"
+  >
+    {
+      categories.length > 0 && (
+        <nav class="news-tabs" aria-label="Categories">
+          <a href={link('/news/', locale)} class={`news-tab${!activeCategory ? ' is-active' : ''}`}>
+            {t('news.allCategories')}
+          </a>
+          {categories.map((c) => (
+            <a
+              href={`${link('/news/', locale)}?category=${c.slug}`}
+              class={`news-tab${activeCategory === c.slug ? ' is-active' : ''}`}
+              style={c.color ? `--tab: ${c.color}` : undefined}
+            >
+              {c.name}
+              <span class="news-tab-n">{c.post_count}</span>
             </a>
-            {categories.map((c) => (
-              <a
-                href={`${link('/news/', locale)}?category=${c.slug}`}
-                class={`news-tab${activeCategory === c.slug ? ' is-active' : ''}`}
-                style={c.color ? `--tab: ${c.color}` : undefined}
-              >
-                {c.name}
-                <span class="news-tab-n">{c.post_count}</span>
-              </a>
-            ))}
-          </nav>
-        )
-      }
-    </div>
-  </section>
+          ))}
+        </nav>
+      )
+    }
+  </PageHero>
 
   <section class="news-body">
+    <Aurora />
     <div class="wrap">
       {
-        posts.length === 0 ? (
+        rest.length === 0 && !showFeatured ? (
           <p class="news-empty">{t('news.empty')}</p>
         ) : (
           <>
             {showFeatured && (
-              <a href={link(`/news/${featured!.slug}/`, locale)} class="news-feat" data-reveal>
-                <span class="news-feat-media">
-                  {featured!.cover_path ? (
-                    <img
-                      class="news-feat-img"
-                      src={featured!.cover_path}
-                      srcset={srcset(featured!.cover_variants)}
-                      sizes="(min-width: 1000px) 50vw, 100vw"
-                      alt={featured!.cover_alt ?? ''}
-                    />
-                  ) : (
-                    <span class="news-feat-ph" aria-hidden="true" />
-                  )}
+              <a href={link(`/${featured!.slug}/`, locale)} class="news-feat" data-reveal>
+                <span class="cover news-feat-media">
+                  <Cover
+                    path={featured!.cover_path}
+                    variants={featured!.cover_variants}
+                    alt={featured!.cover_alt}
+                    sizes="(min-width: 1000px) 50vw, 100vw"
+                    loading="eager"
+                  />
                 </span>
                 <div class="news-feat-body">
                   {featured!.category_name && (
@@ -139,34 +179,34 @@ Astro.response.headers.set(
               </a>
             )}
 
-            <div class="news-grid">
+            <div class="news-grid" id="newsGrid">
               {rest.map((p) => (
-                <a href={link(`/news/${p.slug}/`, locale)} class="news-card" data-reveal>
-                  {p.cover_path ? (
-                    <img
-                      class="news-card-img"
-                      src={p.cover_variants?.['480'] ?? p.cover_path}
-                      srcset={srcset(p.cover_variants)}
-                      sizes="(min-width: 1000px) 30vw, (min-width: 700px) 45vw, 100vw"
-                      alt={p.cover_alt ?? ''}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <span class="news-card-ph" aria-hidden="true">
-                      <Icon name="press" class="w-6 h-6" />
-                    </span>
-                  )}
-                  <div class="news-card-body">
+                <a href={link(`/${p.slug}/`, locale)} class="news-card" data-reveal>
+                  {/* The category rides on the cover, as it does on the homepage cards —
+                      not in the body, where it was pushing the title down a line. */}
+                  <span class="cover news-card-media">
                     {p.category_name && (
                       <span
-                        class="news-cat"
+                        class="blog-cat"
                         style={p.category_color ? `--cat:${p.category_color}` : undefined}
                       >
                         {p.category_name}
                       </span>
                     )}
-                    <h3 class="news-card-title">{p.title}</h3>
-                    {p.excerpt && <p class="news-card-ex">{p.excerpt}</p>}
+                    <Cover
+                      path={p.cover_path}
+                      variants={p.cover_variants}
+                      alt={p.cover_alt}
+                      sizes="(min-width: 1000px) 30vw, (min-width: 700px) 45vw, 100vw"
+                    />
+                  </span>
+                  <div class="news-card-body">
+                    <h3 class="news-card-title" data-clamp>{p.title}</h3>
+                    {p.excerpt && (
+                      <p class="news-card-ex" data-clamp>
+                        {p.excerpt}
+                      </p>
+                    )}
                     <div class="news-meta">
                       <time datetime={new Date(p.published_at).toISOString()}>
                         {formatDate(p.published_at, locale)}
@@ -178,43 +218,45 @@ Astro.response.headers.set(
                 </a>
               ))}
             </div>
+
+            {hasMore && (
+              <div class="news-more">
+                <a
+                  class="btn ghost news-more-btn"
+                  id="newsMore"
+                  href={pageUrl(page + 1)}
+                  rel="next"
+                  data-label={t('news.loadMore')}
+                  data-loading={t('news.loading')}
+                >
+                  {t('news.loadMore')}
+                </a>
+              </div>
+            )}
           </>
         )
       }
     </div>
   </section>
 
-  <Newsletter />
   <CtaStrip />
 </Layout>
 
 <style>
-  .news-hero {
-    position: relative;
-    overflow: hidden;
-    background: var(--gradient-depth);
-    padding: 8rem 0 2.5rem;
-  }
-  .news-hero > .wrap {
-    position: relative;
-    z-index: 1;
-  }
-  .news-h {
-    margin: 1.2rem 0 1rem;
-  }
-  .news-intro {
-    color: rgba(255, 255, 255, 0.65);
-    font-size: 1.05rem;
-    line-height: 1.65;
-    max-width: 48ch;
-  }
-
-  /* category tabs */
+  /* category tabs — slotted into <PageHero>, under the Start Process button */
   .news-tabs {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 2rem;
+    margin-top: 1.75rem;
+  }
+  /* Below 1024px the hero centres its copy — but these are flex children, and
+     `text-align` does not reach them. Without this the tabs stay hard left under a
+     centred headline, and read as though they belong to something else. */
+  @media (max-width: 1023px) {
+    .news-tabs {
+      justify-content: center;
+    }
   }
   .news-tab {
     --tab: var(--color-purple-400);
@@ -246,8 +288,27 @@ Astro.response.headers.set(
   }
 
   .news-body {
+    position: relative;
+    overflow: hidden;
     background: var(--color-navy);
     padding: 3rem 0 4rem;
+  }
+  /* the aurora is taller than this section, so `overflow: hidden` cuts it while it is
+     still lit — fade the last stretch back to navy so there is no seam */
+  .news-body::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 12rem;
+    background: linear-gradient(to bottom, transparent, var(--color-navy));
+    pointer-events: none;
+    z-index: 0;
+  }
+  .news-body > .wrap {
+    position: relative;
+    z-index: 1;
   }
   .news-empty {
     padding: 4rem 0;
@@ -299,34 +360,16 @@ Astro.response.headers.set(
     transform: translateY(-3px);
     border-color: var(--color-purple-400);
   }
-  /* The image is taken OUT of flow, inside a wrapper.
+  /* The cover is a fixed box (see .cover in global.css) whose contents are all
+   * absolutely positioned — so it contributes no intrinsic height of its own.
    *
-   * As a plain grid item it set its own height from its intrinsic aspect ratio — a
-   * 1200x800 cover across half a 1280px container is 400px tall, and the grid row grew
-   * to match, dragging the (much shorter) text column out with it. The card ended up
-   * dominated by an enormous picture with the headline floating in a sea of nothing.
-   *
-   * With the image absolutely positioned, the wrapper contributes no intrinsic height:
-   * the row is sized by the TEXT, and the picture simply fills whatever that leaves,
-   * with min/max-height keeping it in a sane band. */
+   * That is the point. As a plain <img> grid item it sized itself from its aspect
+   * ratio (a 1200x800 cover across half the container is 400px+ tall), the grid row
+   * grew to match, and the much shorter text column got dragged out with it: an
+   * enormous picture with a headline floating in a sea of nothing. Now the row is
+   * sized by the TEXT and the picture fills what is left. */
   .news-feat-media {
-    position: relative;
-    display: block;
     aspect-ratio: 16 / 9;
-    overflow: hidden;
-  }
-  .news-feat-img,
-  .news-feat-ph {
-    position: absolute;
-    inset: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .news-feat-ph {
-    background: var(--gradient-brand);
-    opacity: 0.35;
   }
   .news-feat-body {
     padding: 2rem 2.25rem;
@@ -366,18 +409,28 @@ Astro.response.headers.set(
     transform: translateY(-3px);
     border-color: var(--color-purple-400);
   }
-  .news-card-img,
-  .news-card-ph {
-    display: block;
-    width: 100%;
+  .news-card-media {
     aspect-ratio: 16 / 9;
-    object-fit: cover;
+    position: relative; /* the .blog-cat pill is absolutely placed inside it */
   }
-  .news-card-ph {
-    display: grid;
-    place-items: center;
-    background: rgba(139, 91, 189, 0.12);
-    color: var(--color-purple-300);
+  /* The same pill as the homepage cards. Kept as a copy rather than lifted into
+     global.css: it belongs to the card, and a card is the only thing that should ever
+     have one. The colour comes from the category when it has one. */
+  .news-card-media .blog-cat {
+    --cat: var(--color-purple-500);
+    position: absolute;
+    top: 0.85rem;
+    left: 0.85rem;
+    z-index: 2;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #fff;
+    background: color-mix(in srgb, var(--cat) 85%, transparent);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
   }
   .news-card-body {
     padding: 1.1rem 1.2rem 1.3rem;
@@ -386,19 +439,55 @@ Astro.response.headers.set(
     gap: 0.65rem;
     flex: 1;
   }
+
+  /* Two lines for a title, four for an excerpt — and where the text runs past that, it
+   * fades out rather than stopping at an ellipsis.
+   *
+   * The box is always the full height (2 or 4 lines), so cards in a row line up whatever
+   * their titles do. The fade is a mask, and it is applied ONLY when the text actually
+   * overflows — `.is-clipped`, set by the script at the bottom of this file. A mask that
+   * was always on would dim the bottom of a title that fits perfectly well, which reads
+   * as "there is more here" when there is not: a fade is a promise of hidden text, and
+   * it should not be made falsely. */
+  [data-clamp] {
+    overflow: hidden;
+    max-height: calc(var(--clamp-lines) * 1lh);
+  }
+  [data-clamp].is-clipped {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.15em), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 1.15em), transparent 100%);
+  }
   .news-card-title {
+    --clamp-lines: 2;
     font-size: 1.1rem;
     line-height: 1.3;
   }
   .news-card-ex {
+    --clamp-lines: 4;
     color: rgba(255, 255, 255, 0.6);
     font-size: 0.88rem;
     line-height: 1.6;
-    flex: 1;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  }
+  /* The excerpt used to be flex:1 and absorb the slack, which no longer works now that
+     it is capped at four lines. Push the date row to the floor of the card instead, so
+     it lines up across a row whatever the titles above it do. */
+  .news-card-body .news-meta {
+    margin-top: auto;
+    padding-top: 0.2rem;
+  }
+
+  /* load more */
+  .news-more {
+    display: flex;
+    justify-content: center;
+    margin-top: 2.5rem;
+  }
+  .news-more-btn {
+    min-width: 12rem;
+  }
+  .news-more-btn.is-busy {
+    pointer-events: none;
+    opacity: 0.6;
   }
 
   @media (min-width: 700px) {
@@ -407,19 +496,96 @@ Astro.response.headers.set(
     }
   }
   @media (min-width: 1000px) {
+    /* A narrower image column, and a taller floor. The covers are roughly 3:2, and a
+       box much wider than that leaves `contain` shrinking the subject to fit the
+       height with blur down both sides. Bringing the box closer to the image's own
+       proportions is what makes the picture fill it. */
     .news-feat {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 0.9fr 1fr;
     }
-    /* The wrapper stretches to the row (which the text now defines) and stays inside a
-       sane band — no more 900px-tall hero picture. */
     .news-feat-media {
       aspect-ratio: auto;
       height: 100%;
-      min-height: 17rem;
-      max-height: 22rem;
+      min-height: 20rem;
+      max-height: 24rem;
     }
     .news-grid {
       grid-template-columns: repeat(3, 1fr);
     }
   }
 </style>
+
+<script>
+  // Mark the titles and excerpts that are actually cut off.
+  //
+  // CSS alone cannot tell. A mask on [data-clamp] would fade the bottom of every box,
+  // including the ones whose text ends comfortably inside it — and a fade means "there
+  // is more of this", so making that promise about a two-word title is a small lie the
+  // reader can catch. scrollHeight vs clientHeight is the only thing that knows.
+  //
+  // Re-run on resize (the column narrows, a title that fitted now wraps) and after the
+  // Load more button appends a batch.
+  const clamps = () => document.querySelectorAll<HTMLElement>('[data-clamp]');
+  const mark = (el: HTMLElement) => {
+    el.classList.toggle('is-clipped', el.scrollHeight - el.clientHeight > 1);
+  };
+  const markAll = () => clamps().forEach(mark);
+
+  markAll();
+  // Web fonts land after first paint and change how much text fits on a line, so a
+  // measurement taken before they arrive is a measurement of the fallback font.
+  document.fonts?.ready.then(markAll);
+  window.addEventListener('resize', markAll, { passive: true });
+
+  // Upgrade the "Load more" link into an append-in-place.
+  //
+  // The link already works on its own — it navigates to ?page=2, which the server
+  // renders. All this does is fetch that same page, lift the fifteen cards out of it
+  // and drop them into the grid we are already looking at, so the reader keeps their
+  // scroll position.
+  //
+  // The cards therefore have exactly ONE definition — the Astro template above. A
+  // JSON endpoint plus a template literal in here would have been a second one, and
+  // the two drift the first time someone edits a card and forgets the other copy.
+  const btn = document.getElementById('newsMore') as HTMLAnchorElement | null;
+  const grid = document.getElementById('newsGrid');
+
+  if (btn && grid) {
+    btn.addEventListener('click', async (event) => {
+      // Let a middle-click, ctrl-click or cmd-click open the page for real.
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+      event.preventDefault();
+
+      const next = btn.href;
+      btn.classList.add('is-busy');
+      btn.textContent = btn.dataset.loading ?? 'Loading…';
+
+      try {
+        const res = await fetch(next, { headers: { Accept: 'text/html' } });
+        if (!res.ok) throw new Error(String(res.status));
+
+        const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+        const cards = doc.querySelectorAll('#newsGrid > .news-card');
+        // The <a> that page carries is the button for the page AFTER it. If it has
+        // none, that page is the last one and so is this button.
+        const following = doc.querySelector<HTMLAnchorElement>('#newsMore');
+
+        grid.append(...cards);
+        markAll(); // the new cards have never been measured
+
+        if (following) {
+          btn.href = following.href;
+          btn.classList.remove('is-busy');
+          btn.textContent = btn.dataset.label ?? 'Load more';
+        } else {
+          btn.closest('.news-more')?.remove();
+        }
+      } catch {
+        // Put the reader back where they were: the link still navigates.
+        btn.classList.remove('is-busy');
+        btn.textContent = btn.dataset.label ?? 'Load more';
+        window.location.href = next;
+      }
+    });
+  }
+</script>

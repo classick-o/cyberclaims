@@ -1,28 +1,52 @@
 import { useEffect, useRef, useState } from 'react';
 import { get, patch, del, upload } from '../api.js';
 import { DEFAULT_LOCALE } from '../locales.js';
+import { useDialog } from '../components/Dialog.jsx';
+import Pager from '../components/Pager.jsx';
 
+const PAGE_SIZE = 50;
 const kb = (b) => (b ? `${Math.round(b / 1024)} KB` : '');
 
 export default function MediaLibrary() {
   const [items, setItems] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [over, setOver] = useState(false);
   const fileInput = useRef(null);
+  const [ask, dialog] = useDialog();
 
   const load = () =>
-    get('/admin/media?limit=200')
-      .then((r) => setItems(r.media))
+    get(`/admin/media?limit=${PAGE_SIZE}&offset=${(page - 1) * PAGE_SIZE}`)
+      .then((r) => {
+        setItems(r.media);
+        setTotal(r.total ?? 0);
+        // A delete may have emptied the last page — step back onto a real one.
+        const last = Math.max(1, Math.ceil((r.total ?? 0) / PAGE_SIZE));
+        if (page > last) setPage(last);
+      })
       .catch((e) => setError(e.message));
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
   const send = async (file) => {
     if (!file) return;
-    const alt = window.prompt(`Describe "${file.name}" for screen readers and search engines:`);
+
+    // Alt text is demanded at upload, not offered as an optional field afterwards.
+    // Asked later, it never happens — and a blog of unlabelled images is an
+    // accessibility failure and an SEO one.
+    const alt = await ask({
+      title: 'Describe this image',
+      message: 'Screen readers read this aloud, and search engines index it.',
+      label: 'Alt text',
+      placeholder: `What is in "${file.name}"?`,
+      confirmLabel: 'Upload',
+      required: true,
+    });
     if (alt === null) return;
 
     setError('');
@@ -32,23 +56,43 @@ export default function MediaLibrary() {
       form.append('file', file);
       form.append('alt', alt);
       await upload('/admin/media', form);
-      await load();
+      // A new upload lands at the top (newest first), so return to page 1 to show it.
+      if (page === 1) await load();
+      else setPage(1);
     } catch (err) {
       setError(err.message);
     } finally {
       setBusy(false);
+      if (fileInput.current) fileInput.current.value = '';
     }
   };
 
   const editAlt = async (m) => {
-    const alt = window.prompt('Alt text', m.alt ?? '');
+    const alt = await ask({
+      title: 'Alt text',
+      message: 'Screen readers read this aloud, and search engines index it.',
+      label: `Describe "${m.filename}"`,
+      defaultValue: m.alt ?? '',
+      confirmLabel: 'Save',
+      required: true,
+    });
     if (alt === null) return;
-    await patch(`/admin/media/${m.id}`, { alt, locale: DEFAULT_LOCALE }).catch((e) => setError(e.message));
+
+    await patch(`/admin/media/${m.id}`, { alt, locale: DEFAULT_LOCALE }).catch((e) =>
+      setError(e.message)
+    );
     load();
   };
 
   const remove = async (m) => {
-    if (!window.confirm(`Delete "${m.filename}"? Any article using it will show a broken image.`)) return;
+    const ok = await ask({
+      title: 'Delete this image?',
+      message: `"${m.filename}" will be removed. Any article still using it will show a broken image.`,
+      confirmLabel: 'Delete',
+      danger: true,
+    });
+    if (!ok) return;
+
     await del(`/admin/media/${m.id}`).catch((e) => setError(e.message));
     load();
   };
@@ -105,7 +149,10 @@ export default function MediaLibrary() {
                   {m.width}×{m.height} · {kb(m.bytes)}
                 </div>
                 {m.alt ? (
-                  <div title={m.alt} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div
+                    title={m.alt}
+                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                  >
                     {m.alt}
                   </div>
                 ) : (
@@ -124,6 +171,10 @@ export default function MediaLibrary() {
           ))}
         </div>
       )}
+
+      <Pager page={page} pageSize={PAGE_SIZE} total={total} onPage={setPage} />
+
+      {dialog}
     </>
   );
 }

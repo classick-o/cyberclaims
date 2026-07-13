@@ -63,11 +63,73 @@ export function sanitizeBody(html) {
   return sanitizeHtml(html ?? '', ALLOWED);
 }
 
-/** Strips markup and normalises whitespace — for word counts and excerpts. */
+// Stripping tags is not the same as reading the text. `<p>a</p><p>b</p>` with the tags
+// simply deleted is "ab" — so an excerpt read "…the same every time.How do I know if…"
+// and the word count was wrong too. Put a space where a block ends.
+const BLOCK_END = /<\/(p|h[1-6]|li|ul|ol|blockquote|section|details|summary|figcaption|td|th|tr|pre|div)\s*>/gi;
+
+/** Strips markup and normalises whitespace — for word counts. */
 export function toPlainText(html) {
-  return sanitizeHtml(html ?? '', { allowedTags: [], allowedAttributes: {} })
+  return sanitizeHtml(String(html ?? '').replace(BLOCK_END, ' </$1>'), {
+    allowedTags: [],
+    allowedAttributes: {},
+  })
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * The article's PROSE, with the Q&A block left out.
+ *
+ * An auto-excerpt is a taste of the article. Pulling the FAQ into it produces a card
+ * that reads "…the pattern was the same every time. How do I know if I have been a
+ * victim of a crypto scam? Unexpected requests for transfers in cryptocurr" — the
+ * questions are not prose, and half of one is not a summary.
+ *
+ * Reading time still counts the FAQ, because the reader still reads it.
+ */
+export function toExcerptText(html) {
+  if (!html) return '';
+
+  const BLOCK = new Set(['p', 'h2', 'h3', 'h4', 'li', 'blockquote', 'figcaption', 'td', 'th', 'pre']);
+  let text = '';
+  let skipping = 0;
+
+  const parser = new Parser({
+    onopentag(name, attribs) {
+      if (skipping > 0) {
+        skipping++;
+        return;
+      }
+      if (name === 'section' && (attribs.class ?? '').includes('faq')) skipping = 1;
+    },
+    ontext(chunk) {
+      if (skipping === 0) text += chunk;
+    },
+    onclosetag(name) {
+      if (skipping > 0) {
+        skipping--;
+        return;
+      }
+      if (BLOCK.has(name)) text += ' ';
+    },
+  });
+
+  parser.write(html);
+  parser.end();
+
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+/** An excerpt the editor didn't write. Cut on a word, not mid-syllable. */
+export function autoExcerpt(html, max = 200) {
+  const text = toExcerptText(html);
+  if (text.length <= max) return text;
+
+  const cut = text.slice(0, max);
+  const lastSpace = cut.lastIndexOf(' ');
+  // Only honour the word boundary if it isn't absurdly early (one very long word).
+  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
 }
 
 /** 200 wpm, floor of 1. Computed once on save, never per render. */
@@ -148,4 +210,59 @@ export function slugify(input) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 200);
+}
+
+/**
+ * Slugs an article may not have.
+ *
+ * Articles are served from the ROOT of the site — /<slug>/, not /news/<slug>/ — so they
+ * share one namespace with every page on it. A static page always wins the route. An
+ * article slugged `about-us` would therefore save cleanly, report itself as published,
+ * and be permanently unreachable, with nothing anywhere to say why. The editor would
+ * conclude the CMS is broken, and they would be right.
+ *
+ * So the collision is refused at the door, where there is still a human to tell.
+ *
+ * This list is hardcoded, and it has to be kept in step with `src/pages/[...lang]/*` and
+ * `src/content/legal/*`. Reading the route table would be nicer, but the backend cannot
+ * see it: Astro's routes exist at build time, and in a deployed image the source tree
+ * that defines them is not necessarily next to the server that would have to read it.
+ *
+ * Compared against the SLUGGED value, which is the only thing that ever becomes a URL.
+ * That is also why /sitemap.xml, /robots.txt and /_astro/ are absent: slugify() emits
+ * [a-z0-9-] and nothing else, so no title on earth can slug to a path containing a dot
+ * or an underscore. Listing them would be a guard that can never fire — worse than no
+ * guard, because it reads like one that can.
+ */
+export const RESERVED_SLUGS = new Set([
+  // pages — src/pages/[...lang]/
+  'about-us',
+  'contact-us',
+  'news',
+  'services',
+  'start-process',
+  'thank-you',
+  'url-checker',
+  '404',
+  // legal documents — src/content/legal/
+  'privacy-policy',
+  'cookie-policy',
+  'terms-and-conditions',
+  'data-protection-addendum',
+  // Express owns these, before Astro ever sees the request
+  'admin',
+  'api',
+  'uploads',
+  // Locale prefixes. /nl/ must route to the Dutch site, not to an article called "nl".
+  // Mirrors LOCALES in src/i18n/config.ts.
+  'en',
+]);
+
+/** @returns {string | null} why this slug cannot be used, or null if it can. */
+export function slugConflict(slug) {
+  if (!slug) return 'The title produced an empty URL. Give the article a slug.';
+  if (RESERVED_SLUGS.has(slug)) {
+    return `"/${slug}/" is already a page on the site, so an article there would never be reachable. Choose a different URL slug.`;
+  }
+  return null;
 }

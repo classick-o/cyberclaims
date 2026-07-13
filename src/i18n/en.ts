@@ -66,27 +66,34 @@ export const en = {
 
   // ── News / blog ────────────────────────────────────────────────────────────
   'news.title': 'News',
-  'news.eyebrow': 'Insights',
   'news.intro':
-    'Analysis, case notes and warnings from our investigators.',
+    'Guides, scam reviews and security research from our investigation team - so you can spot fraud early and stay a step ahead.',
+  'news.imageAlt': 'Floating tiles showing a newspaper, magnifier, warning flag and shield',
   'news.allCategories': 'All',
   'news.readingTime': '{minutes} min read',
   'news.empty': 'No articles yet. Check back soon.',
   'news.related': 'Related reading',
+  'news.seeAll': 'See all',
   'news.by': 'By',
   'news.backToNews': 'All articles',
+  'news.loadMore': 'Load more',
+  'news.loading': 'Loading…',
+
+  // ── Article sidebar ────────────────────────────────────────────────────────
+  'aside.services': 'Our services',
+  'share.title': 'Share this article',
+  'share.on': 'Share on {platform}',
   'news.draftBanner': 'You are previewing a draft. It is not visible to anyone else.',
 
-  // ── Newsletter ─────────────────────────────────────────────────────────────
-  'newsletter.title': 'Stay ahead of the scammers',
-  'newsletter.body':
-    'New tactics, new platforms, new warnings — straight to your inbox. No noise.',
-  'newsletter.placeholder': 'Your email address',
-  'newsletter.submit': 'Subscribe',
-  'newsletter.success': 'Check your inbox to confirm your subscription.',
-  'newsletter.confirmed': 'You are subscribed. Thank you.',
-  'newsletter.confirmFailed': 'That confirmation link has expired. Please subscribe again.',
-  'newsletter.unsubscribed': 'You have been removed from the list.',
+  // ── Q&A block ──────────────────────────────────────────────────────────────
+  // Rendered above the accordion whenever an article contains one. Injected
+  // server-side rather than baked into the editor's output, so the copy stays in one
+  // place, is translatable, and isn't duplicated into every article's stored HTML.
+  'faq.eyebrow': 'Frequently asked questions',
+  'faq.titleLead': 'Have any',
+  'faq.titleAccent': 'questions?',
+  'faq.body':
+    "Can't find the answer you're looking for? Reach out to our team and we'll get back to you within 24 hours.",
 
   // ── Trust / footer ─────────────────────────────────────────────────────────
   'trust.moj': 'Dutch MOJ · POB {pob}',

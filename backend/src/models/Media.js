@@ -1,4 +1,5 @@
 import { pool } from '../config/database.js';
+import { toLimit, toOffset } from '../services/pagination.js';
 
 // mysql2 hands JSON columns back already parsed on MySQL, but as a string on
 // MariaDB (where JSON is an alias for LONGTEXT). Normalise so the app never has to
@@ -42,16 +43,18 @@ export class Media {
     }
   }
 
-  static async list({ limit = 60, offset = 0, locale = 'en' } = {}) {
+  /** @returns {Promise<{ rows: object[], total: number }>} one page plus the full count. */
+  static async list({ limit = 50, offset = 0, locale = 'en' } = {}) {
     const [rows] = await pool.query(
       `SELECT m.*, t.alt
          FROM media m
          LEFT JOIN media_translations t ON t.media_id = m.id AND t.locale = ?
         ORDER BY m.created_at DESC
         LIMIT ? OFFSET ?`,
-      [locale, Number(limit), Number(offset)]
+      [locale, toLimit(limit, { def: 50 }), toOffset(offset)]
     );
-    return rows.map(hydrate);
+    const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM media');
+    return { rows: rows.map(hydrate), total };
   }
 
   static async findById(id) {

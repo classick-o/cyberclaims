@@ -47,8 +47,8 @@ src/config/env.js       validates the environment; assertServeable() gates produ
 src/config/database.js  mysql2 pool — prepared statements only
 src/middleware/         auth (JWT + CSRF), validate (zod), honeypot, rate limit, upload, security (CSP)
 src/models/             raw SQL, static methods
-src/routes/public/      lead, newsletter, health
-src/routes/admin/       auth, posts, media, taxonomy, leads, subscribers
+src/routes/public/      lead, health
+src/routes/admin/       auth, posts, media, taxonomy, leads
 src/services/           email, turnstile, content (sanitise/slug/reading-time), contentCache,
                         csv, dbErrors, retention
 migrations/             *.sql, applied in filename order
@@ -88,8 +88,6 @@ hand, then re-run.
 | | | |
 |---|---|---|
 | `POST` | `/api/lead` | All three forms. `source` = `hero` \| `contact` \| `start_process`. 5/15min per IP. |
-| `POST` | `/api/newsletter` | Double opt-in. |
-| `GET` | `/api/newsletter/confirm` · `/unsubscribe` | |
 | `GET` | `/api/health` | `{ ok: true }`. Nothing else — deliberately. |
 
 `POST /api/lead` accepts JSON (the fetch path) **and** urlencoded (the native form post
@@ -100,6 +98,34 @@ victim's name, email and losses never end up in a URL.
 **Admin** — JWT in an httpOnly cookie, plus a double-submit CSRF token on every mutation.
 
 `/api/admin/auth/{login,logout,me}` · `/posts` (+ `/:id/status`) · `/media` ·
-`/categories` · `/authors` · `/leads` (+ `/export.csv`) · `/subscribers`
+`/categories` · `/authors` · `/leads` (+ `/export.csv`)
 
 Errors: `400 { success: false, errors: [{ field, message }] }`.
+
+## Articles live at the root of the site
+
+`/<slug>/`, not `/news/<slug>/`. `/news/` is still the listing; only the articles moved.
+Old URLs 301 to the new ones (`server.js`), so nothing that already linked to one breaks.
+
+The cost of that scheme is that an article's slug now shares a namespace with every page
+on the site, and **a page always wins the route**. An article slugged `about-us` would
+save, report itself as published, and be permanently unreachable — with nothing anywhere
+to say why. So `RESERVED_SLUGS` in `src/services/content.js` refuses the collision at the
+door, where there is still a person to tell. **Keep that list in step with
+`src/pages/[...lang]/*` and `src/content/legal/*`.** Add a page, add its path there.
+
+## The newsletter is gone
+
+It was built (double opt-in, confirmation email, subscriber list, CSV export) and then
+cut — the product does not want one. Every line of code for it has been removed.
+
+Two things survive it, on purpose:
+
+- **`migrations/005_newsletter.sql` and the `newsletter_subscribers` table.** Migrations
+  are an append-only history; deleting one that has already run rewrites the past and
+  leaves any database that applied it disagreeing with the ledger. The table is simply
+  unused now. If you want it gone, add a *new* migration that drops it — and do, because
+  it still holds addresses collected under a consent we are no longer honouring, and an
+  email address nobody has a purpose for is a GDPR liability, not an asset.
+- **The privacy policy still mentions it** ("your email address if you subscribe to our
+  newsletter"). That is a legal document; a lawyer edits it, not this repo.

@@ -43,7 +43,8 @@ const locale = localeFromUrl(Astro.url);
             }
           </div>
           <a href={link(URL_CHECKER.href, locale)} class="mega-foot">
-            <Icon name="url" class="w-4 h-4" /> {URL_CHECKER.title} - verify a suspicious link
+            <Icon name={URL_CHECKER.icon} class="w-4 h-4" /> {URL_CHECKER.title} - verify a suspicious
+            link
           </a>
         </div>
       </div>

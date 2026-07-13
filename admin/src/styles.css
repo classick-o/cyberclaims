@@ -497,6 +497,63 @@ tbody tr:last-child td {
   flex: 1;
 }
 
+/* ── pagination ──────────────────────────────────────────────────────────────
+   Renders nothing when it all fits on one page (see Pager.jsx), so this only ever
+   shows on lists long enough to need it. */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+.pager-count {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.pager-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+}
+.pager-btn {
+  min-width: 2.1rem;
+  height: 2.1rem;
+  padding: 0 0.55rem;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--mist);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.pager-btn:hover:not(:disabled):not(.on) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.pager-btn.on {
+  background: var(--purple-500);
+  border-color: var(--purple-500);
+  color: #fff;
+  cursor: default;
+}
+.pager-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pager-gap {
+  padding: 0 0.15rem;
+  color: var(--faint);
+  user-select: none;
+}
+
 .banner {
   padding: 0.8rem 1rem;
   border-radius: 0.6rem;
@@ -620,6 +677,12 @@ tbody tr:last-child td {
 .tt-btn.on {
   background: var(--purple-500);
   color: #fff;
+}
+/* already used up — the article has its one Q&A block. Not `disabled`: the button still
+   does something useful (it scrolls you to the block), it just has nothing left to add. */
+.tt-btn.spent:not(.on) {
+  color: var(--faint);
+  background: rgba(255, 255, 255, 0.04);
 }
 .tt-sep {
   width: 1px;
@@ -1184,4 +1247,147 @@ input[type='color']::-webkit-color-swatch {
 .tag-input:focus {
   outline: none;
   background: transparent;
+}
+
+/* ── dialog (replaces window.prompt / window.confirm) ───────────────────────── */
+.modal-sm {
+  max-width: 27rem;
+}
+.modal-sm .modal-head h2 {
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+.modal-msg {
+  margin-bottom: 1.1rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.modal-sm .modal-body:last-of-type {
+  padding-bottom: 0.35rem;
+}
+
+/* ── stacked panels (Categories & Authors) ──────────────────────────────────── */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.stack .card + .card {
+  margin-top: 0;
+}
+
+/* one-line "add" row under a table */
+.inline-add {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+.inline-add input[type='text'] {
+  flex: 1;
+}
+
+/* ── toasts ─────────────────────────────────────────────────────────────────── */
+.toaster {
+  position: fixed;
+  left: 50%;
+  bottom: 1.75rem;
+  z-index: 60;
+  display: flex;
+  /* newest nearest the bottom edge, where the eye already is */
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 0.55rem;
+  /* the layer spans the page, so it must not eat clicks — only the toasts do */
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: min(36rem, calc(100vw - 2rem));
+  padding: 0.8rem 1.15rem 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: rgba(35, 35, 64, 0.92);
+  /* prefixed first, standard last — a minifier that collapses the pair keeps the last
+     one, and Chrome does not implement -webkit-backdrop-filter */
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 26px 60px -24px rgba(0, 0, 0, 0.85);
+  color: var(--mist);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  animation: toast-in 0.42s var(--ease-out-brand) both;
+}
+.toast:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.toast.leaving {
+  animation: toast-out 0.26s ease-in both;
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+.toast.success .toast-icon {
+  background: var(--purple-500);
+}
+.toast.success .toast-icon::before {
+  content: '✓';
+}
+.toast.error {
+  border-color: rgba(248, 113, 113, 0.35);
+}
+.toast.error .toast-icon {
+  background: var(--danger);
+  color: var(--navy-deep);
+}
+.toast.error .toast-icon::before {
+  content: '!';
+}
+.toast.info .toast-icon {
+  background: rgba(255, 255, 255, 0.12);
+}
+.toast.info .toast-icon::before {
+  content: 'i';
+  font-style: italic;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.9rem) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(0.4rem) scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast.leaving {
+    animation-duration: 0.01ms;
+  }
 }

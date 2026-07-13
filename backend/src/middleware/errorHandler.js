@@ -1,7 +1,20 @@
 import { isProd } from '../config/env.js';
 
-export function notFound(req, res, next) {
-  if (!req.path.startsWith('/api/')) return next();
+/**
+ * The last handler in the /api router: anything that gets here is an /api path that
+ * matched no route.
+ *
+ * There used to be a `if (!req.path.startsWith('/api/')) return next()` guard in front
+ * of this, and it never once fired. Inside a router mounted at /api, `req.path` is
+ * RELATIVE to the mount point — a request for /api/nope arrives here as '/nope'. So the
+ * guard always took the next() branch, every unknown API call escaped the router, and
+ * Astro was handed it instead: a GET came back as the site's HTML 404 page (so the admin
+ * SPA got HTML where it expected JSON), and a POST came back a 500, because express.json()
+ * had already drained the request body that Astro's adapter then tried to read.
+ *
+ * No guard is needed. Being mounted here IS the condition.
+ */
+export function notFound(_req, res) {
   res.status(404).json({ success: false, message: 'Not found.' });
 }
 

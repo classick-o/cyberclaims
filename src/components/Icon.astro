@@ -28,6 +28,10 @@ const paths: Record<string, string> = {
   business:
     '<path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/><path d="M9 10h.01M15 10h.01"/>',
   url: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"/>',
+  // For the URL Checker. `url` above is a globe — the exact same path as `globe`, in fact
+  // — and a globe says "the internet", not "check this link". A chain link says the one
+  // thing the tool is for, and it collides with nothing in the services list.
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   clock:
     '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   globe:

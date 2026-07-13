@@ -8,9 +8,10 @@
 //
 // It used to render three cards hardcoded in site.ts, whose links all 404'd because
 // no /news/[slug] route existed.
+import Cover from './Cover.astro';
 import Icon from './Icon.astro';
 import { link } from '../lib/paths';
-import { Post, cached, srcset, type PostCard } from '../lib/content';
+import { Post, cached, type PostCard } from '../lib/content';
 import { localeFromUrl } from '../i18n/config';
 import { useTranslations, formatDate } from '../i18n';
 
@@ -41,23 +42,15 @@ const posts = (await cached(`latest:${locale}`, () =>
 
         <div class="blogs-grid">
           {posts.map((p) => (
-            <a href={link(`/news/${p.slug}/`, locale)} class="blog-card" data-reveal>
-              <div class="blog-thumb">
+            <a href={link(`/${p.slug}/`, locale)} class="blog-card" data-reveal>
+              <div class="cover blog-thumb">
                 {p.category_name && <span class="blog-cat">{p.category_name}</span>}
-                {p.cover_path ? (
-                  <img
-                    class="blog-thumb-img"
-                    src={p.cover_variants?.['480'] ?? p.cover_path}
-                    srcset={srcset(p.cover_variants)}
-                    sizes="(min-width: 768px) 30vw, 100vw"
-                    alt={p.cover_alt ?? ''}
-                    loading="lazy"
-                  />
-                ) : (
-                  <div class="blog-thumb-ph">
-                    <Icon name="press" class="w-8 h-8" />
-                  </div>
-                )}
+                <Cover
+                  path={p.cover_path}
+                  variants={p.cover_variants}
+                  alt={p.cover_alt}
+                  sizes="(min-width: 768px) 30vw, 100vw"
+                />
               </div>
               <div class="blog-body">
                 <div class="blog-meta">
@@ -131,25 +124,7 @@ const posts = (await cached(`latest:${locale}`, () =>
     box-shadow: 0 24px 48px -22px rgba(0, 0, 0, 0.6);
   }
   .blog-thumb {
-    position: relative;
     aspect-ratio: 16 / 9;
-    background: linear-gradient(135deg, #232340, #101020);
-    overflow: hidden;
-  }
-  .blog-thumb-img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .blog-thumb-ph {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    color: rgba(168, 128, 209, 0.35);
   }
   .blog-cat {
     position: absolute;

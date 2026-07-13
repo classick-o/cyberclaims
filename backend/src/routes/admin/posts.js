@@ -10,7 +10,8 @@ const router = Router();
 router.get('/', async (req, res, next) => {
   try {
     const { status, q, limit, offset } = req.query;
-    res.json({ success: true, posts: await Post.listAdmin({ status, q, limit, offset }) });
+    const { rows, total } = await Post.listAdmin({ status, q, limit, offset });
+    res.json({ success: true, posts: rows, total });
   } catch (err) {
     next(err);
   }

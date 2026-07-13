@@ -1,5 +1,6 @@
 import { pool } from '../config/database.js';
-import { sanitizeBody, readingMinutes, slugify, toPlainText } from '../services/content.js';
+import { sanitizeBody, readingMinutes, slugify, autoExcerpt, slugConflict } from '../services/content.js';
+import { toLimit, toOffset } from '../services/pagination.js';
 
 const parseJson = (v) => {
   if (v == null) return null;
@@ -47,25 +48,59 @@ export class Post {
   // falling back to English would produce duplicate content and a half-translated
   // page, which is worse than the article not being there.
 
-  static async findPublished(locale, { categorySlug = null, limit = 24, offset = 0 } = {}) {
+  /**
+   * Without this annotation TypeScript infers `categorySlug: null` from the default,
+   * and the SSR page — which passes the ?category= query string — fails to typecheck.
+   *
+   * @param {string} locale
+   * @param {{ categorySlug?: string | null, limit?: number, offset?: number }} [options]
+   */
+  /**
+   * @param {string} locale
+   * @param {{ categorySlug?: string | null, limit?: number, offset?: number, excludeId?: number | null }} [opts]
+   *
+   * `excludeId` exists for /news/, where the featured article headlines the page. It has
+   * to be excluded from the QUERY, not filtered out of the results afterwards: filtering
+   * after the fact silently shortens whichever page the featured post happens to land
+   * in, so page 1 shows 14 cards and page 3 shows 15, and the offsets stop lining up.
+   *
+   * The `p.id DESC` tiebreaker is what makes LIMIT/OFFSET paging correct, and it is not
+   * cosmetic. `published_at` is a DATETIME — second precision — so two articles published
+   * in the same second, or backdated to the same day, tie. SQL leaves the order of tied
+   * rows undefined, and MySQL is free to resolve the tie differently between the query
+   * for OFFSET 0 and the query for OFFSET 15. It does: page 2 then repeats rows page 1
+   * already showed and skips others entirely. Ordering on a column that is unique makes
+   * the sort a total order, and the pages line up.
+   */
+  static async findPublished(
+    locale,
+    { categorySlug = null, limit = 24, offset = 0, excludeId = null } = {}
+  ) {
+    const params = [locale, locale, locale];
+    if (categorySlug) params.push(categorySlug);
+    if (excludeId) params.push(Number(excludeId));
+    params.push(toLimit(limit, { def: 24 }), toOffset(offset));
+
     const [rows] = await pool.query(
       `SELECT ${PUBLIC_COLUMNS} ${PUBLIC_JOINS}
         WHERE p.status = 'published' AND p.published_at <= NOW()
           ${categorySlug ? 'AND ct.slug = ?' : ''}
-        ORDER BY p.published_at DESC
+          ${excludeId ? 'AND p.id <> ?' : ''}
+        ORDER BY p.published_at DESC, p.id DESC
         LIMIT ? OFFSET ?`,
-      categorySlug
-        ? [locale, locale, locale, categorySlug, Number(limit), Number(offset)]
-        : [locale, locale, locale, Number(limit), Number(offset)]
+      params
     );
     return rows.map(hydrate);
   }
 
+  // `p.id DESC` for the same reason as findPublished: without a unique last sort key,
+  // two articles that tie leave the winner up to MySQL, and "which article is the hero"
+  // could then answer differently on two consecutive page loads.
   static async findFeatured(locale) {
     const [rows] = await pool.query(
       `SELECT ${PUBLIC_COLUMNS} ${PUBLIC_JOINS}
         WHERE p.status = 'published' AND p.published_at <= NOW()
-        ORDER BY p.featured DESC, p.published_at DESC
+        ORDER BY p.featured DESC, p.published_at DESC, p.id DESC
         LIMIT 1`,
       [locale, locale, locale]
     );
@@ -93,9 +128,9 @@ export class Post {
     const [rows] = await pool.query(
       `SELECT ${PUBLIC_COLUMNS} ${PUBLIC_JOINS}
         WHERE p.status = 'published' AND p.published_at <= NOW() AND p.id <> ?
-        ORDER BY (p.category_id = ?) DESC, p.published_at DESC
+        ORDER BY (p.category_id = ?) DESC, p.published_at DESC, p.id DESC
         LIMIT ?`,
-      [locale, locale, locale, postId, categoryId ?? 0, Number(limit)]
+      [locale, locale, locale, postId, categoryId ?? 0, toLimit(limit, { def: 3 })]
     );
     return rows.map(hydrate);
   }
@@ -113,7 +148,13 @@ export class Post {
 
   // ─── Admin ─────────────────────────────────────────────────────────────────
 
-  static async listAdmin({ status = null, q = null, limit = 50, offset = 0 } = {}) {
+  /**
+   * @returns {Promise<{ rows: object[], total: number }>} one page of posts plus the
+   * full count matching the filter, so the admin can render page controls. `total` is
+   * counted with the same WHERE but no LIMIT — the count of matching POSTS, which is the
+   * number of GROUP BY groups, so no join or DISTINCT is needed on the posts table.
+   */
+  static async listAdmin({ status = null, q = null, limit = 25, offset = 0 } = {}) {
     const where = [];
     const params = [];
     if (status) {
@@ -124,6 +165,7 @@ export class Post {
       where.push('EXISTS (SELECT 1 FROM post_translations x WHERE x.post_id = p.id AND x.title LIKE ?)');
       params.push(`%${q}%`);
     }
+    const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
     const [rows] = await pool.query(
       `SELECT p.id, p.status, p.featured, p.published_at, p.updated_at,
@@ -137,21 +179,26 @@ export class Post {
          LEFT JOIN categories c ON c.id = p.category_id
          LEFT JOIN authors a ON a.id = p.author_id
          LEFT JOIN media m ON m.id = p.cover_media_id
-        ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
+        ${clause}
         GROUP BY p.id, p.status, p.featured, p.published_at, p.updated_at,
                  c.key_slug, a.name, m.path
         ORDER BY p.updated_at DESC
         LIMIT ? OFFSET ?`,
-      [...params, Number(limit), Number(offset)]
+      [...params, toLimit(limit), toOffset(offset)]
     );
 
-    return rows.map((r) => ({
-      ...r,
-      // JSON_ARRAYAGG over a LEFT JOIN with no matches gives [null], not [].
-      locales: (parseJson(r.locales) ?? []).filter(Boolean),
-      // A post whose only translation isn't English still needs a label in the list.
-      title: r.title ?? '(untitled)',
-    }));
+    const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total FROM posts p ${clause}`, params);
+
+    return {
+      total,
+      rows: rows.map((r) => ({
+        ...r,
+        // JSON_ARRAYAGG over a LEFT JOIN with no matches gives [null], not [].
+        locales: (parseJson(r.locales) ?? []).filter(Boolean),
+        // A post whose only translation isn't English still needs a label in the list.
+        title: r.title ?? '(untitled)',
+      })),
+    };
   }
 
   /** The full record, with every translation — what the editor loads. */
@@ -173,6 +220,27 @@ export class Post {
   }
 
   static async save({ id = null, category_id, author_id, cover_media_id, featured, status, published_at, translations }) {
+    // Slug the whole set first, and refuse a reserved one BEFORE a transaction is open —
+    // there is nothing to roll back, and the editor gets the error on the field it
+    // belongs to rather than a 500 from the middle of a write.
+    const slugs = Object.fromEntries(
+      Object.entries(translations).map(([locale, t]) => [locale, slugify(t.slug || t.title)])
+    );
+    const multi = Object.keys(slugs).length > 1;
+    const conflicts = Object.entries(slugs)
+      .map(([locale, slug]) => {
+        const why = slugConflict(slug);
+        return why && { field: 'slug', message: multi ? `${locale}: ${why}` : why };
+      })
+      .filter(Boolean);
+
+    if (conflicts.length > 0) {
+      const err = new Error(conflicts[0].message);
+      err.status = 400;
+      err.errors = conflicts;
+      throw err;
+    }
+
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
@@ -222,9 +290,10 @@ export class Post {
 
       for (const [locale, t] of Object.entries(translations)) {
         const body = sanitizeBody(t.body_html);
-        const slug = slugify(t.slug || t.title);
-        // An excerpt nobody wrote is better than an empty card.
-        const excerpt = t.excerpt?.trim() || toPlainText(body).slice(0, 200);
+        const slug = slugs[locale];
+        // An excerpt nobody wrote is better than an empty card — as long as it reads
+        // like one. autoExcerpt skips the Q&A block and cuts on a word boundary.
+        const excerpt = t.excerpt?.trim() || autoExcerpt(body);
 
         const fields = [
           slug, t.title, excerpt, body,

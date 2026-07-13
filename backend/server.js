@@ -40,6 +40,20 @@ app.use(securityHeaders);
 
 app.use('/api', api);
 
+// Articles moved from /news/<slug>/ to /<slug>/. Send the old URL to the new one, once,
+// permanently — anything that already linked to an article keeps working, and a search
+// engine transfers the ranking rather than re-earning it.
+//
+// Only the article URLs. /news/ itself is still the listing, and the pattern requires a
+// segment after it, so the listing (with or without ?category= and ?page=) is untouched.
+// The optional locale prefix is matched too: /nl/news/foo/ -> /nl/foo/.
+app.get(/^(\/[a-z]{2})?\/news\/([^/]+)\/?$/, (req, res) => {
+  const prefix = req.params[0] ?? ''; // '' or '/nl'
+  const slug = req.params[1];
+  const query = req.originalUrl.slice(req.path.length); // keeps ?preview=1
+  res.redirect(301, `${prefix}/${slug}/${query}`);
+});
+
 // Uploaded media. Filenames are content-random and never reused, so these are
 // immutable. `dotfiles: 'deny'` and no `index` because this directory holds user-
 // supplied content — it should serve exactly the files we wrote and nothing else.
@@ -124,6 +138,25 @@ if (existsSync(SERVER_ENTRY)) {
 
 startRetentionJob();
 
-app.listen(env.PORT, () => {
+const server = app.listen(env.PORT, () => {
   console.log(`Cyberclaims on http://localhost:${env.PORT}  [${env.NODE_ENV}]`);
+});
+
+// Without this, a busy port throws an unhandled 'error' event: eleven lines of Node
+// internals and a stack trace, for a problem whose fix is one line in a file.
+server.on('error', (err) => {
+  if (err.code !== 'EADDRINUSE') throw err;
+
+  console.error(`\n  Port ${env.PORT} is already in use.\n`);
+  console.error('  Something else is listening there — often another dev server, or a');
+  console.error('  copy of this one that did not shut down. Either free it:\n');
+  console.error(
+    process.platform === 'win32'
+      ? `    netstat -ano | findstr :${env.PORT}      then: taskkill /F /PID <pid>`
+      : `    lsof -ti :${env.PORT} | xargs kill`
+  );
+  console.error('\n  ...or move this app instead, by setting PORT in .env:\n');
+  console.error('    PORT=3100\n');
+  console.error('  The Astro dev proxy reads the same variable, so both halves follow.\n');
+  process.exit(1);
 });

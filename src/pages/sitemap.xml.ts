@@ -72,7 +72,7 @@ export const GET: APIRoute = async ({ site }) => {
       ? (post.locale as Locale)
       : DEFAULT_LOCALE;
     entries.push(`  <url>
-    <loc>${escape(url(`/news/${post.slug}/`, locale, origin))}</loc>
+    <loc>${escape(url(`/${post.slug}/`, locale, origin))}</loc>
     <lastmod>${new Date(post.updated_at).toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

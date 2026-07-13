@@ -5,14 +5,13 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 
 import leadsRouter from './routes/public/leads.js';
-import newsletterRouter from './routes/public/newsletter.js';
 import healthRouter from './routes/public/health.js';
 
 import authRouter from './routes/admin/auth.js';
 import postsRouter from './routes/admin/posts.js';
 import mediaRouter from './routes/admin/media.js';
 import { categories, authors } from './routes/admin/taxonomy.js';
-import { leads, subscribers } from './routes/admin/leads.js';
+import { leads } from './routes/admin/leads.js';
 
 import { requireAuth, verifyCsrf } from './middleware/auth.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -30,7 +29,6 @@ api.use(express.urlencoded({ extended: false, limit: '32kb' }));
 
 // ─── Public ──────────────────────────────────────────────────────────────────
 api.use('/lead', leadsRouter);
-api.use('/newsletter', newsletterRouter);
 api.use('/health', healthRouter);
 
 // ─── Admin ───────────────────────────────────────────────────────────────────
@@ -46,7 +44,6 @@ admin.use('/media', mediaRouter);
 admin.use('/categories', categories);
 admin.use('/authors', authors);
 admin.use('/leads', leads);
-admin.use('/subscribers', subscribers);
 api.use('/admin', admin);
 
 api.use(notFound);

@@ -73,15 +73,26 @@ html {
   }
 }
 
+/* `clip`, not `hidden` — the two look identical and behave completely differently.
+ *
+ * `overflow-x: hidden` makes the element a SCROLL CONTAINER (a hidden one: it can still
+ * be scrolled by script, it just shows no bar). Any `position: sticky` descendant then
+ * sticks relative to THAT box instead of the viewport — and since the box is not what
+ * the reader is scrolling, the sticky element simply travels off the top of the screen
+ * with everything else. It fails silently, and it fails in a way that looks like the
+ * sticky rule was never written.
+ *
+ * `overflow-x: clip` cuts the overflow exactly the same way and creates no scroll
+ * container at all. It exists for precisely this. The article's sidebar depends on it. */
 html {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
   background-color: var(--color-navy-deep);
   color: var(--color-mist);
   font-family: var(--font-sans);
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
 }
 
@@ -251,6 +262,58 @@ h1, h2, h3, h4 {
   scrollbar-width: none;
 }
 .no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================================
+   ARTICLE COVERS (see src/components/Cover.astro)
+   Two layers: the image CONTAINED so it is never cropped, over a blurred, dimmed
+   COVER of itself so there are no letterbox bars. Give the wrapper an aspect-ratio
+   or a height; these fill it.
+   ============================================================ */
+.cover {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: var(--gradient-depth);
+}
+.cover-wash {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* scaled up so the blur's soft edge never shows against the box */
+  transform: scale(1.2);
+  filter: blur(28px) saturate(130%) brightness(0.5);
+}
+.cover-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* A modest scale-up. `contain` alone leaves the subject looking small and lost in a
+     box whose aspect ratio doesn't match it — and the site's 3D renders already carry
+     generous margins of their own, so the only thing 6% of overflow clips is empty
+     space. Enough to give the subject presence; not enough to cut into it. */
+  transform: scale(1.06);
+}
+.cover-none {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(139, 91, 189, 0.1);
+  color: var(--color-purple-300);
+}
+/* A photograph fills the frame properly — it has no negative space to preserve, and
+   contain would only shrink it. Set data-fit="cover" on the wrapper for those. */
+.cover[data-fit='cover'] .cover-art {
+  object-fit: cover;
+  padding: 0;
+}
+.cover[data-fit='cover'] .cover-wash {
   display: none;
 }
 

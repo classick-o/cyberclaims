@@ -29,6 +29,8 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
     ]}
     image="/contact-hero.webp"
     imageAlt="Floating tiles showing an envelope, chat bubble, at-sign and map pin"
+    imageWidth={1100}
+    imageHeight={1070}
     imageMaxWidth="19rem"
     imageMaxWidthMobile="16rem"
     ctaHref="/start-process/"
@@ -186,9 +188,9 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
     background: var(--color-navy);
     padding: 0 0 4rem;
   }
+  /* Full width — .wrap's 80rem container is the only limit. */
   .contact-form-wrap {
-    max-width: 52rem;
-    margin-inline: auto;
+    max-width: none;
   }
   .contact-grid {
     display: grid;

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { get, upload } from '../api.js';
+import { useDialog } from './Dialog.jsx';
 
-/** Modal image browser + uploader. Used for post covers, author avatars and inline images. */
+/** Modal image browser + uploader. Used for post covers and inline images. */
 export default function MediaPicker({ onPick, onClose }) {
   const [items, setItems] = useState([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [over, setOver] = useState(false);
+  const [ask, dialog] = useDialog();
 
   const load = () =>
     get('/admin/media?limit=60')
@@ -19,16 +21,24 @@ export default function MediaPicker({ onPick, onClose }) {
 
   const send = async (file) => {
     if (!file) return;
+
+    // Alt text is required on the way in. Asking for it later means it never happens,
+    // and a blog full of unlabelled images is an accessibility problem and an SEO one.
+    const alt = await ask({
+      title: 'Describe this image',
+      message: 'Screen readers read this aloud, and search engines index it.',
+      label: 'Alt text',
+      placeholder: `What is in "${file.name}"?`,
+      confirmLabel: 'Upload',
+      required: true,
+    });
+    if (alt === null) return;
+
     setError('');
     setBusy(true);
     try {
       const form = new FormData();
       form.append('file', file);
-      // Alt text is required on the way in. Asking for it later means it never
-      // happens, and a blog full of unlabelled images is an accessibility problem
-      // and an SEO one.
-      const alt = window.prompt(`Describe "${file.name}" for screen readers and search engines:`);
-      if (alt === null) return setBusy(false);
       form.append('alt', alt);
 
       const { media } = await upload('/admin/media', form);
@@ -43,8 +53,9 @@ export default function MediaPicker({ onPick, onClose }) {
   };
 
   return (
-    <div className="modal-back" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <>
+    <div className="modal-back" onMouseDown={onClose}>
+      <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <h2>Choose an image</h2>
           <button className="btn ghost sm" onClick={onClose}>
@@ -103,5 +114,11 @@ export default function MediaPicker({ onPick, onClose }) {
         </div>
       </div>
     </div>
+
+    {/* A sibling, not a child: nested inside the picker's backdrop, clicking the
+        dialog's own backdrop would bubble up and close the picker underneath it too.
+        Rendered after, so it stacks on top. */}
+    {dialog}
+    </>
   );
 }

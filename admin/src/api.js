@@ -24,6 +24,44 @@ export class ApiError extends Error {
   }
 }
 
+// Say which field.
+//
+// The server sends { field: "translations.en.seo_title", message: "..." }, and we used
+// to surface the message alone. Zod's own messages describe a TYPE — "Expected string,
+// received null" — not a place. On a form with a dozen inputs that is a riddle, not an
+// error, and only the fields the page happens to render inline (slug, cover) ever showed
+// it where it belonged. Naming the field costs one line and makes the rest actionable.
+const LABELS = {
+  title: 'Title',
+  slug: 'URL slug',
+  excerpt: 'Excerpt',
+  body_html: 'Body',
+  seo_title: 'SEO title',
+  seo_description: 'Meta description',
+  keywords: 'Keywords',
+  cover_media_id: 'Cover image',
+  category_id: 'Category',
+  author_id: 'Author',
+  status: 'Status',
+  name: 'Name',
+  role: 'Role',
+  color: 'Colour',
+  key_slug: 'Slug',
+  alt: 'Alt text',
+};
+
+const describe = (issue) => {
+  if (!issue) return null;
+  const path = String(issue.field ?? '');
+  if (!path || path === 'form') return issue.message;
+
+  const parts = path.split('.');
+  const name = LABELS[parts.at(-1)] ?? parts.at(-1);
+  // translations.<locale>.<field> — say which language, but only when it is one
+  const locale = parts[0] === 'translations' && parts.length === 3 ? ` (${parts[1]})` : '';
+  return `${name}${locale}: ${issue.message}`;
+};
+
 export async function api(path, { method = 'GET', body, form } = {}) {
   const headers = {};
   if (method !== 'GET') headers['x-csrf-token'] = csrf();
@@ -42,7 +80,7 @@ export async function api(path, { method = 'GET', body, form } = {}) {
 
   if (!res.ok) {
     throw new ApiError(
-      data?.errors?.[0]?.message ?? data?.message ?? 'Something went wrong.',
+      describe(data?.errors?.[0]) ?? data?.message ?? 'Something went wrong.',
       { status: res.status, errors: data?.errors }
     );
   }

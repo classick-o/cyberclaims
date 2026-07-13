@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 
 // A questions-and-answers block for articles.
 //
@@ -84,6 +85,47 @@ export const Faq = Node.create({
       return { dom, contentDOM: items };
     };
   },
+
+  // One Q&A block per article — enforced, not merely discouraged by a disabled button.
+  //
+  // Two <section class="faq"> blocks would render the "Have any questions?" heading
+  // twice (the article page injects it into every .faq it finds) and emit two FAQPage
+  // schemas for one URL, which Search Console rejects as invalid. The toolbar button
+  // covers the ordinary path; paste is the one that gets past it, and it is not exotic
+  // — copying a chunk of one article into another is exactly how it happens.
+  //
+  // Rather than throw the pasted questions away, fold them into the block that already
+  // exists. Nothing the writer typed is lost; it just lands somewhere legal.
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('faqSingleton'),
+        appendTransaction: (transactions, _oldState, newState) => {
+          if (!transactions.some((t) => t.docChanged)) return null;
+
+          const blocks = [];
+          newState.doc.descendants((node, pos) => {
+            if (node.type.name !== 'faq') return true;
+            blocks.push({ node, pos });
+            return false; // a faq never nests inside a faq
+          });
+          if (blocks.length < 2) return null;
+
+          const [first, ...extras] = blocks; // descendants() walks in document order
+          const rescued = extras.flatMap(({ node }) => node.content.content);
+
+          const tr = newState.tr;
+          // Delete back-to-front: every extra sits AFTER `first`, so removing them
+          // leaves `first`'s own position untouched and the insert below stays valid.
+          for (let i = extras.length - 1; i >= 0; i--) {
+            tr.delete(extras[i].pos, extras[i].pos + extras[i].node.nodeSize);
+          }
+          tr.insert(first.pos + first.node.nodeSize - 1, rescued);
+          return tr;
+        },
+      }),
+    ];
+  },
 });
 
 export const FaqItem = Node.create({
@@ -164,9 +206,38 @@ export const FaqQuestion = Node.create({
   },
 });
 
-/** Toolbar command: drop in a Q&A block with one empty question. */
-export const insertFaq = (editor) =>
-  editor
+/** The Q&A block in this document, if there is one. */
+export const findFaq = (editor) => {
+  let hit = null;
+  editor.state.doc.descendants((node, pos) => {
+    if (hit) return false;
+    if (node.type.name !== 'faq') return true;
+    hit = { node, pos };
+    return false;
+  });
+  return hit;
+};
+
+/** Is there already a Q&A block? The toolbar greys its button out when there is. */
+export const hasFaq = (editor) => findFaq(editor) !== null;
+
+/**
+ * Toolbar command: drop in a Q&A block with one empty question.
+ *
+ * If the article already has one, scroll to it instead of adding a second — an article
+ * gets one FAQ section (see the singleton plugin above). A button that quietly does
+ * nothing is worse than one that takes you where you meant to go.
+ */
+export const insertFaq = (editor) => {
+  const existing = findFaq(editor);
+  if (existing) {
+    const dom = editor.view.nodeDOM(existing.pos);
+    if (dom instanceof HTMLElement) dom.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    editor.commands.focus();
+    return false;
+  }
+
+  return editor
     .chain()
     .focus()
     .insertContent({
@@ -179,5 +250,6 @@ export const insertFaq = (editor) =>
       ],
     })
     .run();
+};
 
 export const FAQ_EXTENSIONS = [Faq, FaqItem, FaqQuestion];

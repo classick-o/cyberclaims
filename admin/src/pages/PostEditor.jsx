@@ -5,6 +5,7 @@ import { LOCALES, DEFAULT_LOCALE } from '../locales.js';
 import RichText from '../components/RichText.jsx';
 import MediaPicker from '../components/MediaPicker.jsx';
 import TagInput from '../components/TagInput.jsx';
+import { useToast } from '../components/Toast.jsx';
 
 const emptyTranslation = () => ({
   title: '',
@@ -31,6 +32,7 @@ const previewSlug = (input) =>
 export default function PostEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const isNew = !id;
 
   const [locale, setLocale] = useState(DEFAULT_LOCALE);
@@ -103,7 +105,10 @@ export default function PostEditor() {
 
     if (Object.keys(filled).length === 0) {
       setBusy(false);
-      return setError('Give the article a title and some content before saving.');
+      const msg = 'Give the article a title and some content before saving.';
+      setError(msg);
+      toast.error(msg);
+      return;
     }
 
     const payload = {
@@ -114,6 +119,11 @@ export default function PostEditor() {
       translations: filled,
     };
 
+    // Publishing has a public consequence, so say plainly what just happened to the
+    // article — the previous feedback was the word "saved" appended to a subtitle
+    // above the fold, which you never see if you scrolled down to write.
+    const wasPublished = meta.status === 'published';
+
     try {
       if (isNew) {
         const { id: newId } = await post('/admin/posts', payload);
@@ -123,9 +133,21 @@ export default function PostEditor() {
       }
       setMeta((m) => ({ ...m, status }));
       setSaved(true);
+
+      if (status === 'published') {
+        toast.success(wasPublished ? 'Changes are live on the site.' : 'Article published. It is live on the site.');
+      } else {
+        toast.success(wasPublished ? 'Saved as a draft. It is no longer on the site.' : 'Draft saved.');
+      }
     } catch (err) {
       setError(err.message);
-      setFieldErrors(Object.fromEntries((err.errors ?? []).map((e) => [e.field, e.message])));
+      // The server addresses a field by its full path — "translations.en.slug" — but the
+      // inputs on this page are keyed by the bare name. Take the last segment so a zod
+      // error lands under the box that caused it, not only in the banner.
+      setFieldErrors(
+        Object.fromEntries((err.errors ?? []).map((e) => [String(e.field).split('.').at(-1), e.message]))
+      );
+      toast.error(err.message);
     } finally {
       setBusy(false);
     }
@@ -135,7 +157,7 @@ export default function PostEditor() {
   // a static build could only have offered a fake preview inside this panel.
   const previewUrl =
     !isNew && t.slug
-      ? `/news/${t.slug}/?preview=1`
+      ? `/${t.slug}/?preview=1`
       : null;
 
   return (
@@ -211,8 +233,9 @@ export default function PostEditor() {
                 placeholder="Left blank, this is generated from the title"
               />
               {fieldErrors.slug && <div className="err">{fieldErrors.slug}</div>}
+              {/* Articles live at the root of the site, not under /news/. */}
               <div className="hint">
-                /news/{previewSlug(t.slug || t.title) || '…'}/
+                /{previewSlug(t.slug || t.title) || '…'}/
                 {!t.slug && t.title && ' — from the title'}
               </div>
             </div>

@@ -247,10 +247,23 @@ const locale = localeFromUrl(Astro.url);
   /* Form */
   .hero-form {
     padding: 1.75rem;
-    /* frost the 3D object sitting behind the form */
-    background: rgba(22, 22, 42, 0.62);
-    -webkit-backdrop-filter: blur(26px) saturate(150%);
-    backdrop-filter: blur(26px) saturate(150%);
+    /* Thin, and only lightly blurred — the 3D object should be recognisable through the
+       panel, not smeared into a purple wash. What keeps the text legible at this tint is
+       not the panel but the fields: they carry their own darker fill (below), so the
+       words sit on a solid surface even where the object is bright behind them.
+       (Prefixed first, standard last — see the note on .glass in global.css.) */
+    background: rgba(20, 20, 40, 0.24);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    backdrop-filter: blur(10px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.7);
+  }
+  /* The fields need to stay readable against a translucent panel over a moving object. */
+  /* This is what buys the panel its transparency. The fields are the only thing that has
+     to stay readable, so they — not the whole card — carry the contrast. */
+  .hero-form .field input,
+  .hero-form .field textarea {
+    background: rgba(10, 10, 24, 0.55);
   }
   .form-head {
     margin-bottom: 1.3rem;
@@ -517,7 +530,12 @@ const locale = localeFromUrl(Astro.url);
         antialias: true,
         powerPreference: 'high-performance',
       });
-    } catch {
+    } catch (err) {
+      // Say so. Swallowing this silently means the hero's centrepiece just isn't there
+      // and nothing anywhere tells you why — which is exactly how it gets reported as
+      // "the 3D object is gone" with no way to tell a code regression apart from a
+      // browser with hardware acceleration switched off (see chrome://gpu).
+      console.warn('Hero: WebGL is unavailable, so the 3D object will not render.', err);
       renderer = null;
     }
 
@@ -604,7 +622,9 @@ const locale = localeFromUrl(Astro.url);
           );
       };
 
-      loader.load(MODEL, (gltf) => {
+      loader.load(
+        MODEL,
+        (gltf) => {
         model = gltf.scene;
         // swap the Tripo material for the brand material on every mesh
         model.traverse((o) => {
@@ -626,9 +646,14 @@ const locale = localeFromUrl(Astro.url);
         core.scale.setScalar(targetSize() / baseMaxDim);
         holder.add(core);
 
-        draco.dispose();
-        render();
-      });
+          draco.dispose();
+          render();
+        },
+        undefined,
+        // The other silent failure: a 404 on the .glb, or a Draco decoder the browser
+        // refused to compile, left an empty canvas and no clue anywhere.
+        (err) => console.warn(`Hero: the 3D model at ${MODEL} failed to load.`, err)
+      );
 
       function render() {
         const t = clock.getElapsedTime();

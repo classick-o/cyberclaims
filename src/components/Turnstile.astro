@@ -1,26 +1,46 @@
 ---
-// Cloudflare Turnstile widget. Renders nothing when PUBLIC_TURNSTILE_SITEKEY is
-// unset, which keeps local dev frictionless — the backend skips verification in the
-// same case. Production refuses to boot without the key pair.
+// Cloudflare Turnstile — run ON SUBMIT, not on page load.
 //
-// Turnstile injects a hidden <input name="cf-turnstile-response"> into the enclosing
-// <form>, so the token rides along in the FormData with no extra wiring.
+// data-execution="execute" stops the challenge from running when the widget renders;
+// src/lib/lead-form.ts calls turnstile.execute() when the user presses the button.
+// data-appearance="interaction-only" keeps the box out of the form entirely unless
+// Cloudflare decides a human actually has to click something — which, for a real
+// person filling in a real form, is almost never.
+//
+// So the form is just a form. No Cloudflare panel sitting under the fields announcing
+// that we suspect you, on a page whose visitors have already been defrauded once.
+//
+// Renders nothing when PUBLIC_TURNSTILE_SITEKEY is unset, which keeps local dev
+// frictionless — the backend skips verification in the same case. Production refuses
+// to boot without the key pair.
 const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITEKEY;
 ---
 
 {
   sitekey && (
     <>
-      <div class="cf-turnstile" data-sitekey={sitekey} data-theme="dark" />
+      <div
+        class="cf-turnstile"
+        data-sitekey={sitekey}
+        data-theme="dark"
+        data-execution="execute"
+        data-appearance="interaction-only"
+        data-callback="__ccTurnstileDone"
+        data-error-callback="__ccTurnstileFail"
+        data-timeout-callback="__ccTurnstileFail"
+        data-expired-callback="__ccTurnstileFail"
+      />
       <script is:inline async defer src="https://challenges.cloudflare.com/turnstile/v0/api.js" />
     </>
   )
 }
 
 <style>
-  .cf-turnstile {
+  /* No reserved space. The container stays a zero-height nothing until Turnstile puts
+     an interactive challenge inside it, and only then does it become a visible box. */
+  .cf-turnstile:not(:empty) {
     display: flex;
     justify-content: center;
-    min-height: 65px;
+    margin: 0.25rem 0;
   }
 </style>

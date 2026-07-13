@@ -64,10 +64,7 @@ export function isEditor(cookies: AstroCookies): boolean {
   }
 }
 
-/** srcset from the WebP variants sharp produced at upload. */
-export function srcset(variants: Record<string, string> | null): string | undefined {
-  if (!variants) return undefined;
-  return Object.entries(variants)
-    .map(([width, path]) => `${path} ${width}w`)
-    .join(', ');
-}
+// Re-exported so existing imports keep working. The implementation lives in lib/media
+// because it has no backend dependency, and a prerendered page must be able to use it
+// without dragging mysql2 into its build.
+export { srcset, smallest } from './media';

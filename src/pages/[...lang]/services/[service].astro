@@ -281,7 +281,12 @@ const BENTO_IMG: Record<string, string> = {
                     return (
                       <div
                         class={`svc-cards bento n${b.items.length}`}
-                        style={b.grid ? `--svc-card-grid:${b.grid}` : undefined}
+                        style={[
+                          b.grid ? `--svc-card-grid:${b.grid}` : null,
+                          b.cols ? `--svc-card-cols:${b.cols}` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(';') || undefined}
                       >
                         {b.items.map((d, i) => (
                           <div class={`svc-card${i === tallIdx ? ' is-tall' : ''}`}>
@@ -324,18 +329,22 @@ const BENTO_IMG: Record<string, string> = {
                           />
                         </div>
                       ) : (
+                        // t.d is non-null in this branch by construction — the tile is
+                        // either the centre logo (t.logo set, t.d null) or a definition
+                        // (t.d set, t.logo empty). TypeScript can't see that from the
+                        // ternary, hence the assertions.
                         <article class="bento-ic">
                           <span class="bento-ic-glow" aria-hidden="true" />
                           <img
                             class="bento-ic-img"
-                            src={asset(BENTO_IMG[t.d.id!])}
+                            src={asset(BENTO_IMG[t.d!.id!])}
                             alt=""
                             aria-hidden="true"
                             loading="lazy"
                           />
                           <div class="bento-ic-body">
-                            <h3 class="bento-ic-term">{t.d.term}</h3>
-                            <p class="bento-ic-desc">{t.d.text}</p>
+                            <h3 class="bento-ic-term">{t.d!.term}</h3>
+                            <p class="bento-ic-desc">{t.d!.text}</p>
                           </div>
                         </article>
                       )
@@ -860,10 +869,19 @@ const BENTO_IMG: Record<string, string> = {
     .svc-cards.bento {
       grid-auto-flow: row dense;
     }
+    /* `cols` from the data now actually decides this.
+     *
+     * It never did: the type documents "columns for a 'cards' masonry on desktop
+     * (default 3)", the data said 2, and the stylesheet hardcoded two columns for any
+     * three-card block regardless. So the third card always dropped to a row of its
+     * own — an afterthought below its two peers — and no amount of editing the data
+     * could change it. */
     .svc-cards.bento.n3 {
-      grid-template-columns: var(--svc-card-grid, 1fr 1fr);
+      grid-template-columns: var(--svc-card-grid, repeat(var(--svc-card-cols, 3), 1fr));
     }
-    .svc-cards.bento .svc-card.is-tall {
+    /* The tall feature card belongs to the 2-column n4 bento. In a 3-across row it just
+       stretches one card to twice the height of its neighbours for no reason. */
+    .svc-cards.bento.n4 .svc-card.is-tall {
       grid-column: -2 / -1;
       grid-row: span 2;
     }

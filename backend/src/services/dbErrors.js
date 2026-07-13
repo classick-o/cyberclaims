@@ -17,11 +17,17 @@ export function asUserError(err) {
   if (!err?.code) return err;
 
   if (err.code === 'ER_DUP_ENTRY') {
+    // The raw message is `Duplicate entry 'x' for key 'categories.key_slug'` — it names
+    // the table and column, which is exactly what a 500 must not leak. Map the known
+    // constraints to a field the admin can act on; everything else stays generic.
+    if (/key_slug/.test(err.message)) {
+      return badRequest('name', 'A category with that name already exists.');
+    }
     const slug = /uq_locale_slug|uq_post_locale/.test(err.message);
     return badRequest(
       slug ? 'slug' : 'form',
       slug
-        ? 'Another article already uses that URL slug. Change the slug and try again.'
+        ? 'Another entry already uses that URL slug. Change it and try again.'
         : 'That value is already taken.'
     );
   }

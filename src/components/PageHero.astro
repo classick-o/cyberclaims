@@ -17,6 +17,19 @@ interface Props {
   intro?: string[];
   image?: string;
   imageAlt?: string;
+  /**
+   * The artwork's INTRINSIC size — its real pixel dimensions, not the size it renders at.
+   *
+   * Without them the browser has no idea how tall the image will be until the bytes
+   * arrive, so it reserves no room and the headline underneath jumps down the moment it
+   * lands. This is the hero: it is the biggest thing on the page and the thing the reader
+   * is already looking at. CSS still governs the rendered size (`width: 100%` and a
+   * max-width) — these only supply the ratio.
+   *
+   * Optional, so a page that has not been given them is unchanged rather than wrong.
+   */
+  imageWidth?: number;
+  imageHeight?: number;
   placeholderIcon?: string;
   ctaHref?: string;
   ctaLabel?: string;
@@ -32,6 +45,8 @@ const {
   intro = [],
   image,
   imageAlt = '',
+  imageWidth,
+  imageHeight,
   placeholderIcon = 'press',
   ctaHref = '/start-process/',
   ctaLabel = 'Start Process',
@@ -79,12 +94,26 @@ const imgVars = [
           {ctaLabel} <Icon name="arrow" class="w-4 h-4" />
         </a>
       </div>
+      {/* Anything a page needs under its own headline — /news/ puts its category filters
+          here. Empty on every other page, so nothing else changes. */}
+      <slot />
     </div>
 
     <div class="ph-visual" data-reveal>
+      {/* fetchpriority: it is above the fold and almost certainly the LCP element, so it
+          has no business queueing behind whatever else the page happens to want. */}
       {
         image ? (
-          <img class="ph-img" src={asset(image)} alt={imageAlt} style={imgVars} />
+          <img
+            class="ph-img"
+            src={asset(image)}
+            alt={imageAlt}
+            style={imgVars}
+            width={imageWidth}
+            height={imageHeight}
+            fetchpriority="high"
+            decoding="async"
+          />
         ) : (
           <div class="ph-placeholder" role="img" aria-label="Image placeholder">
             <span class="ph-ph-icon">

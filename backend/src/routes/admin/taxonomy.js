@@ -4,6 +4,7 @@ import { categorySchema, authorSchema } from '../../schemas/post.schema.js';
 import { validate } from '../../middleware/validate.js';
 import { slugify } from '../../services/content.js';
 import { invalidateContent } from '../../services/contentCache.js';
+import { asUserError } from '../../services/dbErrors.js';
 
 export const categories = Router();
 
@@ -11,7 +12,7 @@ categories.get('/', async (req, res, next) => {
   try {
     res.json({ success: true, categories: await Category.list(req.query.locale ?? 'en') });
   } catch (err) {
-    next(err);
+    next(asUserError(err));
   }
 });
 
@@ -29,7 +30,7 @@ categories.post('/', validate(categorySchema), async (req, res, next) => {
     invalidateContent();
     res.status(201).json({ success: true, id });
   } catch (err) {
-    next(err);
+    next(asUserError(err));
   }
 });
 
@@ -39,7 +40,7 @@ categories.put('/:id', validate(categorySchema), async (req, res, next) => {
     invalidateContent();
     res.json({ success: true });
   } catch (err) {
-    next(err);
+    next(asUserError(err));
   }
 });
 
@@ -49,7 +50,7 @@ categories.delete('/:id', async (req, res, next) => {
     invalidateContent();
     res.json({ success: true });
   } catch (err) {
-    next(err);
+    next(asUserError(err));
   }
 });
 
@@ -59,7 +60,7 @@ authors.get('/', async (_req, res, next) => {
   try {
     res.json({ success: true, authors: await Author.list() });
   } catch (err) {
-    next(err);
+    next(asUserError(err));
   }
 });
 
@@ -69,7 +70,7 @@ authors.post('/', validate(authorSchema), async (req, res, next) => {
     invalidateContent();
     res.status(201).json({ success: true, id });
   } catch (err) {
-    next(err);
+    next(asUserError(err));
   }
 });
 
@@ -79,7 +80,7 @@ authors.put('/:id', validate(authorSchema), async (req, res, next) => {
     invalidateContent();
     res.json({ success: true });
   } catch (err) {
-    next(err);
+    next(asUserError(err));
   }
 });
 
@@ -89,6 +90,6 @@ authors.delete('/:id', async (req, res, next) => {
     invalidateContent();
     res.json({ success: true });
   } catch (err) {
-    next(err);
+    next(asUserError(err));
   }
 });

@@ -1,16 +1,40 @@
 import { z } from 'zod';
 
-const nullable = (max) =>
-  z.string().trim().max(max).optional().transform((v) => v || null);
+/**
+ * An optional piece of text, stored as NULL when it is blank.
+ *
+ * `.nullish()`, not `.optional()`. This is the difference between the two:
+ *
+ *   .optional()  accepts  string | undefined
+ *   .nullish()   accepts  string | null | undefined
+ *
+ * ...and the columns behind these fields are nullable, so `null` is exactly what
+ * `GET /api/admin/posts/:id` hands back for an excerpt or an SEO title nobody filled in.
+ * The editor loads the post, changes the body, and PUTs back the object it was given —
+ * so with `.optional()` the API was rejecting its own output. Editing any article whose
+ * SEO fields were left blank failed, with "Expected string, received null" and no clue
+ * which field it meant.
+ *
+ * The rule this broke: whatever GET returns, PUT must accept. If the two disagree, the
+ * only editable records are the ones where every field happens to be filled in.
+ */
+const optionalText = (max) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .nullish()
+    .transform((v) => v || null); // '', null and undefined all mean "no value"
 
 const translation = z.object({
   title: z.string().trim().min(3, 'Give the article a title.').max(255),
-  slug: z.string().trim().max(255).optional(),   // derived from the title when blank
-  excerpt: nullable(500),
+  // nullish for the same reason: derived from the title when blank, and blank is NULL
+  slug: z.string().trim().max(255).nullish(),
+  excerpt: optionalText(500),
   body_html: z.string().min(1, 'The article is empty.').max(500_000),
-  seo_title: nullable(255),
-  seo_description: nullable(320),
-  keywords: z.array(z.string().trim().max(60)).max(20).default([]),
+  seo_title: optionalText(255),
+  seo_description: optionalText(320),
+  keywords: z.array(z.string().trim().max(60)).max(20).nullish().transform((v) => v ?? []),
 });
 
 export const postSchema = z.object({
@@ -37,31 +61,32 @@ export const categorySchema = z.object({
     .trim()
     .regex(/^[a-z0-9-]+$/, 'Use lowercase letters, numbers and hyphens only.')
     .max(100),
-  color: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, 'Use a hex colour.').optional().or(z.literal('')),
+  // `categories.color` is nullable, so GET returns null for one that has none — and the
+  // same round-trip rule applies here as it does to the article's SEO fields above.
+  color: z
+    .string()
+    .trim()
+    .regex(/^#[0-9a-fA-F]{6}$/, 'Use a hex colour.')
+    .nullish()
+    .or(z.literal(''))
+    .transform((v) => v || null),
   sort_order: z.coerce.number().int().min(0).default(0),
   translations: z.record(
     z.string().max(5),
     z.object({
       name: z.string().trim().min(1).max(255),
-      slug: z.string().trim().max(255).optional(),
+      slug: z.string().trim().max(255).nullish(),
     })
   ),
 });
 
 export const authorSchema = z.object({
   name: z.string().trim().min(2).max(255),
-  role: nullable(255),
-  bio: nullable(2000),
-  avatar_id: z.coerce.number().int().positive().nullable().optional(),
+  role: optionalText(255),
+  bio: optionalText(2000),
+  avatar_id: z.coerce.number().int().positive().nullish(),
 });
 
 export const leadStatusSchema = z.object({
   status: z.enum(['new', 'contacted', 'qualified', 'closed']),
-});
-
-export const newsletterSchema = z.object({
-  email: z.string().trim().toLowerCase().email('Enter a valid email address.').max(255),
-  locale: z.string().trim().max(5).default('en'),
-  _honey: z.string().max(0).optional(),
-  'cf-turnstile-response': z.string().max(4096).optional(),
 });

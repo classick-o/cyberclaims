@@ -1,7 +1,7 @@
 ---
 // Featured "Crypto Currency Tracing" highlight - alternating layout (visual left, text right).
 import Icon from './Icon.astro';
-import { link } from '../lib/paths';
+import { link, serviceUrl } from '../lib/paths';
 import { localeFromUrl } from '../i18n/config';
 
 // Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
@@ -39,7 +39,11 @@ const locale = localeFromUrl(Astro.url);
         software enables us to identify risks related to crypto wallets, track cashout points,
         and precisely determine where funds were sent and cashed out.
       </p>
-      <a href={link('/cryptocurrency-tracing/', locale)} class="btn">View More</a>
+      {/* serviceUrl(), not the bare href. The service `href` in site.ts is the internal
+          KEY ('/cryptocurrency-tracing/') used to look up content and images — the page
+          itself lives at /services/cryptocurrency-tracing/. Linking straight to the key
+          sent this button to a URL that has never existed. */}
+      <a href={link(serviceUrl('/cryptocurrency-tracing/'), locale)} class="btn">View More</a>
     </div>
   </div>
 </section>

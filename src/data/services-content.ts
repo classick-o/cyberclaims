@@ -1020,7 +1020,11 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
           {
             type: 'defs',
             layout: 'cards',
-            cols: 2,
+            // Three audiences, three columns. At two, the third card dropped onto a row
+            // of its own and read as an afterthought rather than a peer of the other
+            // two. (`cols` was also being ignored by the stylesheet until now — see the
+            // note on .svc-cards.bento.n3 in services/[service].astro.)
+            cols: 3,
             items: [
               {
                 term: 'Individuals',
@@ -1076,7 +1080,12 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
           },
           {
             type: 'list',
-            grid: '1.9fr 1fr',
+            // Four peers of equal weight: two columns, two rows, four cells of the same
+            // width. The old `grid: '1.9fr 1fr'` made the left column half again as wide
+            // as the right for no reason a reader could infer — and simply dropping the
+            // override falls through to the 3-column default, which is worse: three
+            // across and one orphan underneath.
+            cols: 2,
             items: [
               'Customer-involved',
               'Intangible - the services cannot be stocked just like everyday goods',

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { get, post, put, del } from '../api.js';
-import { LOCALES, DEFAULT_LOCALE } from '../locales.js';
-import MediaPicker from '../components/MediaPicker.jsx';
+import { DEFAULT_LOCALE } from '../locales.js';
+import { useDialog } from '../components/Dialog.jsx';
+import { useToast } from '../components/Toast.jsx';
 
 export default function Taxonomy() {
   const [categories, setCategories] = useState([]);
@@ -32,7 +33,10 @@ export default function Taxonomy() {
 
       {error && <div className="banner error">{error}</div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', alignItems: 'start' }}>
+      {/* Stacked, not side by side. Two tables of unrelated things in adjacent columns
+          made each one narrow enough to crowd its own buttons, and neither is long
+          enough to be worth the squeeze. */}
+      <div className="stack">
         <Categories items={categories} reload={load} onError={setError} />
         <Authors items={authors} reload={load} onError={setError} />
       </div>
@@ -43,6 +47,8 @@ export default function Taxonomy() {
 function Categories({ items, reload, onError }) {
   const [name, setName] = useState('');
   const [color, setColor] = useState('#8b5bbd');
+  const [ask, dialog] = useDialog();
+  const toast = useToast();
 
   const add = async (e) => {
     e.preventDefault();
@@ -50,7 +56,11 @@ function Categories({ items, reload, onError }) {
     // the display name is edited or translated. It is the stable identity of the
     // category — keying anything on translatable display text is how mappings break
     // silently the moment someone translates them.
-    const key_slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const key_slug = name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
     if (!key_slug) return;
 
     try {
@@ -59,16 +69,26 @@ function Categories({ items, reload, onError }) {
         color,
         translations: { [DEFAULT_LOCALE]: { name: name.trim() } },
       });
+      toast.success(`Category "${name.trim()}" added.`);
       setName('');
       reload();
     } catch (err) {
       onError(err.message);
+      toast.error(err.message);
     }
   };
 
   const rename = async (c) => {
-    const next = window.prompt('Category name', c.name);
-    if (!next?.trim()) return;
+    const next = await ask({
+      title: 'Rename category',
+      message: 'The URL stays the same — only the label on the filter tab changes.',
+      label: 'Name',
+      defaultValue: c.name,
+      confirmLabel: 'Rename',
+      required: true,
+    });
+    if (next === null) return;
+
     try {
       await put(`/admin/categories/${c.id}`, {
         key_slug: c.key_slug,
@@ -76,15 +96,30 @@ function Categories({ items, reload, onError }) {
         sort_order: c.sort_order ?? 0,
         translations: { [DEFAULT_LOCALE]: { name: next.trim() } },
       });
+      toast.success(`Renamed to "${next.trim()}".`);
       reload();
     } catch (err) {
       onError(err.message);
+      toast.error(err.message);
     }
   };
 
   const remove = async (c) => {
-    if (!window.confirm(`Delete "${c.name}"? Articles in it stay, but lose their category.`)) return;
-    await del(`/admin/categories/${c.id}`).catch((e) => onError(e.message));
+    const ok = await ask({
+      title: 'Delete this category?',
+      message: `"${c.name}" will be removed. Articles in it stay published, but lose their category.`,
+      confirmLabel: 'Delete',
+      danger: true,
+    });
+    if (!ok) return;
+
+    try {
+      await del(`/admin/categories/${c.id}`);
+      toast.success(`Category "${c.name}" was deleted.`);
+    } catch (e) {
+      onError(e.message);
+      toast.error(e.message);
+    }
     reload();
   };
 
@@ -130,7 +165,7 @@ function Categories({ items, reload, onError }) {
         </table>
       )}
 
-      <form onSubmit={add} style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+      <form onSubmit={add} className="inline-add">
         <input
           type="text"
           placeholder="New category"
@@ -141,49 +176,68 @@ function Categories({ items, reload, onError }) {
           type="color"
           value={color}
           onChange={(e) => setColor(e.target.value)}
-          style={{ width: '2.6rem', padding: '0.2rem', cursor: 'pointer' }}
-          title="Colour"
+          title="Colour of the filter tab"
         />
         <button className="btn">Add</button>
       </form>
+
+      {dialog}
     </div>
   );
 }
 
 function Authors({ items, reload, onError }) {
-  const [form, setForm] = useState({ name: '', role: '', bio: '', avatar_id: null });
-  const [avatar, setAvatar] = useState(null);
-  const [picker, setPicker] = useState(false);
+  // Name and role only. An author here is a byline, not a profile — nothing on the
+  // site renders a bio or a portrait, and a field that feeds nothing is a field that
+  // gets filled in once and then quietly rots.
+  const [form, setForm] = useState({ name: '', role: '' });
   const [editing, setEditing] = useState(null);
+  const [ask, dialog] = useDialog();
+  const toast = useToast();
 
   const reset = () => {
-    setForm({ name: '', role: '', bio: '', avatar_id: null });
-    setAvatar(null);
+    setForm({ name: '', role: '' });
     setEditing(null);
   };
 
   const submit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return;
+    const name = form.name.trim();
     try {
       if (editing) await put(`/admin/authors/${editing}`, form);
       else await post('/admin/authors', form);
+      toast.success(editing ? `Saved changes to ${name}.` : `${name} added as an author.`);
       reset();
       reload();
     } catch (err) {
       onError(err.message);
+      toast.error(err.message);
     }
   };
 
   const edit = (a) => {
     setEditing(a.id);
-    setForm({ name: a.name, role: a.role ?? '', bio: a.bio ?? '', avatar_id: a.avatar_id });
-    setAvatar(a.avatar_url ? { path: a.avatar_url } : null);
+    setForm({ name: a.name, role: a.role ?? '' });
   };
 
   const remove = async (a) => {
-    if (!window.confirm(`Delete ${a.name}? Their articles stay, but lose the byline.`)) return;
-    await del(`/admin/authors/${a.id}`).catch((e) => onError(e.message));
+    const ok = await ask({
+      title: 'Delete this author?',
+      message: `${a.name} will be removed. Their articles stay published, but lose the byline.`,
+      confirmLabel: 'Delete',
+      danger: true,
+    });
+    if (!ok) return;
+
+    try {
+      await del(`/admin/authors/${a.id}`);
+      toast.success(`${a.name} was deleted.`);
+    } catch (e) {
+      onError(e.message);
+      toast.error(e.message);
+    }
+    if (editing === a.id) reset();
     reload();
   };
 
@@ -200,15 +254,6 @@ function Authors({ items, reload, onError }) {
           <tbody>
             {items.map((a) => (
               <tr key={a.id}>
-                <td style={{ width: '2.5rem' }}>
-                  {a.avatar_url && (
-                    <img
-                      src={a.avatar_url}
-                      alt=""
-                      style={{ width: '2rem', height: '2rem', borderRadius: '50%', objectFit: 'cover', display: 'block' }}
-                    />
-                  )}
-                </td>
                 <td>
                   <strong>{a.name}</strong>
                   {a.role && <div className="hint">{a.role}</div>}
@@ -227,61 +272,41 @@ function Authors({ items, reload, onError }) {
         </table>
       )}
 
-      <form onSubmit={submit} style={{ marginTop: '1rem' }}>
-        <div className="field">
-          <input
-            type="text"
-            placeholder="Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-        </div>
-        <div className="field">
-          <input
-            type="text"
-            placeholder="Role — e.g. Head of Blockchain Forensics"
-            value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value })}
-          />
-        </div>
-        <div className="field">
-          <textarea
-            rows={2}
-            placeholder="Short bio"
-            value={form.bio}
-            onChange={(e) => setForm({ ...form, bio: e.target.value })}
-          />
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          {avatar && (
-            <img
-              src={avatar.path}
-              alt=""
-              style={{ width: '2.2rem', height: '2.2rem', borderRadius: '50%', objectFit: 'cover' }}
+      <form onSubmit={submit} style={{ marginTop: '1.25rem' }}>
+        <div className="field-row">
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label htmlFor="author-name">Name</label>
+            <input
+              id="author-name"
+              type="text"
+              placeholder="Julia Blokhina"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
-          )}
-          <button type="button" className="btn ghost sm" onClick={() => setPicker(true)}>
-            {avatar ? 'Change photo' : 'Add photo'}
-          </button>
-          <div className="spacer" />
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label htmlFor="author-role">Role</label>
+            <input
+              id="author-role"
+              type="text"
+              placeholder="Head of Blockchain Forensics"
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
           {editing && (
             <button type="button" className="btn ghost sm" onClick={reset}>
               Cancel
             </button>
           )}
-          <button className="btn sm">{editing ? 'Save' : 'Add author'}</button>
+          <button className="btn sm">{editing ? 'Save changes' : 'Add author'}</button>
         </div>
       </form>
 
-      {picker && (
-        <MediaPicker
-          onPick={(m) => {
-            setAvatar(m);
-            setForm((f) => ({ ...f, avatar_id: m.id }));
-          }}
-          onClose={() => setPicker(false)}
-        />
-      )}
+      {dialog}
     </div>
   );
 }

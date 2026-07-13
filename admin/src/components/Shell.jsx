@@ -7,7 +7,6 @@ const NAV = [
   { to: '/media', label: 'Media', icon: Icons.media },
   { to: '/taxonomy', label: 'Categories & Authors', icon: Icons.taxonomy },
   { to: '/leads', label: 'Leads', icon: Icons.leads },
-  { to: '/subscribers', label: 'Newsletter', icon: Icons.newsletter },
 ];
 
 export default function Shell({ admin, onSignedOut, children }) {

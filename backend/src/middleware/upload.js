@@ -23,6 +23,14 @@ import { env } from '../config/env.js';
 const ACCEPTED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']);
 const WIDTHS = [480, 960, 1600];
 
+/** A 400 the media route renders as { field: 'file', message } — never a 500. */
+function badImage(message) {
+  const err = new Error(message);
+  err.status = 400;
+  err.field = 'file';
+  return err;
+}
+
 export const uploadImage = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: env.MAX_UPLOAD_MB * 1024 * 1024, files: 1 },
@@ -43,10 +51,7 @@ export function handleUploadErrors(err, req, res, next) {
 export async function processImage(buffer, originalName) {
   const sniffed = await fileTypeFromBuffer(buffer);
   if (!sniffed || !ACCEPTED.has(sniffed.mime)) {
-    const err = new Error('That file is not an image we can process (JPEG, PNG, WebP, AVIF or GIF).');
-    err.status = 400;
-    err.field = 'file';
-    throw err;
+    throw badImage('That file is not an image we can process (JPEG, PNG, WebP, AVIF or GIF).');
   }
 
   const now = new Date();
@@ -57,7 +62,17 @@ export async function processImage(buffer, originalName) {
   // .rotate() with no argument applies the EXIF orientation and then discards the
   // EXIF block — which is also where GPS coordinates live. Photos of a scam victim's
   // screen should not ship their home address to the internet.
-  const { width = 0, height = 0 } = await sharp(buffer, { animated: false }).rotate().metadata();
+  //
+  // The magic-byte sniff only proves the HEADER is an image; the body can still be
+  // truncated or corrupt, and sharp will throw a raw libvips message ("vipspng: libpng
+  // read error"). Uncaught, that is a 500 that leaks libvips internals to the client.
+  // Translate any decode failure into the same friendly 400 an unsupported file gets.
+  let width = 0, height = 0;
+  try {
+    ({ width = 0, height = 0 } = await sharp(buffer, { animated: false }).rotate().metadata());
+  } catch {
+    throw badImage('We could not read that image — it may be corrupt or truncated.');
+  }
 
   // Never upscale — but never truncate either. A 1200px source gets 480/960/1200,
   // not 480/960: capping at the second-largest step would mean the biggest file we
@@ -67,23 +82,34 @@ export async function processImage(buffer, originalName) {
     .filter((w) => w > 0)
     .sort((a, b) => a - b);
 
+  // A decodable header with no dimensions (0×0) would produce no variants and store a
+  // media row whose `path` is null — a "successful" upload of nothing, which then renders
+  // as a broken <img>. Refuse it here instead.
+  if (targets.length === 0) {
+    throw badImage('That image has no readable dimensions.');
+  }
+
   const variants = {};
   let largest = null;
   let bytes = 0;
 
-  for (const w of targets) {
-    const out = await sharp(buffer, { animated: false })
-      .rotate()
-      .resize({ width: w, withoutEnlargement: true })
-      .webp({ quality: 82 })
-      .toBuffer();
+  try {
+    for (const w of targets) {
+      const out = await sharp(buffer, { animated: false })
+        .rotate()
+        .resize({ width: w, withoutEnlargement: true })
+        .webp({ quality: 82 })
+        .toBuffer();
 
-    const rel = `/uploads/${dir.replace(/\\/g, '/')}/${id}-${w}.webp`;
-    await writeFile(join(env.UPLOAD_DIR, dir, `${id}-${w}.webp`), out);
+      const rel = `/uploads/${dir.replace(/\\/g, '/')}/${id}-${w}.webp`;
+      await writeFile(join(env.UPLOAD_DIR, dir, `${id}-${w}.webp`), out);
 
-    variants[w] = rel;
-    largest = rel; // targets is ascending, so this ends up as the biggest
-    bytes = out.length;
+      variants[w] = rel;
+      largest = rel; // targets is ascending, so this ends up as the biggest
+      bytes = out.length;
+    }
+  } catch {
+    throw badImage('We could not process that image — it may be corrupt or truncated.');
   }
 
   return {

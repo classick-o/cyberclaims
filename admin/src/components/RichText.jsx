@@ -4,7 +4,8 @@ import StarterKit from '@tiptap/starter-kit';
 import { Placeholder } from '@tiptap/extensions';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
-import { FAQ_EXTENSIONS, insertFaq } from '../extensions/Faq.js';
+import { FAQ_EXTENSIONS, insertFaq, hasFaq } from '../extensions/Faq.js';
+import { useDialog } from './Dialog.jsx';
 
 // WYSIWYG, not Markdown.
 //
@@ -24,13 +25,17 @@ const TOOLBAR = [
   { cmd: 'toggleBulletList', is: 'bulletList', label: '• List' },
   { cmd: 'toggleOrderedList', is: 'orderedList', label: '1. List' },
   { cmd: 'toggleBlockquote', is: 'blockquote', label: 'Quote' },
-  { cmd: 'toggleCode', is: 'code', label: 'Code' },
 ];
 
 export default function RichText({ value, onChange, onPickImage, placeholder }) {
+  const [ask, dialog] = useDialog();
+
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ heading: { levels: [2, 3] } }),
+      // code and codeBlock are switched off outright, not just hidden from the toolbar
+      // — leaving the extensions loaded would keep Ctrl+E and the ``` shortcut alive,
+      // and an editor who hit one by accident would have no button to undo it with.
+      StarterKit.configure({ heading: { levels: [2, 3] }, code: false, codeBlock: false }),
       // The CSS has always styled `.is-editor-empty::before` to show a hint — but that
       // class comes from this extension, which was never installed. The placeholder had
       // simply never appeared.
@@ -82,12 +87,22 @@ export default function RichText({ value, onChange, onPickImage, placeholder }) 
 
   const active = (is) => (Array.isArray(is) ? editor.isActive(...is) : editor.isActive(is));
 
-  const setLink = () => {
+  const setLink = async () => {
     const prev = editor.getAttributes('link').href ?? '';
-    const url = window.prompt('Link URL (leave empty to remove)', prev);
-    if (url === null) return;
-    if (url === '') return editor.chain().focus().unsetLink().run();
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+
+    const url = await ask({
+      title: prev ? 'Edit link' : 'Add a link',
+      label: 'Link URL',
+      message: 'Leave it empty to remove the link.',
+      defaultValue: prev,
+      placeholder: 'https://example.com',
+      confirmLabel: prev ? 'Update' : 'Add link',
+    });
+
+    if (url === null) return; // cancelled
+    if (url.trim() === '') return editor.chain().focus().unsetLink().run();
+
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url.trim() }).run();
   };
 
   return (
@@ -133,10 +148,17 @@ export default function RichText({ value, onChange, onPickImage, placeholder }) 
 
         <div className="tt-sep" />
 
+        {/* One per article. The button stays clickable once the block exists — it takes
+            you to it rather than adding a second — but it reads as spent, so you can see
+            at a glance that this article already has its Q&A section. */}
         <button
           type="button"
-          className={`tt-btn${active('faq') ? ' on' : ''}`}
-          title="A block of questions and answers. Renders as an accordion, and tells Google it is an FAQ."
+          className={`tt-btn${active('faq') ? ' on' : ''}${hasFaq(editor) ? ' spent' : ''}`}
+          title={
+            hasFaq(editor)
+              ? 'This article already has its Q&A section — an article gets one. Click to jump to it.'
+              : 'A block of questions and answers. Renders as an accordion, and tells Google it is an FAQ.'
+          }
           onClick={() => insertFaq(editor)}
         >
           Q&amp;A
@@ -146,6 +168,8 @@ export default function RichText({ value, onChange, onPickImage, placeholder }) 
       <div className="tt-editor">
         <EditorContent editor={editor} />
       </div>
+
+      {dialog}
     </div>
   );
 }

@@ -116,7 +116,7 @@ export const SERVICES: Service[] = [
   },
 ];
 
-export const URL_CHECKER = { title: 'URL Checker', href: '/url-checker/', icon: 'url' };
+export const URL_CHECKER = { title: 'URL Checker', href: '/url-checker/', icon: 'link' };
 
 // Sustainability metrics - preserved from the live site ("We prioritise Sustainability").
 // NOTE: live site shows 0 / 0 / 0 - placeholders below await real figures from TBS.

@@ -1,23 +1,37 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { get, post, del } from '../api.js';
+import { useDialog } from '../components/Dialog.jsx';
+import { useToast } from '../components/Toast.jsx';
+import Pager from '../components/Pager.jsx';
 import { LOCALES } from '../locales.js';
 
+const PAGE_SIZE = 25;
 const date = (v) => (v ? new Date(v).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
 
 export default function Posts() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
   const [q, setQ] = useState('');
   const [error, setError] = useState('');
+  const [ask, dialog] = useDialog();
+  const toast = useToast();
 
   const load = () => {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String((page - 1) * PAGE_SIZE) });
     if (status) params.set('status', status);
     if (q) params.set('q', q);
     get(`/admin/posts?${params}`)
-      .then((r) => setPosts(r.posts))
+      .then((r) => {
+        setPosts(r.posts);
+        setTotal(r.total ?? 0);
+        // If deletions shrank the list below the current page, step back onto a real one.
+        const last = Math.max(1, Math.ceil((r.total ?? 0) / PAGE_SIZE));
+        if (page > last) setPage(last);
+      })
       .catch((e) => setError(e.message));
   };
 
@@ -25,16 +39,42 @@ export default function Posts() {
     const t = setTimeout(load, q ? 250 : 0); // debounce the search box only
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, q]);
+  }, [status, q, page]);
 
-  const setPostStatus = async (id, next) => {
-    await post(`/admin/posts/${id}/status`, { status: next }).catch((e) => setError(e.message));
+  // A filter change is a new result set — go back to its first page, never leave the
+  // reader stranded on page 4 of a set that now has one page.
+  const filter = (setter) => (v) => {
+    setter(v);
+    setPage(1);
+  };
+
+  const setPostStatus = async (id, title, next) => {
+    try {
+      await post(`/admin/posts/${id}/status`, { status: next });
+      toast.success(
+        next === 'published' ? `"${title}" is live on the site.` : `"${title}" is no longer on the site.`
+      );
+    } catch (e) {
+      toast.error(e.message);
+    }
     load();
   };
 
   const remove = async (id, title) => {
-    if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
-    await del(`/admin/posts/${id}`).catch((e) => setError(e.message));
+    const ok = await ask({
+      title: 'Delete this article?',
+      message: `"${title}" will be removed from the site and the database. This cannot be undone.`,
+      confirmLabel: 'Delete',
+      danger: true,
+    });
+    if (!ok) return;
+
+    try {
+      await del(`/admin/posts/${id}`);
+      toast.success(`"${title}" was deleted.`);
+    } catch (e) {
+      toast.error(e.message);
+    }
     load();
   };
 
@@ -54,7 +94,7 @@ export default function Posts() {
       {error && <div className="banner error">{error}</div>}
 
       <div className="toolbar">
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+        <select value={status} onChange={(e) => filter(setStatus)(e.target.value)}>
           <option value="">All statuses</option>
           <option value="draft">Drafts</option>
           <option value="published">Published</option>
@@ -64,7 +104,7 @@ export default function Posts() {
           type="search"
           placeholder="Search titles..."
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => filter(setQ)(e.target.value)}
         />
       </div>
 
@@ -130,11 +170,11 @@ export default function Posts() {
                   <td style={{ color: 'var(--muted)', whiteSpace: 'nowrap' }}>{date(p.published_at)}</td>
                   <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                     {p.status === 'published' ? (
-                      <button className="btn ghost sm" onClick={() => setPostStatus(p.id, 'draft')}>
+                      <button className="btn ghost sm" onClick={() => setPostStatus(p.id, p.title, 'draft')}>
                         Unpublish
                       </button>
                     ) : (
-                      <button className="btn ghost sm" onClick={() => setPostStatus(p.id, 'published')}>
+                      <button className="btn ghost sm" onClick={() => setPostStatus(p.id, p.title, 'published')}>
                         Publish
                       </button>
                     )}{' '}
@@ -148,6 +188,10 @@ export default function Posts() {
           </table>
         )}
       </div>
+
+      <Pager page={page} pageSize={PAGE_SIZE} total={total} onPage={setPage} />
+
+      {dialog}
     </>
   );
 }
