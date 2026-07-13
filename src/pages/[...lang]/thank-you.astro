@@ -3,10 +3,16 @@
 // `action="/api/lead"`, and the API redirects here (303) when the request wasn't the
 // fetch() call. With JS, the forms show their success state inline and never
 // navigate here.
-import Layout from '../layouts/Layout.astro';
-import Icon from '../components/Icon.astro';
-import { CONTACT } from '../data/site';
-import { link } from '../lib/paths';
+import Layout from '../../layouts/Layout.astro';
+import Icon from '../../components/Icon.astro';
+import { CONTACT } from '../../data/site';
+import { link } from '../../lib/paths';
+import { localePaths, type Locale } from '../../i18n/config';
+
+// One file, one page per locale. The default locale maps to lang: undefined, and a
+// rest parameter matches zero segments — so English stays at /about-us/, not /en/about-us/.
+export const getStaticPaths = localePaths;
+const { locale } = Astro.props as { locale: Locale };
 ---
 
 <Layout
@@ -34,7 +40,7 @@ import { link } from '../lib/paths';
           <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>.
         </p>
 
-        <a href={link('/')} class="btn ty-btn">Back to homepage</a>
+        <a href={link('/', locale)} class="btn ty-btn">Back to homepage</a>
       </div>
     </div>
   </section>

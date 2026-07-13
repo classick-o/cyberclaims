@@ -118,16 +118,6 @@ export const SERVICES: Service[] = [
 
 export const URL_CHECKER = { title: 'URL Checker', href: '/url-checker/', icon: 'url' };
 
-// Homepage stats - brief §4 wants animated counters (cases resolved, funds traced, countries).
-// NOTE: values below are PLACEHOLDERS pending real figures from TBS/Julia.
-// The live site currently shows "0" which harms credibility - do not ship these unverified.
-export const STATS = [
-  { value: 2400, suffix: '+', label: 'Cases Reviewed' },
-  { value: 90000, prefix: '€', label: 'Recovered (single case)' },
-  { value: 120, suffix: '+', label: 'Countries Served' },
-  { value: 350, suffix: '+', label: 'Press Features' },
-];
-
 // Sustainability metrics - preserved from the live site ("We prioritise Sustainability").
 // NOTE: live site shows 0 / 0 / 0 - placeholders below await real figures from TBS.
 export const SUSTAINABILITY = [
@@ -198,38 +188,6 @@ export const TESTIMONIALS: Testimonial[] = [
     quote:
       'They have become our partners in our fight against cybercrime. Helping in the protection of our brand from cyber-attacks and counterfeiting was impressive. We experienced a significant boost in the protection of our intellectual property.',
     name: 'Alex Dunn',
-  },
-];
-
-export type BlogCard = {
-  date: string;
-  author: string;
-  title: string;
-  href: string;
-  category: string;
-};
-
-export const LATEST_BLOGS: BlogCard[] = [
-  {
-    date: 'July 2, 2026',
-    author: 'ContentTeam',
-    title: 'Is Coinbase Wallet Safe? A 2026 Security Review',
-    href: '/news/is-coinbase-wallet-safe-a-2026-security-review/',
-    category: 'Regulation',
-  },
-  {
-    date: 'March 23, 2026',
-    author: 'ContentTeam',
-    title: 'Is Profit Storm Legit or a Scam? What Users Should Know',
-    href: '/news/is-profit-storm-legit-or-a-scam/',
-    category: 'Crypto Scams',
-  },
-  {
-    date: 'March 23, 2026',
-    author: 'ContentTeam',
-    title: 'X Bitcoin Capex Club Review: What Users Are Asking and What to Watch Out For',
-    href: '/news/x-bitcoin-capex-club-review/',
-    category: 'Crypto Scams',
   },
 ];
 

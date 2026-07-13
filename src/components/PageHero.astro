@@ -3,7 +3,13 @@
 // Shows the provided image, or an icon "placeholder" so it's clear an image
 // still needs to be created/placed there.
 import Icon from './Icon.astro';
-import { link } from '../lib/paths';
+import { asset, link } from '../lib/paths';
+import { localeFromUrl } from '../i18n/config';
+
+// Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
+// 14 components, and a prop that one of them forgets to pass renders another
+// language's URLs on the page without erroring.
+const locale = localeFromUrl(Astro.url);
 
 interface Props {
   eyebrow?: string;
@@ -69,7 +75,7 @@ const imgVars = [
       <h1 class="h-display ph-title">{title}</h1>
       {intro.map((p) => <p class="ph-intro">{p}</p>)}
       <div class="ph-cta">
-        <a href={link(ctaHref)} class="btn">
+        <a href={link(ctaHref, locale)} class="btn">
           {ctaLabel} <Icon name="arrow" class="w-4 h-4" />
         </a>
       </div>
@@ -78,7 +84,7 @@ const imgVars = [
     <div class="ph-visual" data-reveal>
       {
         image ? (
-          <img class="ph-img" src={link(image)} alt={imageAlt} style={imgVars} />
+          <img class="ph-img" src={asset(image)} alt={imageAlt} style={imgVars} />
         ) : (
           <div class="ph-placeholder" role="img" aria-label="Image placeholder">
             <span class="ph-ph-icon">

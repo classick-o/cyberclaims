@@ -39,6 +39,11 @@ const schema = z
     // intended emergency response, not a bug.
     JWT_SECRET: z.string().min(32, 'must be at least 32 characters'),
 
+    // Days after a lead is CLOSED before it is deleted. GDPR Art. 5(1)(e): personal
+    // data may not be kept longer than the purpose requires, and these rows record how
+    // much money a victim lost. 0 disables the job.
+    LEAD_RETENTION_DAYS: z.coerce.number().int().min(0).max(3650).default(730),
+
     // Where uploaded media is written and served from.
     UPLOAD_DIR: z.string().default('uploads'),
     MAX_UPLOAD_MB: z.coerce.number().int().positive().max(50).default(8),
@@ -52,28 +57,13 @@ const schema = z
     NOTIFICATION_EMAIL: z.string().email().optional(),
 
     TURNSTILE_SECRET: optional,
-  })
-  .superRefine((v, ctx) => {
-    if (v.NODE_ENV !== 'production') return;
-    for (const key of [
-      'SMTP_HOST',
-      'SMTP_USER',
-      'SMTP_PASS',
-      'MAIL_FROM',
-      'NOTIFICATION_EMAIL',
-      'TURNSTILE_SECRET',
-    ]) {
-      if (!v[key]) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: [key], message: 'is required in production' });
-      }
-    }
   });
 
 const parsed = schema.safeParse(present);
 
 if (!parsed.success) {
   const lines = parsed.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`);
-  console.error(`\nInvalid environment — refusing to start:\n${lines.join('\n')}\n`);
+  console.error(`\nInvalid environment:\n${lines.join('\n')}\n`);
   console.error('See .env.example for the full list.\n');
   process.exit(1);
 }
@@ -83,3 +73,42 @@ export const env = parsed.data;
 export const isProd = env.NODE_ENV === 'production';
 export const emailEnabled = Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS);
 export const turnstileEnabled = Boolean(env.TURNSTILE_SECRET);
+
+/**
+ * Runtime preconditions for a production server. Called from server.js — deliberately
+ * NOT enforced at module load.
+ *
+ * The Astro build imports this module (the blog pages read the database directly) and
+ * Vite sets NODE_ENV=production while building. Enforcing "you must have SMTP
+ * credentials" at import time therefore killed the *build*, on a machine that is not
+ * serving anything and has no business holding production secrets.
+ *
+ * Parsing the environment and asserting it is fit to serve traffic are two different
+ * questions. This is the second one.
+ */
+export function assertServeable() {
+  if (!isProd) return;
+
+  const missing = [
+    'SMTP_HOST',
+    'SMTP_USER',
+    'SMTP_PASS',
+    'MAIL_FROM',
+    'NOTIFICATION_EMAIL',
+    // The forms say "Protected by CAPTCHA". Booting production without a Turnstile
+    // secret would make that a lie, so it is a hard requirement, not a nice-to-have.
+    'TURNSTILE_SECRET',
+  ].filter((key) => !env[key]);
+
+  if (missing.length > 0) {
+    console.error(
+      `\nRefusing to serve in production without:\n${missing.map((m) => `  ${m}`).join('\n')}\n`
+    );
+    process.exit(1);
+  }
+
+  if (env.JWT_SECRET.startsWith('dev-only')) {
+    console.error('\nRefusing to serve in production with the development JWT_SECRET.\n');
+    process.exit(1);
+  }
+}

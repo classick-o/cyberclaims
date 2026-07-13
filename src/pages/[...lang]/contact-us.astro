@@ -1,12 +1,18 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import PageHero from '../components/PageHero.astro';
-import Aurora from '../components/Aurora.astro';
-import CtaStrip from '../components/CtaStrip.astro';
-import Icon from '../components/Icon.astro';
-import Turnstile from '../components/Turnstile.astro';
-import { CONTACT } from '../data/site';
-import { link } from '../lib/paths';
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Aurora from '../../components/Aurora.astro';
+import CtaStrip from '../../components/CtaStrip.astro';
+import Icon from '../../components/Icon.astro';
+import Turnstile from '../../components/Turnstile.astro';
+import { CONTACT } from '../../data/site';
+import { asset } from '../../lib/paths';
+import { localePaths, type Locale } from '../../i18n/config';
+
+// One file, one page per locale. The default locale maps to lang: undefined, and a
+// rest parameter matches zero segments — so English stays at /about-us/, not /en/about-us/.
+export const getStaticPaths = localePaths;
+const { locale } = Astro.props as { locale: Locale };
 
 const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
 ---
@@ -44,7 +50,7 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
                   <li>
                     <img
                       class="ci-flag"
-                      src={link(`/flags/${flagOf(p.region)}.svg`)}
+                      src={asset(`/flags/${flagOf(p.region)}.svg`)}
                       alt={p.region}
                       width="20"
                       height="20"
@@ -395,7 +401,7 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
 </style>
 
 <script>
-  import { initLeadForm } from '../lib/lead-form';
+  import { initLeadForm } from '../../lib/lead-form';
 
   const form = document.getElementById('contactForm') as HTMLFormElement | null;
   const head = document.getElementById('contactFormHead');

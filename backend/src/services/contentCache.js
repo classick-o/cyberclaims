@@ -10,7 +10,21 @@
 const TTL_MS = 5 * 60 * 1000;
 const MAX_ENTRIES = 200;
 
-const store = new Map();
+// Anchored on globalThis, NOT a plain module-level `const`.
+//
+// Express and Astro share one process, but not one module graph: Astro's build
+// BUNDLES this file into dist/server/, so `import { cached }` from an .astro page and
+// `import { invalidateContent }` from an Express route resolve to two different
+// module instances, each with its own Map.
+//
+// The failure that produced this comment: an anonymous visitor loaded a draft's URL,
+// findBySlug cached `null`, the editor published — invalidateContent() cleared
+// EXPRESS's Map — and the article stayed 404 for five minutes, because Astro was
+// reading the other one. The cache was, in effect, never invalidated.
+//
+// There is exactly one globalThis per process, so this is the shared ground.
+const STORE = Symbol.for('cyberclaims.contentCache');
+const store = (globalThis[STORE] ??= new Map());
 
 export function cached(key, fn) {
   const hit = store.get(key);

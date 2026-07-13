@@ -1,23 +1,31 @@
 ---
 // Individual service page - lives at /services/<slug>/
-import Layout from '../../layouts/Layout.astro';
-import PageHero from '../../components/PageHero.astro';
-import Aurora from '../../components/Aurora.astro';
-import CtaStrip from '../../components/CtaStrip.astro';
-import Icon from '../../components/Icon.astro';
-import ServicesRail from '../../components/ServicesRail.astro';
-import { SERVICES } from '../../data/site';
-import { SERVICE_CONTENT, SERVICE_IMAGE } from '../../data/services-content';
-import { link } from '../../lib/paths';
+import Layout from '../../../layouts/Layout.astro';
+import PageHero from '../../../components/PageHero.astro';
+import Aurora from '../../../components/Aurora.astro';
+import CtaStrip from '../../../components/CtaStrip.astro';
+import Icon from '../../../components/Icon.astro';
+import ServicesRail from '../../../components/ServicesRail.astro';
+import { SERVICES } from '../../../data/site';
+import { SERVICE_CONTENT, SERVICE_IMAGE } from '../../../data/services-content';
+import { asset } from '../../../lib/paths';
+import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 
+// Two dynamic segments, so this is the cartesian product: every service in every
+// locale. With one locale that is exactly the ten pages we had before.
 export function getStaticPaths() {
-  return SERVICES.map((s) => ({
-    params: { service: s.href.replace(/^\/|\/$/g, '') },
-    props: { service: s },
-  }));
+  return LOCALES.flatMap((locale) =>
+    SERVICES.map((s) => ({
+      params: {
+        lang: locale === DEFAULT_LOCALE ? undefined : locale,
+        service: s.href.replace(/^\/|\/$/g, ''),
+      },
+      props: { service: s, locale },
+    }))
+  );
 }
 
-const { service } = Astro.props;
+const { service, locale } = Astro.props as { service: (typeof SERVICES)[number]; locale: Locale };
 const content = SERVICE_CONTENT[service.href];
 const image = SERVICE_IMAGE[service.href];
 const intro = content?.intro ?? [service.blurb];
@@ -37,19 +45,26 @@ const CARD_ICONS = [
   'business',
 ];
 
-// 3D glossy artwork for the recurring "techniques" bento cards, keyed by term.
-// A bento section whose every item has artwork renders the rich image cards.
+// 3D glossy artwork for the recurring "techniques" bento cards.
+//
+// Keyed on a STABLE id, not on the displayed term.
+//
+// This map used to be keyed on the English term itself ('Cluster Analysis': ...).
+// That works right up until someone translates the term — at which point the lookup
+// silently misses, every bento card loses its artwork, and nothing errors. It is the
+// same class of bug as keying a category on its display name, and it was sitting in
+// the one file a translator would touch first. Each `defs` item now carries an `id`
+// (see src/data/services-content.ts) and that id is what we look up.
 const BENTO_IMG: Record<string, string> = {
-  'Cluster Analysis': '/bento/cluster-analysis.webp',
-  'Attribution Data': '/bento/attribution-data.webp',
-  'KYC Information Requests': '/bento/kyc-information.webp',
-  'KYC Requests': '/bento/kyc-information.webp',
-  'Subpoena Targets': '/bento/subpoena.webp',
-  'Network Forensics': '/bento/network-forensics.webp',
-  'Cryptocurrency Forensics': '/bento/crypto-forensics.webp',
-  'Fraudulent Pattern Analysis': '/bento/fraudulent-pattern.webp',
-  'Email Forensics': '/bento/email-forensics.webp',
-  'Mobile Phone Forensics': '/bento/mobile-forensics.webp',
+  'cluster-analysis': '/bento/cluster-analysis.webp',
+  'attribution-data': '/bento/attribution-data.webp',
+  'kyc-information': '/bento/kyc-information.webp',
+  subpoena: '/bento/subpoena.webp',
+  'network-forensics': '/bento/network-forensics.webp',
+  'crypto-forensics': '/bento/crypto-forensics.webp',
+  'fraudulent-pattern': '/bento/fraudulent-pattern.webp',
+  'email-forensics': '/bento/email-forensics.webp',
+  'mobile-forensics': '/bento/mobile-forensics.webp',
 };
 ---
 
@@ -112,7 +127,7 @@ const BENTO_IMG: Record<string, string> = {
             <div class="svc-bento img count-3">
               <article class="bento-ic">
                 <span class="bento-ic-glow" aria-hidden="true"></span>
-                <img class="bento-ic-img" src={link('/bento/cluster-analysis.webp')} alt="" aria-hidden="true" loading="lazy" />
+                <img class="bento-ic-img" src={asset('/bento/cluster-analysis.webp')} alt="" aria-hidden="true" loading="lazy" />
                 <div class="bento-ic-body">
                   <h3 class="bento-ic-term">Cluster Analysis</h3>
                   <p class="bento-ic-desc">
@@ -124,7 +139,7 @@ const BENTO_IMG: Record<string, string> = {
               </article>
               <article class="bento-ic">
                 <span class="bento-ic-glow" aria-hidden="true"></span>
-                <img class="bento-ic-img" src={link('/bento/attribution-data.webp')} alt="" aria-hidden="true" loading="lazy" />
+                <img class="bento-ic-img" src={asset('/bento/attribution-data.webp')} alt="" aria-hidden="true" loading="lazy" />
                 <div class="bento-ic-body">
                   <h3 class="bento-ic-term">Attribution Data</h3>
                   <p class="bento-ic-desc">
@@ -136,7 +151,7 @@ const BENTO_IMG: Record<string, string> = {
               </article>
               <article class="bento-ic">
                 <span class="bento-ic-glow" aria-hidden="true"></span>
-                <img class="bento-ic-img" src={link('/bento/subpoena.webp')} alt="" aria-hidden="true" loading="lazy" />
+                <img class="bento-ic-img" src={asset('/bento/subpoena.webp')} alt="" aria-hidden="true" loading="lazy" />
                 <div class="bento-ic-body">
                   <h3 class="bento-ic-term">Subpoena Targets</h3>
                   <p class="bento-ic-desc">
@@ -282,7 +297,7 @@ const BENTO_IMG: Record<string, string> = {
                       </div>
                     );
                   })()
-                ) : b.items.every((d) => BENTO_IMG[d.term]) ? (
+                ) : b.items.every((d) => d.id && BENTO_IMG[d.id]) ? (
                   <div
                     class={`svc-bento img ${b.centerImage ? 'logo6' : `count-${b.items.length}`}`}
                   >
@@ -303,7 +318,7 @@ const BENTO_IMG: Record<string, string> = {
                           <span class="bento-ic-glow" aria-hidden="true" />
                           <img
                             class="bento-logo-img"
-                            src={link(t.logo)}
+                            src={asset(t.logo)}
                             alt="Cyberclaims"
                             loading="lazy"
                           />
@@ -313,7 +328,7 @@ const BENTO_IMG: Record<string, string> = {
                           <span class="bento-ic-glow" aria-hidden="true" />
                           <img
                             class="bento-ic-img"
-                            src={link(BENTO_IMG[t.d.term])}
+                            src={asset(BENTO_IMG[t.d.id!])}
                             alt=""
                             aria-hidden="true"
                             loading="lazy"

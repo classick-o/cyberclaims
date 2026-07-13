@@ -4,7 +4,12 @@
 import mysql from 'mysql2/promise';
 import { env } from './env.js';
 
-export const pool = mysql.createPool({
+// Anchored on globalThis for the same reason as the content cache: Astro bundles this
+// file into its SSR output, so a plain module-level `const` would give Express and
+// Astro a pool each — two pools, twice the connections, for one process.
+const POOL = Symbol.for('cyberclaims.pool');
+
+export const pool = (globalThis[POOL] ??= mysql.createPool({
   host: env.DB_HOST,
   port: env.DB_PORT,
   user: env.DB_USER,
@@ -15,7 +20,7 @@ export const pool = mysql.createPool({
   queueLimit: 0,
   charset: 'utf8mb4',
   timezone: 'Z',
-});
+}));
 
 export async function pingDatabase() {
   const conn = await pool.getConnection();

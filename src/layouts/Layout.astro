@@ -3,29 +3,75 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ImpersonatorNotice from '../components/ImpersonatorNotice.astro';
-import { link } from '../lib/paths';
+import { asset, absoluteUrl } from '../lib/paths';
+import { LOCALES, DEFAULT_LOCALE, LOCALE_META, localeFromUrl, type Locale } from '../i18n/config';
 
 interface Props {
   title?: string;
   description?: string;
   notice?: boolean; // show the "Beware of Impersonators" band (default true)
+  locale?: Locale;
+  /** Locale-independent path of this page, e.g. '/about-us/'. Used for canonical + hreflang. */
+  path?: string;
+  /** Keep this page out of search results (draft previews, the thank-you page). */
+  noindex?: boolean;
 }
 const {
   title = 'Cyberclaims - Crypto Tracing & Fraud Investigation',
   description = 'Cyberclaims provides expert crypto tracing and investigation services to help victims of crypto fraud trace and freeze their assets.',
   notice = true,
+  noindex = false,
 } = Astro.props;
+
+// Prerendered pages hand the locale down as a prop. SSR routes (the blog) have no
+// getStaticPaths to do that, so they fall back to reading it out of the URL.
+const locale: Locale = Astro.props.locale ?? localeFromUrl(Astro.url);
+const meta = LOCALE_META[locale];
+
+// The canonical path WITHOUT any locale prefix, so hreflang can rebuild each variant.
+// Passed explicitly where it matters; otherwise derived by stripping the prefix.
+const path =
+  Astro.props.path ??
+  (() => {
+    const segments = Astro.url.pathname.split('/').filter(Boolean);
+    if (segments[0] === locale && locale !== DEFAULT_LOCALE) segments.shift();
+    return `/${segments.join('/')}${segments.length ? '/' : ''}`;
+  })();
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={meta.htmlLang} data-intl={meta.intl}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <link rel="icon" type="image/png" sizes="32x32" href={link('/favicon-32.png')} />
-    <link rel="icon" type="image/png" sizes="192x192" href={link('/favicon-192.png')} />
-    <link rel="apple-touch-icon" href={link('/favicon-192.png')} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <link rel="canonical" href={absoluteUrl(path, locale, Astro.site)} />
+
+    {/* hreflang. Inert while LOCALES has one entry; correct the moment it doesn't. */}
+    {
+      LOCALES.length > 1 &&
+        LOCALES.map((l) => (
+          <link rel="alternate" hreflang={LOCALE_META[l].htmlLang} href={absoluteUrl(path, l, Astro.site)} />
+        ))
+    }
+    {
+      LOCALES.length > 1 && (
+        <link rel="alternate" hreflang="x-default" href={absoluteUrl(path, DEFAULT_LOCALE, Astro.site)} />
+      )
+    }
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content={meta.ogLocale} />
+    <meta property="og:url" content={absoluteUrl(path, locale, Astro.site)} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/png" sizes="32x32" href={asset('/favicon-32.png')} />
+    <link rel="icon" type="image/png" sizes="192x192" href={asset('/favicon-192.png')} />
+    <link rel="apple-touch-icon" href={asset('/favicon-192.png')} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -33,14 +79,15 @@ const {
       rel="stylesheet"
     />
     <title>{title}</title>
+    <slot name="head" />
   </head>
   <body>
-    <Header />
+    <Header locale={locale} />
     <main>
       <slot />
     </main>
     {notice && <ImpersonatorNotice />}
-    <Footer />
+    <Footer locale={locale} />
   </body>
 </html>
 

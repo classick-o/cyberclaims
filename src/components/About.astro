@@ -2,7 +2,13 @@
 // "Hello, We Are Cyberclaims" - split section: copy left, animated blockchain-trace SVG right.
 import Aurora from './Aurora.astro';
 import Icon from './Icon.astro';
-import { link } from '../lib/paths';
+import { asset, link } from '../lib/paths';
+import { localeFromUrl } from '../i18n/config';
+
+// Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
+// 14 components, and a prop that one of them forgets to pass renders another
+// language's URLs on the page without erroring.
+const locale = localeFromUrl(Astro.url);
 
 const points = [
   'Certified experts in crypto & blockchain forensics',
@@ -39,7 +45,7 @@ const points = [
         }
       </ul>
       <div class="about-cta">
-        <a href={link('/about-us/')} class="btn">Read More</a>
+        <a href={link('/about-us/', locale)} class="btn">Read More</a>
       </div>
     </div>
 
@@ -48,7 +54,7 @@ const points = [
       <div class="trace-frame">
         <img
           class="trace-img"
-          src={link('/funds-flow.webp')}
+          src={asset('/funds-flow.webp')}
           alt="Live blockchain funds-flow trace: wallet, exchange and mixer nodes linked to a flagged cashout point"
           width="2048"
           height="2048"

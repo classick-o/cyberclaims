@@ -1,13 +1,19 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import PageHero from '../components/PageHero.astro';
-import Partners from '../components/Partners.astro';
-import ServicesRail from '../components/ServicesRail.astro';
-import RecoveryCta from '../components/RecoveryCta.astro';
-import Aurora from '../components/Aurora.astro';
-import CtaStrip from '../components/CtaStrip.astro';
-import Icon from '../components/Icon.astro';
-import { link } from '../lib/paths';
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Partners from '../../components/Partners.astro';
+import ServicesRail from '../../components/ServicesRail.astro';
+import RecoveryCta from '../../components/RecoveryCta.astro';
+import Aurora from '../../components/Aurora.astro';
+import CtaStrip from '../../components/CtaStrip.astro';
+import Icon from '../../components/Icon.astro';
+import { asset } from '../../lib/paths';
+import { localePaths, type Locale } from '../../i18n/config';
+
+// One file, one page per locale. The default locale maps to lang: undefined, and a
+// rest parameter matches zero segments — so English stays at /about-us/, not /en/about-us/.
+export const getStaticPaths = localePaths;
+const { locale } = Astro.props as { locale: Locale };
 
 const points = [
   'Certified experts in crypto & blockchain forensics',
@@ -48,7 +54,7 @@ const points = [
         <div class="ab-visual">
           <img
             class="ab-img"
-            src={link('/turning-impossible.webp')}
+            src={asset('/turning-impossible.webp')}
             alt="A fractured ring reassembling, symbolising recovered assets"
             width="1100"
             height="871"
@@ -106,7 +112,7 @@ const points = [
         <div class="ab-visual">
           <img
             class="ab-img"
-            src={link('/values.webp')}
+            src={asset('/values.webp')}
             alt="Interlocking orbits around a glowing core, symbolising our values"
             width="1100"
             height="1008"

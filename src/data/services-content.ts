@@ -30,7 +30,10 @@ export type ServiceBlock =
       centerImage?: string;
       cols?: number; // columns for a 'cards' masonry on desktop (default 3)
       grid?: string; // custom desktop grid-template-columns for a 3-card bento (e.g. '1.5fr 1fr')
-      items: { term: string; text: string }[];
+      // `id` is the STABLE key for the bento artwork map in [service].astro.
+      // It is deliberately not derived from `term`: `term` is display text and gets
+      // translated, and a lookup keyed on translated text misses silently.
+      items: { id?: string; term: string; text: string }[];
     };
 
 export type ServiceSection = {
@@ -124,18 +127,22 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
             type: 'defs',
             items: [
               {
+                id: 'cluster-analysis',
                 term: 'Cluster Analysis',
                 text: 'Cluster analysis helps identify relationships between blockchain wallets by grouping them based on shared transaction history. This method allows us to link wallets that share unspent transaction outputs (UTXOs) and track asset movements across the blockchain, shedding light on potentially fraudulent or suspicious activity.',
               },
               {
+                id: 'attribution-data',
                 term: 'Attribution Data',
                 text: 'Attribution analysis focuses on identifying the owners behind blockchain addresses by mapping ownership across multiple accounts. This process aids in revealing the connections between these accounts and helps to de-anonymize blockchain transactions, providing deeper insight into the flow of funds.',
               },
               {
+                id: 'kyc-information',
                 term: 'KYC Information Requests',
                 text: 'KYC Information Requests are formal inquiries made to entities that adhere to Anti-Money Laundering (AML) and Know Your Customer (KYC) regulations. These requests allow us to gather critical information to support investigations, aiding in the identification of individuals behind suspicious transactions and potential fraud.',
               },
               {
+                id: 'subpoena',
                 term: 'Subpoena Targets',
                 text: 'Through this, all cryptocurrency companies that comply with Anti-Money Laundering (AML) and Know Your Customer (KYC) regulations can get identifying information for their customers who own wallet addresses.',
               },
@@ -201,18 +208,22 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
             type: 'defs',
             items: [
               {
+                id: 'cluster-analysis',
                 term: 'Cluster Analysis',
                 text: 'Cluster analysis links related blockchain wallets to deanonymize transactions, revealing whether these addresses share unspent transaction outputs (UTXOs). This technique helps identify connections between wallets and trace asset flows across the blockchain.',
               },
               {
+                id: 'attribution-data',
                 term: 'Attribution Data',
                 text: 'Attribution analysis will support the investigation by analyzing ownership attribution across multiple accounts, helping to deanonymize blockchain addresses and trace connections between them.',
               },
               {
+                id: 'kyc-information',
                 term: 'KYC Information Requests',
                 text: 'KYC Information Requests allow us to obtain information through requests made by companies that comply with Anti-Money Laundering (AML) and Know Your Customer (KYC) regulations.',
               },
               {
+                id: 'subpoena',
                 term: 'Subpoena Targets',
                 text: 'Through this, all cryptocurrency companies that comply with Anti-Money Laundering (AML) and Know Your Customer (KYC) regulations can get identifying information for their customers who own wallet addresses.',
               },
@@ -548,22 +559,27 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
             centerImage: '/bento/logo-bento.webp',
             items: [
               {
+                id: 'network-forensics',
                 term: 'Network Forensics',
                 text: 'Our network forensics examines digital trails across networks to detect suspicious transactions, unauthorized access, and hidden data exchanges. By analyzing traffic patterns, we help trace fraudulent activities, which is often critical in asset recovery efforts.',
               },
               {
+                id: 'crypto-forensics',
                 term: 'Cryptocurrency Forensics',
                 text: 'As crypto transactions are often decentralized and anonymous, tracing funds can be complex. We deploy cutting-edge blockchain analysis tools to track and map crypto flows, identify wallet activity, and trace assets across blockchain networks to recover funds lost to scams or fraud.',
               },
               {
+                id: 'fraudulent-pattern',
                 term: 'Fraudulent Pattern Analysis',
                 text: 'Our advanced algorithms and forensic tools assess patterns in financial transactions to detect unusual activity linked to money laundering, fraud, and other financial crimes. We provide detailed AML reports and assist in compliance with regulatory standards, fortifying your financial integrity.',
               },
               {
+                id: 'email-forensics',
                 term: 'Email Forensics',
                 text: 'We analyze email headers, metadata, and recovered communication to identify phishing attempts, fraudulent schemes, or other cyber threats. This branch also includes uncovering deleted emails or conversations that may contain critical evidence.',
               },
               {
+                id: 'mobile-forensics',
                 term: 'Mobile Phone Forensics',
                 text: 'By examining digital devices for relevant files, logs, and traces, our disk forensics uncovers critical data, even from deleted files, essential for reconstructing fraudulent transactions or recovering funds. We employ advanced forensic software and methodologies, ensuring all findings are admissible in court.',
               },
@@ -582,18 +598,22 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
             type: 'defs',
             items: [
               {
+                id: 'cluster-analysis',
                 term: 'Cluster Analysis',
                 text: 'Through cluster analysis, we identify connections between blockchain wallets by grouping them based on common transaction patterns. By linking wallets with shared unspent transaction outputs (UTXOs), we reveal asset flows and identify suspicious activities across the blockchain.',
               },
               {
+                id: 'attribution-data',
                 term: 'Attribution Data',
                 text: 'Using attribution data, we map ownership across blockchain addresses, helping to uncover connections between accounts. This de-anonymization process provides valuable insights into the origins and destinations of funds, shedding light on potential fraud.',
               },
               {
+                id: 'kyc-information',
                 term: 'KYC Requests',
                 text: 'KYC information requests are formal submissions to institutions adhering to Anti-Money Laundering (AML) and Know Your Customer (KYC) standards. These requests grant access to essential information, helping investigators identify the individuals behind suspicious or fraudulent transactions.',
               },
               {
+                id: 'subpoena',
                 term: 'Subpoena Targets',
                 text: 'Through this, all cryptocurrency companies that comply with Anti-Money Laundering (AML) and Know Your Customer (KYC) regulations can get identifying information for their customers who own wallet addresses.',
               },
@@ -688,14 +708,17 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
             type: 'defs',
             items: [
               {
+                id: 'cluster-analysis',
                 term: 'Cluster Analysis',
                 text: 'Cluster analysis is a method that aims to deanonymize blockchain data, linking together different wallets belonging to the same user. This also enables one to determine whether any of the linked addresses have a UTXO.',
               },
               {
+                id: 'attribution-data',
                 term: 'Attribution Data',
                 text: 'This will aid the investigation processes by analyzing ownership attribution information for numerous accounts, also with the aim of deanonymizing blockchain addresses.',
               },
               {
+                id: 'subpoena',
                 term: 'Subpoena Targets',
                 text: 'Through this, all cryptocurrency companies that comply with Anti-Money Laundering (AML) and Know Your Customer (KYC) regulations can get identifying information for their customers who own wallet addresses.',
               },
@@ -775,14 +798,17 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
             type: 'defs',
             items: [
               {
+                id: 'cluster-analysis',
                 term: 'Cluster Analysis',
                 text: 'Cluster analysis is a method that aims to deanonymize blockchain data, linking together different wallets belonging to the same user. This also enables one to determine whether any of the linked addresses have a UTXO.',
               },
               {
+                id: 'attribution-data',
                 term: 'Attribution Data',
                 text: 'This will aid the investigation processes by analyzing ownership attribution information for numerous accounts, also with the aim of deanonymizing blockchain addresses.',
               },
               {
+                id: 'subpoena',
                 term: 'Subpoena Targets',
                 text: 'Through this, all cryptocurrency companies that comply with Anti-Money Laundering (AML) and Know Your Customer (KYC) regulations can get identifying information for their customers who own wallet addresses.',
               },
@@ -879,14 +905,17 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
             type: 'defs',
             items: [
               {
+                id: 'cluster-analysis',
                 term: 'Cluster Analysis',
                 text: 'Cluster analysis is a method that aims to deanonymize blockchain data, linking together different wallets belonging to the same user. This also enables one to determine whether any of the linked addresses have a UTXO.',
               },
               {
+                id: 'attribution-data',
                 term: 'Attribution Data',
                 text: 'This will aid the investigation processes by analyzing ownership attribution information for numerous accounts, also with the aim of deanonymizing blockchain addresses.',
               },
               {
+                id: 'subpoena',
                 term: 'Subpoena Targets',
                 text: 'Through this, all cryptocurrency companies that comply with Anti-Money Laundering (AML) and Know Your Customer (KYC) regulations can get identifying information for their customers who own wallet addresses.',
               },
@@ -1104,14 +1133,17 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
             type: 'defs',
             items: [
               {
+                id: 'cluster-analysis',
                 term: 'Cluster Analysis',
                 text: 'Cluster analysis is a method that aims to deanonymize blockchain data, linking together different wallets belonging to the same user. This also enables one to determine whether any of the linked addresses have a UTXO.',
               },
               {
+                id: 'attribution-data',
                 term: 'Attribution Data',
                 text: 'This will aid the investigation processes by analyzing ownership attribution information for numerous accounts, also with the aim of deanonymizing blockchain addresses.',
               },
               {
+                id: 'subpoena',
                 term: 'Subpoena Targets',
                 text: 'Through this, all cryptocurrency companies that comply with Anti-Money Laundering (AML) and Know Your Customer (KYC) regulations can get identifying information for their customers who own wallet addresses.',
               },

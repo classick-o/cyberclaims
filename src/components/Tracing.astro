@@ -2,6 +2,12 @@
 // Featured "Crypto Currency Tracing" highlight - alternating layout (visual left, text right).
 import Icon from './Icon.astro';
 import { link } from '../lib/paths';
+import { localeFromUrl } from '../i18n/config';
+
+// Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
+// 14 components, and a prop that one of them forgets to pass renders another
+// language's URLs on the page without erroring.
+const locale = localeFromUrl(Astro.url);
 ---
 
 <section class="tracing">
@@ -33,7 +39,7 @@ import { link } from '../lib/paths';
         software enables us to identify risks related to crypto wallets, track cashout points,
         and precisely determine where funds were sent and cashed out.
       </p>
-      <a href={link('/cryptocurrency-tracing/')} class="btn">View More</a>
+      <a href={link('/cryptocurrency-tracing/', locale)} class="btn">View More</a>
     </div>
   </div>
 </section>

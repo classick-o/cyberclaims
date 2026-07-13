@@ -1,13 +1,19 @@
 ---
 // Services index - all services in a card grid (lives at /services/).
-import Layout from '../../layouts/Layout.astro';
-import PageHero from '../../components/PageHero.astro';
-import ArcGlow from '../../components/ArcGlow.astro';
-import CtaStrip from '../../components/CtaStrip.astro';
-import Icon from '../../components/Icon.astro';
-import { SERVICES, URL_CHECKER } from '../../data/site';
-import { SERVICE_IMAGE } from '../../data/services-content';
-import { link, serviceUrl } from '../../lib/paths';
+import Layout from '../../../layouts/Layout.astro';
+import PageHero from '../../../components/PageHero.astro';
+import ArcGlow from '../../../components/ArcGlow.astro';
+import CtaStrip from '../../../components/CtaStrip.astro';
+import Icon from '../../../components/Icon.astro';
+import { SERVICES, URL_CHECKER } from '../../../data/site';
+import { SERVICE_IMAGE } from '../../../data/services-content';
+import { asset, link, serviceUrl } from '../../../lib/paths';
+import { localePaths, type Locale } from '../../../i18n/config';
+
+// One file, one page per locale. The default locale maps to lang: undefined, and a
+// rest parameter matches zero segments — so English stays at /about-us/, not /en/about-us/.
+export const getStaticPaths = localePaths;
+const { locale } = Astro.props as { locale: Locale };
 ---
 
 <Layout
@@ -32,10 +38,10 @@ import { link, serviceUrl } from '../../lib/paths';
       <div class="svcs-grid">
         {
           SERVICES.map((s) => (
-            <a href={link(serviceUrl(s.href))} class="svc-card" data-svc={s.href} data-reveal>
+            <a href={link(serviceUrl(s.href), locale)} class="svc-card" data-svc={s.href} data-reveal>
               <img
                 class="svc-card-visual"
-                src={link(SERVICE_IMAGE[s.href])}
+                src={asset(SERVICE_IMAGE[s.href])}
                 alt=""
                 aria-hidden="true"
                 loading="lazy"
@@ -52,10 +58,10 @@ import { link, serviceUrl } from '../../lib/paths';
         }
 
         {/* the URL Checker is a tool, not a /services/ page - hence the plain href */}
-        <a href={link(URL_CHECKER.href)} class="svc-card" data-svc="/url-checker/" data-reveal>
+        <a href={link(URL_CHECKER.href, locale)} class="svc-card" data-svc="/url-checker/" data-reveal>
           <img
             class="svc-card-visual"
-            src={link('/sv-url-checker.webp')}
+            src={asset('/sv-url-checker.webp')}
             alt=""
             aria-hidden="true"
             loading="lazy"

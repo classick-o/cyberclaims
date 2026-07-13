@@ -1,43 +1,84 @@
 ---
-// Latest blogs - 3 cards with category tag, date, author (brief §4 News card spec).
+// Latest articles — 3 cards (brief §4 News card spec).
+//
+// Rendered as a SERVER ISLAND: <Blogs server:defer /> in index.astro. The homepage
+// stays prerendered HTML on disk — so it keeps serving even if MySQL is down — and
+// only this strip renders on the server, on demand. Making the whole homepage SSR
+// just to show three cards would have put the site's most-hit page behind a database.
+//
+// It used to render three cards hardcoded in site.ts, whose links all 404'd because
+// no /news/[slug] route existed.
 import Icon from './Icon.astro';
-import { LATEST_BLOGS } from '../data/site';
 import { link } from '../lib/paths';
+import { Post, cached, srcset, type PostCard } from '../lib/content';
+import { localeFromUrl } from '../i18n/config';
+import { useTranslations, formatDate } from '../i18n';
+
+const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
+
+// If the database is unreachable the island renders nothing rather than throwing —
+// the point of keeping the homepage static is that it survives a bad day downstream.
+const posts = (await cached(`latest:${locale}`, () =>
+  Post.findPublished(locale, { limit: 3 })
+).catch(() => [])) as PostCard[];
 ---
 
-<section class="blogs">
-  <div class="wrap">
-    <div class="blogs-head" data-reveal>
-      <div>
-        <h2 class="h-section">Latest <span class="accent">blogs</span></h2>
-      </div>
-      <a href={link('/news/')} class="btn">All news</a>
-    </div>
-
-    <div class="blogs-grid">
-      {
-        LATEST_BLOGS.map((b) => (
-          <a href={link(b.href)} class="blog-card" data-reveal>
-            <div class="blog-thumb">
-              <span class="blog-cat">{b.category}</span>
-              <!-- image placeholder (client-supplied 16:9) -->
-              <div class="blog-thumb-ph"><Icon name="press" class="w-8 h-8" /></div>
-            </div>
-            <div class="blog-body">
-              <div class="blog-meta">
-                <span>{b.date}</span>
-                <span class="blog-dot">·</span>
-                <span>by {b.author}</span>
-              </div>
-              <h3 class="blog-title">{b.title}</h3>
-              <span class="blog-more">Read more <Icon name="arrow" class="w-4 h-4" /></span>
-            </div>
+{
+  posts.length > 0 && (
+    <section class="blogs">
+      <div class="wrap">
+        <div class="blogs-head" data-reveal>
+          <div>
+            <h2 class="h-section">
+              Latest <span class="accent">blogs</span>
+            </h2>
+          </div>
+          <a href={link('/news/', locale)} class="btn">
+            All news
           </a>
-        ))
-      }
-    </div>
-  </div>
-</section>
+        </div>
+
+        <div class="blogs-grid">
+          {posts.map((p) => (
+            <a href={link(`/news/${p.slug}/`, locale)} class="blog-card" data-reveal>
+              <div class="blog-thumb">
+                {p.category_name && <span class="blog-cat">{p.category_name}</span>}
+                {p.cover_path ? (
+                  <img
+                    class="blog-thumb-img"
+                    src={p.cover_variants?.['480'] ?? p.cover_path}
+                    srcset={srcset(p.cover_variants)}
+                    sizes="(min-width: 768px) 30vw, 100vw"
+                    alt={p.cover_alt ?? ''}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div class="blog-thumb-ph">
+                    <Icon name="press" class="w-8 h-8" />
+                  </div>
+                )}
+              </div>
+              <div class="blog-body">
+                <div class="blog-meta">
+                  <time datetime={new Date(p.published_at).toISOString()}>
+                    {formatDate(p.published_at, locale)}
+                  </time>
+                  <span class="blog-dot">·</span>
+                  <span>{t('news.readingTime', { minutes: p.reading_minutes })}</span>
+                </div>
+                <h3 class="blog-title">{p.title}</h3>
+                <span class="blog-more">
+                  {t('cta.readMore')} <Icon name="arrow" class="w-4 h-4" />
+                </span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
 
 <style>
   .blogs {
@@ -94,6 +135,14 @@ import { link } from '../lib/paths';
     aspect-ratio: 16 / 9;
     background: linear-gradient(135deg, #232340, #101020);
     overflow: hidden;
+  }
+  .blog-thumb-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
   .blog-thumb-ph {
     position: absolute;

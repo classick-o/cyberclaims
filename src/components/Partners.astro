@@ -1,7 +1,13 @@
 ---
 // "Industry Allies / Our Partners" - logo strip with real logos from the live site.
 import { PARTNERS } from '../data/site';
-import { link } from '../lib/paths';
+import { asset, link } from '../lib/paths';
+import { localeFromUrl } from '../i18n/config';
+
+// Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
+// 14 components, and a prop that one of them forgets to pass renders another
+// language's URLs on the page without erroring.
+const locale = localeFromUrl(Astro.url);
 ---
 
 <section class="partners">
@@ -18,7 +24,7 @@ import { link } from '../lib/paths';
       {
         PARTNERS.map((p) => (
           <div class="partner-logo">
-            <img src={link(p.src)} alt={p.alt} loading="lazy" />
+            <img src={asset(p.src)} alt={p.alt} loading="lazy" />
           </div>
         ))
       }

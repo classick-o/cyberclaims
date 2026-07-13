@@ -1,10 +1,16 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import PageHero from '../components/PageHero.astro';
-import Aurora from '../components/Aurora.astro';
-import CtaStrip from '../components/CtaStrip.astro';
-import Icon from '../components/Icon.astro';
-import Turnstile from '../components/Turnstile.astro';
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Aurora from '../../components/Aurora.astro';
+import CtaStrip from '../../components/CtaStrip.astro';
+import Icon from '../../components/Icon.astro';
+import Turnstile from '../../components/Turnstile.astro';
+import { localePaths, type Locale } from '../../i18n/config';
+
+// One file, one page per locale. The default locale maps to lang: undefined, and a
+// rest parameter matches zero segments — so English stays at /about-us/, not /en/about-us/.
+export const getStaticPaths = localePaths;
+const { locale } = Astro.props as { locale: Locale };
 
 const amounts = [
   '1,000 - 5,000',
@@ -464,7 +470,7 @@ const steps = [
 </style>
 
 <script>
-  import { initLeadForm } from '../lib/lead-form';
+  import { initLeadForm } from '../../lib/lead-form';
 
   const form = document.getElementById('spForm') as HTMLFormElement | null;
   const success = document.getElementById('spSuccess');

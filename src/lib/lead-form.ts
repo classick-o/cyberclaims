@@ -1,7 +1,8 @@
-// Client-side submit for the three lead forms (hero, contact, start-process).
+// Client-side submit for every form on the site: the three lead forms (hero, contact,
+// start-process) and the newsletter strip.
 //
-// All three POST the same shape to /api/lead; `source` tells the backend which form
-// it came from. Same-origin, so no CORS and no absolute URL to keep in sync.
+// All of them are same-origin, so there is no CORS and no absolute URL to keep in
+// sync with the backend.
 
 declare global {
   interface Window {
@@ -9,13 +10,21 @@ declare global {
   }
 }
 
-type Source = 'hero' | 'contact' | 'start_process';
 type FieldError = { field: string; message: string };
+
+type Options = {
+  /** Where to POST. Same-origin path. */
+  endpoint: string;
+  /** Which form this is — the lead endpoint stores it, the newsletter ignores it. */
+  source?: 'hero' | 'contact' | 'start_process' | 'url_checker';
+  /** Called only once the server confirms. Never on a failure. */
+  onSuccess: () => void;
+};
 
 const GENERIC =
   'Something went wrong on our side. Please try again, or email contact@cyberclaims.net.';
 
-export function initLeadForm(form: HTMLFormElement, source: Source, onSuccess: () => void): void {
+export function initForm(form: HTMLFormElement, { endpoint, source, onSuccess }: Options): void {
   const status = form.querySelector<HTMLElement>('[data-form-status]');
   const submit = form.querySelector<HTMLButtonElement>('[type="submit"]');
   let sending = false;
@@ -43,13 +52,13 @@ export function initLeadForm(form: HTMLFormElement, source: Source, onSuccess: (
       submit.textContent = 'Sending...';
     }
 
-    const payload: Record<string, string> = { source };
+    const payload: Record<string, string> = source ? { source } : {};
     new FormData(form).forEach((value, key) => {
       if (typeof value === 'string') payload[key] = value;
     });
 
     try {
-      const res = await fetch('/api/lead', {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -79,4 +88,13 @@ export function initLeadForm(form: HTMLFormElement, source: Source, onSuccess: (
       window.turnstile?.reset();
     }
   });
+}
+
+/** The three lead forms. */
+export function initLeadForm(
+  form: HTMLFormElement,
+  source: 'hero' | 'contact' | 'start_process',
+  onSuccess: () => void
+): void {
+  initForm(form, { endpoint: '/api/lead', source, onSuccess });
 }

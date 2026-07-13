@@ -1,0 +1,403 @@
+---
+// /news/ — the magazine listing (brief §4): featured hero card, category tabs,
+// reading time, excerpts, newsletter strip.
+//
+// SSR, not prerendered: the articles come from the database and publishing has to be
+// instant. The queries go through an in-process cache that is dropped on any write,
+// so a normal page view costs no database round-trip.
+//
+// It used to render three cards hardcoded in site.ts whose links all 404'd, because
+// no /news/[slug] route existed.
+export const prerender = false;
+
+import Layout from '../../../layouts/Layout.astro';
+import Aurora from '../../../components/Aurora.astro';
+import CtaStrip from '../../../components/CtaStrip.astro';
+import Newsletter from '../../../components/Newsletter.astro';
+import Icon from '../../../components/Icon.astro';
+import { link } from '../../../lib/paths';
+import { Post, Category, cached, srcset, type PostCard } from '../../../lib/content';
+import { localeFromUrl } from '../../../i18n/config';
+import { useTranslations, formatDate } from '../../../i18n';
+
+const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
+
+const activeCategory = Astro.url.searchParams.get('category');
+
+const [featured, posts, categories] = (await Promise.all([
+  cached(`featured:${locale}`, () => Post.findFeatured(locale)),
+  cached(`posts:${locale}:${activeCategory ?? ''}`, () =>
+    Post.findPublished(locale, { categorySlug: activeCategory, limit: 30 })
+  ),
+  cached(`cats:${locale}`, () => Category.listWithPosts(locale)),
+])) as [
+  PostCard | null,
+  PostCard[],
+  { id: number; name: string; slug: string; color: string | null; post_count: number }[],
+];
+
+// The featured article headlines the page, so it must not appear again in the grid
+// below. Only when no filter is active, though: a filtered view is a plain list, and
+// a hero card there would be claiming "featured" about a category, not the site.
+const showFeatured = !activeCategory && featured;
+const rest = showFeatured ? posts.filter((p) => p.id !== featured!.id) : posts;
+
+// SSR + CDN. Publishing drops the in-process cache instantly, so the only staleness a
+// reader can see is whatever a CDN in front of us chooses to hold — and s-maxage
+// bounds that to five minutes while stale-while-revalidate keeps the page fast.
+Astro.response.headers.set(
+  'Cache-Control',
+  'public, max-age=0, s-maxage=300, stale-while-revalidate=86400'
+);
+---
+
+<Layout
+  title="News - Cyberclaims"
+  description="Analysis, case notes and warnings from the Cyberclaims investigation team."
+  path="/news/"
+  locale={locale}
+>
+  <section class="news-hero">
+    <Aurora />
+    <div class="wrap">
+      <span class="eyebrow" data-reveal>{t('news.eyebrow')}</span>
+      <h1 class="h-display news-h" data-reveal>{t('news.title')}</h1>
+      <p class="news-intro" data-reveal>{t('news.intro')}</p>
+
+      {
+        categories.length > 0 && (
+          <nav class="news-tabs" aria-label="Categories" data-reveal>
+            <a href={link('/news/', locale)} class={`news-tab${!activeCategory ? ' is-active' : ''}`}>
+              {t('news.allCategories')}
+            </a>
+            {categories.map((c) => (
+              <a
+                href={`${link('/news/', locale)}?category=${c.slug}`}
+                class={`news-tab${activeCategory === c.slug ? ' is-active' : ''}`}
+                style={c.color ? `--tab: ${c.color}` : undefined}
+              >
+                {c.name}
+                <span class="news-tab-n">{c.post_count}</span>
+              </a>
+            ))}
+          </nav>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="news-body">
+    <div class="wrap">
+      {
+        posts.length === 0 ? (
+          <p class="news-empty">{t('news.empty')}</p>
+        ) : (
+          <>
+            {showFeatured && (
+              <a href={link(`/news/${featured!.slug}/`, locale)} class="news-feat" data-reveal>
+                {featured!.cover_path ? (
+                  <img
+                    class="news-feat-img"
+                    src={featured!.cover_path}
+                    srcset={srcset(featured!.cover_variants)}
+                    sizes="(min-width: 1000px) 55vw, 100vw"
+                    alt={featured!.cover_alt ?? ''}
+                  />
+                ) : (
+                  <span class="news-feat-ph" aria-hidden="true" />
+                )}
+                <div class="news-feat-body">
+                  {featured!.category_name && (
+                    <span
+                      class="news-cat"
+                      style={featured!.category_color ? `--cat:${featured!.category_color}` : undefined}
+                    >
+                      {featured!.category_name}
+                    </span>
+                  )}
+                  <h2 class="news-feat-title">{featured!.title}</h2>
+                  {featured!.excerpt && <p class="news-feat-ex">{featured!.excerpt}</p>}
+                  <div class="news-meta">
+                    <time datetime={new Date(featured!.published_at).toISOString()}>
+                      {formatDate(featured!.published_at, locale)}
+                    </time>
+                    <span class="news-dot" />
+                    <span>{t('news.readingTime', { minutes: featured!.reading_minutes })}</span>
+                    {featured!.author_name && (
+                      <>
+                        <span class="news-dot" />
+                        <span>
+                          {t('news.by')} {featured!.author_name}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </a>
+            )}
+
+            <div class="news-grid">
+              {rest.map((p) => (
+                <a href={link(`/news/${p.slug}/`, locale)} class="news-card" data-reveal>
+                  {p.cover_path ? (
+                    <img
+                      class="news-card-img"
+                      src={p.cover_variants?.['480'] ?? p.cover_path}
+                      srcset={srcset(p.cover_variants)}
+                      sizes="(min-width: 1000px) 30vw, (min-width: 700px) 45vw, 100vw"
+                      alt={p.cover_alt ?? ''}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span class="news-card-ph" aria-hidden="true">
+                      <Icon name="press" class="w-6 h-6" />
+                    </span>
+                  )}
+                  <div class="news-card-body">
+                    {p.category_name && (
+                      <span
+                        class="news-cat"
+                        style={p.category_color ? `--cat:${p.category_color}` : undefined}
+                      >
+                        {p.category_name}
+                      </span>
+                    )}
+                    <h3 class="news-card-title">{p.title}</h3>
+                    {p.excerpt && <p class="news-card-ex">{p.excerpt}</p>}
+                    <div class="news-meta">
+                      <time datetime={new Date(p.published_at).toISOString()}>
+                        {formatDate(p.published_at, locale)}
+                      </time>
+                      <span class="news-dot" />
+                      <span>{t('news.readingTime', { minutes: p.reading_minutes })}</span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </>
+        )
+      }
+    </div>
+  </section>
+
+  <Newsletter />
+  <CtaStrip />
+</Layout>
+
+<style>
+  .news-hero {
+    position: relative;
+    overflow: hidden;
+    background: var(--gradient-depth);
+    padding: 8rem 0 2.5rem;
+  }
+  .news-hero > .wrap {
+    position: relative;
+    z-index: 1;
+  }
+  .news-h {
+    margin: 1.2rem 0 1rem;
+  }
+  .news-intro {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 1.05rem;
+    line-height: 1.65;
+    max-width: 48ch;
+  }
+
+  /* category tabs */
+  .news-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 2rem;
+  }
+  .news-tab {
+    --tab: var(--color-purple-400);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+  }
+  .news-tab:hover {
+    color: #fff;
+    border-color: var(--tab);
+  }
+  .news-tab.is-active {
+    background: var(--tab);
+    border-color: var(--tab);
+    color: #fff;
+  }
+  .news-tab-n {
+    font-size: 0.72rem;
+    opacity: 0.75;
+  }
+
+  .news-body {
+    background: var(--color-navy);
+    padding: 3rem 0 4rem;
+  }
+  .news-empty {
+    padding: 4rem 0;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .news-cat {
+    --cat: var(--color-purple-400);
+    align-self: flex-start;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--cat) 22%, transparent);
+    color: color-mix(in srgb, var(--cat) 45%, white);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .news-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.45);
+  }
+  .news-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+  }
+
+  /* featured hero card */
+  .news-feat {
+    display: grid;
+    margin-bottom: 2.5rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: var(--color-navy-elevated);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.3s var(--ease-out-brand), border-color 0.3s;
+  }
+  .news-feat:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-purple-400);
+  }
+  .news-feat-img,
+  .news-feat-ph {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+  .news-feat-ph {
+    background: var(--gradient-brand);
+    opacity: 0.35;
+  }
+  .news-feat-body {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    justify-content: center;
+  }
+  .news-feat-title {
+    font-size: clamp(1.4rem, 2.4vw, 2rem);
+    line-height: 1.15;
+  }
+  .news-feat-ex {
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.65;
+    max-width: 55ch;
+  }
+
+  /* card grid */
+  .news-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .news-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.85rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: var(--color-navy-elevated);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.3s var(--ease-out-brand), border-color 0.3s;
+  }
+  .news-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-purple-400);
+  }
+  .news-card-img,
+  .news-card-ph {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+  .news-card-ph {
+    display: grid;
+    place-items: center;
+    background: rgba(139, 91, 189, 0.12);
+    color: var(--color-purple-300);
+  }
+  .news-card-body {
+    padding: 1.1rem 1.2rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    flex: 1;
+  }
+  .news-card-title {
+    font-size: 1.1rem;
+    line-height: 1.3;
+  }
+  .news-card-ex {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  @media (min-width: 700px) {
+    .news-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 1000px) {
+    .news-feat {
+      grid-template-columns: 1.15fr 1fr;
+    }
+    .news-feat-img,
+    .news-feat-ph {
+      height: 100%;
+      aspect-ratio: auto;
+      min-height: 22rem;
+    }
+    .news-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>

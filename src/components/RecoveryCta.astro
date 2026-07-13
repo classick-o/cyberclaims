@@ -2,6 +2,12 @@
 // "Start Your Recovery Now" CTA block - preserved from live homepage (between About & Services).
 import Icon from './Icon.astro';
 import { link } from '../lib/paths';
+import { localeFromUrl } from '../i18n/config';
+
+// Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
+// 14 components, and a prop that one of them forgets to pass renders another
+// language's URLs on the page without erroring.
+const locale = localeFromUrl(Astro.url);
 ---
 
 <section class="rec">
@@ -24,7 +30,7 @@ import { link } from '../lib/paths';
           </p>
         </div>
         <div class="rec-actions">
-          <a href={link('/start-process/')} class="btn">Start Process <Icon name="arrow" class="w-4 h-4" /></a>
+          <a href={link('/start-process/', locale)} class="btn">Start Process <Icon name="arrow" class="w-4 h-4" /></a>
         </div>
       </div>
     </div>

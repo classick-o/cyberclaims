@@ -1,7 +1,13 @@
 ---
 // Site-wide fraud warning (present on every page of the live site, above the footer).
 import { CONTACT } from '../data/site';
-import { link } from '../lib/paths';
+import { asset, link } from '../lib/paths';
+import { localeFromUrl } from '../i18n/config';
+
+// Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
+// 14 components, and a prop that one of them forgets to pass renders another
+// language's URLs on the page without erroring.
+const locale = localeFromUrl(Astro.url);
 ---
 
 <aside class="imp" role="note">
@@ -11,7 +17,7 @@ import { link } from '../lib/paths';
         <span class="imp-glow" aria-hidden="true"></span>
         <img
           class="imp-img"
-          src={link('/notice/beware.webp')}
+          src={asset('/notice/beware.webp')}
           alt=""
           aria-hidden="true"
           width="220"

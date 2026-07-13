@@ -1,0 +1,410 @@
+---
+// /news/<slug>/ — the article.
+//
+// This route did not exist. The three cards on /news/ have been linking to it since
+// launch, and every one of them 404'd in production.
+//
+// SSR so that publishing is instant and so an editor can preview a draft on the real
+// site, with the real CSS, rather than in a mock panel inside the admin.
+export const prerender = false;
+
+import Layout from '../../../layouts/Layout.astro';
+import CtaStrip from '../../../components/CtaStrip.astro';
+import RecoveryCta from '../../../components/RecoveryCta.astro';
+import { link, absoluteUrl } from '../../../lib/paths';
+import { Post, cached, srcset, isEditor, type FullPost, type PostCard } from '../../../lib/content';
+import { localeFromUrl } from '../../../i18n/config';
+import { useTranslations, formatDate } from '../../../i18n';
+
+const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
+const { slug } = Astro.params;
+
+// A draft is visible only to someone holding a valid admin session cookie. It's
+// httpOnly and same-origin, so there is no preview token to mint, leak or expire —
+// and to anyone else the draft 404s exactly as it should.
+const editor = isEditor(Astro.cookies);
+const wantsPreview = Astro.url.searchParams.get('preview') === '1';
+const preview = wantsPreview && editor;
+
+const post = (preview
+  ? await Post.findBySlug(locale, slug, { preview: true })
+  : await cached(`post:${locale}:${slug}`, () => Post.findBySlug(locale, slug))) as FullPost | null;
+
+if (!post) return new Response(null, { status: 404, statusText: 'Not found' });
+
+const related = (await cached(`related:${locale}:${post.id}`, () =>
+  Post.findRelated(locale, post.id, null, 3)
+)) as PostCard[];
+
+const url = absoluteUrl(`/news/${post.slug}/`, locale, Astro.site);
+const cover = post.cover_path ? new URL(post.cover_path, Astro.site ?? url).href : undefined;
+
+// Structured data. The one thing TBSBV genuinely does well, kept.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Article',
+      '@id': url,
+      headline: post.title,
+      description: post.seo_description ?? post.excerpt ?? undefined,
+      image: cover ? [cover] : undefined,
+      datePublished: new Date(post.published_at).toISOString(),
+      dateModified: new Date(post.updated_at).toISOString(),
+      wordCount: undefined,
+      keywords: post.keywords.length ? post.keywords.join(', ') : undefined,
+      articleSection: post.category_name ?? undefined,
+      inLanguage: locale,
+      author: post.author_name
+        ? { '@type': 'Person', name: post.author_name, jobTitle: post.author_role ?? undefined }
+        : { '@type': 'Organization', name: 'Cyberclaims' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Cyberclaims',
+        url: Astro.site?.origin,
+      },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/', locale, Astro.site) },
+        { '@type': 'ListItem', position: 2, name: t('news.title'), item: absoluteUrl('/news/', locale, Astro.site) },
+        { '@type': 'ListItem', position: 3, name: post.title, item: url },
+      ],
+    },
+  ],
+};
+
+if (!preview) {
+  Astro.response.headers.set(
+    'Cache-Control',
+    'public, max-age=0, s-maxage=300, stale-while-revalidate=86400'
+  );
+} else {
+  // A draft must never end up in a shared cache.
+  Astro.response.headers.set('Cache-Control', 'private, no-store');
+}
+---
+
+<Layout
+  title={`${post.seo_title ?? post.title} - Cyberclaims`}
+  description={post.seo_description ?? post.excerpt ?? ''}
+  path={`/news/${post.slug}/`}
+  locale={locale}
+  noindex={preview}
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  {preview && <div class="draft-bar">{t('news.draftBanner')}</div>}
+
+  <article class="art">
+    <header class="art-head">
+      <div class="wrap art-head-inner">
+        <a href={link('/news/', locale)} class="art-back">&larr; {t('news.backToNews')}</a>
+
+        {
+          post.category_name && (
+            <span class="news-cat" style={post.category_color ? `--cat:${post.category_color}` : undefined}>
+              {post.category_name}
+            </span>
+          )
+        }
+
+        <h1 class="h-display art-title">{post.title}</h1>
+
+        <div class="art-meta">
+          <time datetime={new Date(post.published_at).toISOString()}>
+            {formatDate(post.published_at, locale)}
+          </time>
+          <span class="art-dot" />
+          <span>{t('news.readingTime', { minutes: post.reading_minutes })}</span>
+          {
+            post.author_name && (
+              <>
+                <span class="art-dot" />
+                <span>
+                  {t('news.by')} <strong>{post.author_name}</strong>
+                  {post.author_role && <span class="art-role">, {post.author_role}</span>}
+                </span>
+              </>
+            )
+          }
+        </div>
+      </div>
+    </header>
+
+    {
+      post.cover_path && (
+        <div class="wrap">
+          <img
+            class="art-cover"
+            src={post.cover_path}
+            srcset={srcset(post.cover_variants)}
+            sizes="(min-width: 1000px) 60rem, 100vw"
+            alt={post.cover_alt ?? ''}
+          />
+        </div>
+      )
+    }
+
+    {/* Sanitised on write against a strict allowlist (backend/src/services/content.js),
+        never on render — a single forgotten call site would otherwise be an XSS. */}
+    <div class="wrap">
+      <div class="prose" set:html={post.body_html} />
+    </div>
+  </article>
+
+  {
+    related.length > 0 && (
+      <section class="rel">
+        <div class="wrap">
+          <h2 class="h-section rel-h">{t('news.related')}</h2>
+          <div class="rel-grid">
+            {related.map((p) => (
+              <a href={link(`/news/${p.slug}/`, locale)} class="rel-card">
+                {p.cover_path && (
+                  <img
+                    src={p.cover_variants?.['480'] ?? p.cover_path}
+                    alt={p.cover_alt ?? ''}
+                    loading="lazy"
+                  />
+                )}
+                <div class="rel-body">
+                  <h3>{p.title}</h3>
+                  <span class="rel-meta">{t('news.readingTime', { minutes: p.reading_minutes })}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <RecoveryCta />
+  <CtaStrip />
+</Layout>
+
+<style>
+  .draft-bar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    padding: 0.6rem 1rem;
+    text-align: center;
+    background: var(--color-purple-500);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .art {
+    background: var(--color-navy);
+    padding-bottom: 3rem;
+  }
+  .art-head {
+    background: var(--gradient-depth);
+    padding: 8rem 0 2.5rem;
+  }
+  .art-head-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    max-width: 52rem;
+  }
+  .art-back {
+    color: var(--color-purple-300);
+    font-size: 0.85rem;
+    text-decoration: none;
+  }
+  .art-back:hover {
+    color: #fff;
+  }
+  .news-cat {
+    --cat: var(--color-purple-400);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--cat) 22%, transparent);
+    color: color-mix(in srgb, var(--cat) 45%, white);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .art-title {
+    font-size: clamp(1.9rem, 4vw, 3.1rem);
+    line-height: 1.1;
+  }
+  .art-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    font-size: 0.84rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .art-meta strong {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 600;
+  }
+  .art-role {
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .art-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+  }
+  .art-cover {
+    display: block;
+    width: 100%;
+    max-width: 60rem;
+    margin: -1.5rem auto 2.5rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  /* Article body. The editor emits h2/h3/p/ul/ol/blockquote/img/table/code, and
+     nothing else survives the sanitiser — so this is the complete set of what can
+     appear here. :global because the HTML is injected with set:html and never sees
+     Astro's scoping. */
+  .prose {
+    max-width: 44rem;
+    margin-inline: auto;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 1.02rem;
+    line-height: 1.8;
+  }
+  .prose :global(> * + *) {
+    margin-top: 1.35rem;
+  }
+  .prose :global(h2) {
+    margin-top: 2.75rem;
+    font-size: 1.6rem;
+    color: #fff;
+  }
+  .prose :global(h3) {
+    margin-top: 2rem;
+    font-size: 1.25rem;
+    color: #fff;
+  }
+  .prose :global(strong) {
+    color: #fff;
+    font-weight: 600;
+  }
+  .prose :global(a) {
+    color: var(--color-purple-300);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .prose :global(a:hover) {
+    color: #fff;
+  }
+  .prose :global(ul),
+  .prose :global(ol) {
+    padding-left: 1.4rem;
+  }
+  .prose :global(li) {
+    margin-top: 0.5rem;
+  }
+  .prose :global(li::marker) {
+    color: var(--color-purple-400);
+  }
+  .prose :global(blockquote) {
+    border-left: 3px solid var(--color-purple-400);
+    padding: 0.2rem 0 0.2rem 1.2rem;
+    color: rgba(255, 255, 255, 0.65);
+    font-style: italic;
+  }
+  .prose :global(img) {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+  }
+  .prose :global(code) {
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.3rem;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 0.9em;
+  }
+  .prose :global(pre) {
+    padding: 1rem;
+    border-radius: 0.6rem;
+    background: rgba(0, 0, 0, 0.35);
+    overflow-x: auto;
+  }
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+  .prose :global(th),
+  .prose :global(td) {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    text-align: left;
+  }
+  .prose :global(th) {
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+  }
+
+  /* related */
+  .rel {
+    background: var(--color-navy-deep);
+    padding: 3.5rem 0;
+    border-top: 1px solid var(--color-line);
+  }
+  .rel-h {
+    margin-bottom: 1.75rem;
+  }
+  .rel-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .rel-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: var(--color-navy-elevated);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.3s var(--ease-out-brand), border-color 0.3s;
+  }
+  .rel-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-purple-400);
+  }
+  .rel-card img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+  }
+  .rel-body {
+    padding: 1rem 1.1rem 1.2rem;
+  }
+  .rel-body h3 {
+    font-size: 1rem;
+    line-height: 1.35;
+    margin-bottom: 0.5rem;
+  }
+  .rel-meta {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  @media (min-width: 700px) {
+    .rel-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>

@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite';
+import { LOCALES, DEFAULT_LOCALE } from './src/i18n/config.ts';
 
 // `base` and `site` come from env so nothing is hard-coded:
 //   • GitHub Pages (CI) sets BASE_PATH=/<repo>  → site builds under the sub-path
@@ -19,6 +20,16 @@ export default defineConfig({
   // `static` + an adapter is Astro's hybrid mode: pages prerender by default, and a
   // route opts out with `export const prerender = false`. Only the blog will need
   // that — the marketing pages stay HTML on disk and never touch the database.
+  // Locales live in src/i18n/config.ts (the single source of truth); this mirrors
+  // them so Astro's own routing and the sitemap integration agree with us.
+  // prefixDefaultLocale: false is what keeps English at / rather than /en/ — every
+  // existing URL survives, which the redesign brief (§Scope) explicitly requires.
+  i18n: {
+    locales: [...LOCALES],
+    defaultLocale: DEFAULT_LOCALE,
+    routing: { prefixDefaultLocale: false },
+  },
+
   output: 'static',
   adapter: node({ mode: 'middleware' }),
 

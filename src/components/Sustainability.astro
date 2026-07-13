@@ -122,13 +122,19 @@ import { SUSTAINABILITY } from '../data/site';
   // count up wherever this section is rendered (homepage, URL checker, ...).
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // The BCP-47 tag Layout.astro stamped on <html> from LOCALE_META. Read it rather
+  // than hardcoding 'en-US': the same figure is "1,511" in English and "1.511" in
+  // Dutch, and a counter that silently formats every language as American is the kind
+  // of thing nobody notices until a customer does.
+  const intl = document.documentElement.dataset.intl || 'en-GB';
+
   const runCounter = (el: HTMLElement) => {
     const raw = el.dataset.target || '0';
     const target = Number(raw);
     // preserve the target's decimal places (e.g. 57.45 stays 57.45, not 57)
     const dec = (raw.split('.')[1] || '').length;
     const fmt = (n: number) =>
-      n.toLocaleString('en-US', {
+      n.toLocaleString(intl, {
         minimumFractionDigits: dec,
         maximumFractionDigits: dec,
       });

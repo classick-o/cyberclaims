@@ -1,0 +1,144 @@
+---
+// Newsletter strip (brief §4, News section). Double opt-in — the address is `pending`
+// until the confirmation link is clicked, and pending addresses are never mailed.
+import Turnstile from './Turnstile.astro';
+import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
+
+const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
+---
+
+<section class="nl">
+  <div class="glow-blob" style="background:#6b3fa0;width:30rem;height:30rem;top:-8rem;right:-6rem;opacity:0.3;"></div>
+  <div class="wrap nl-inner">
+    <div class="nl-copy" data-reveal>
+      <h2 class="h-section">{t('newsletter.title')}</h2>
+      <p class="nl-sub">{t('newsletter.body')}</p>
+    </div>
+
+    <form class="nl-form" id="newsletterForm" method="post" action="/api/newsletter" novalidate data-reveal>
+      <div class="nl-row">
+        <input
+          type="email"
+          name="email"
+          required
+          placeholder={t('newsletter.placeholder')}
+          aria-label={t('newsletter.placeholder')}
+        />
+        <button type="submit" class="btn">{t('newsletter.submit')}</button>
+      </div>
+      <input class="hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <input type="hidden" name="locale" value={locale} />
+      <Turnstile />
+      <p class="form-status" data-form-status role="alert" hidden></p>
+    </form>
+
+    <p class="nl-done" id="newsletterDone" hidden>{t('newsletter.success')}</p>
+  </div>
+</section>
+
+<style>
+  .nl {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-navy);
+    border-top: 1px solid var(--color-line);
+    padding: 4rem 0;
+  }
+  .nl-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+  }
+  .nl-sub {
+    margin-top: 0.7rem;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.65;
+    max-width: 44ch;
+  }
+  .nl-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    min-width: 0;
+  }
+  .nl-row {
+    display: flex;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+  .nl-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.9rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.6rem;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+  }
+  .nl-row input:focus {
+    outline: none;
+    border-color: var(--color-purple-400);
+    background: rgba(139, 91, 189, 0.08);
+  }
+  .nl-row .btn {
+    flex-shrink: 0;
+  }
+  .nl-done {
+    padding: 0.9rem 1.1rem;
+    border-radius: 0.6rem;
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    background: rgba(74, 222, 128, 0.1);
+    color: #86efac;
+    font-size: 0.88rem;
+  }
+  @media (min-width: 900px) {
+    .nl-inner {
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 3rem;
+    }
+  }
+  @media (max-width: 520px) {
+    .nl-row {
+      flex-direction: column;
+    }
+    .nl-row .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  import { initForm } from '../lib/lead-form';
+
+  const form = document.getElementById('newsletterForm') as HTMLFormElement | null;
+  const done = document.getElementById('newsletterDone');
+
+  if (form && done) {
+    initForm(form, {
+      endpoint: '/api/newsletter',
+      onSuccess: () => {
+        form.hidden = true;
+        done.hidden = false;
+      },
+    });
+  }
+
+  // The API redirects back here after a confirm / unsubscribe click in the email.
+  const params = new URLSearchParams(window.location.search);
+  const banner = (msg: string) => {
+    if (!done) return;
+    done.textContent = msg;
+    done.hidden = false;
+    if (form) form.hidden = true;
+    done.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+  if (params.get('subscribed') === '1') banner('You are subscribed. Thank you.');
+  if (params.get('subscribed') === '0') banner('That confirmation link has expired. Please subscribe again.');
+  if (params.get('unsubscribed') === '1') banner('You have been removed from the list.');
+</script>
