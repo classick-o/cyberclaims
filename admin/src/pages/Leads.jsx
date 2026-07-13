@@ -62,6 +62,7 @@ export default function Leads() {
     <>
       <div className="head">
         <div>
+          <span className="eyebrow">Cases</span>
           <h1>Leads</h1>
           <p className="sub">{total} in total. Everything the three forms have captured.</p>
         </div>
@@ -92,7 +93,7 @@ export default function Leads() {
         <input type="search" placeholder="Name, email, platform..." value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card flush">
         {leads === null ? (
           <div className="empty">Loading...</div>
         ) : leads.length === 0 ? (

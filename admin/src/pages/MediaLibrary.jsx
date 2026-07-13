@@ -57,6 +57,7 @@ export default function MediaLibrary() {
     <>
       <div className="head">
         <div>
+          <span className="eyebrow">Library</span>
           <h1>Media</h1>
           <p className="sub">Uploads are converted to WebP at three sizes.</p>
         </div>

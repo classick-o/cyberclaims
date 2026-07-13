@@ -42,6 +42,7 @@ export default function Posts() {
     <>
       <div className="head">
         <div>
+          <span className="eyebrow">Content</span>
           <h1>Articles</h1>
           <p className="sub">Everything under /news/.</p>
         </div>
@@ -67,7 +68,7 @@ export default function Posts() {
         />
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card flush">
         {posts === null ? (
           <div className="empty">Loading...</div>
         ) : posts.length === 0 ? (

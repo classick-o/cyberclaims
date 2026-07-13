@@ -143,11 +143,23 @@ h1, h2, h3, h4 {
   background: var(--color-purple-400);
 }
 
-/* Frosted-glass card */
+/* Frosted-glass card.
+ *
+ * -webkit- FIRST, standard LAST. With the order reversed, lightningcss (which Tailwind
+ * v4 minifies this file with) collapsed the pair down to the -webkit- one alone — and
+ * Chrome does not support -webkit-backdrop-filter, only the unprefixed property. The
+ * result shipped: .glass had NO frost at all in Chrome, so the contact form, the Start
+ * Process wizard, the success cards and /thank-you/ rendered as flat translucent boxes
+ * instead of frosted glass. The prefixed declaration must come first so the standard
+ * one wins the cascade and survives the minifier.
+ *
+ * If you touch this, check the built CSS, not the source:
+ *   grep -o "\.glass{[^}]*}" dist/client/_astro/*.css
+ */
 .glass {
   background: rgba(35, 35, 64, 0.45);
-  backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 0.75rem;
 }

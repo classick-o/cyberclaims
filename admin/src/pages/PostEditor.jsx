@@ -141,6 +141,7 @@ export default function PostEditor() {
     <>
       <div className="head">
         <div>
+          <span className="eyebrow">{isNew ? 'Write' : 'Edit'}</span>
           <h1>{isNew ? 'New article' : 'Edit article'}</h1>
           <p className="sub">
             {meta.status === 'published' ? 'Live on the site' : 'Not published'}
@@ -350,14 +351,13 @@ export default function PostEditor() {
             </div>
 
             <div className="field" style={{ marginBottom: 0 }}>
-              <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', cursor: 'pointer' }}>
+              <label className="check">
                 <input
                   type="checkbox"
                   checked={meta.featured}
                   onChange={(e) => setMeta({ ...meta, featured: e.target.checked })}
-                  style={{ width: 'auto' }}
                 />
-                Featured
+                Featured on /news/
               </label>
               <div className="hint">
                 The large hero card at the top of /news/. Only one article can hold it —

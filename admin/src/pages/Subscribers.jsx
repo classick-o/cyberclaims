@@ -30,6 +30,7 @@ export default function Subscribers() {
     <>
       <div className="head">
         <div>
+          <span className="eyebrow">Audience</span>
           <h1>Newsletter</h1>
           <p className="sub">
             {subs?.filter((s) => s.status === 'confirmed').length ?? 0} confirmed
@@ -59,7 +60,7 @@ export default function Subscribers() {
         </select>
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card flush">
         {subs === null ? (
           <div className="empty">Loading...</div>
         ) : subs.length === 0 ? (

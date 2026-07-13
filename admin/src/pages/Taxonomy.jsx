@@ -24,6 +24,7 @@ export default function Taxonomy() {
     <>
       <div className="head">
         <div>
+          <span className="eyebrow">Taxonomy</span>
           <h1>Categories &amp; Authors</h1>
           <p className="sub">The filter tabs on /news/, and the bylines.</p>
         </div>
