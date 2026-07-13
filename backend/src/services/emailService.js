@@ -86,6 +86,41 @@ export async function sendLeadNotification(lead, leadId) {
   });
 }
 
+/**
+ * Newsletter double opt-in. Until this link is clicked the address is `pending` and
+ * must not be mailed anything else — that's what makes the subscription lawful.
+ */
+export async function sendNewsletterConfirmation({ email, token }) {
+  if (!transporter) return;
+
+  const url = `${env.SITE_URL}/api/newsletter/confirm?token=${encodeURIComponent(token)}`;
+
+  await transporter.sendMail({
+    from: from(),
+    to: email,
+    subject: 'Confirm your subscription — Cyberclaims',
+    html: `
+      <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#1a1a2e;">
+        <h2 style="color:#6b3fa0;margin:0 0 16px;">One more step</h2>
+        <p style="font-size:15px;line-height:1.65;">
+          Click below to confirm you want our updates on crypto fraud, recovery and
+          investigations. If you didn't ask for this, ignore this email — nothing
+          will be sent.
+        </p>
+        <p style="margin:28px 0;">
+          <a href="${escapeHtml(url)}"
+             style="display:inline-block;padding:12px 24px;border-radius:8px;background:#6b3fa0;color:#fff;text-decoration:none;font-weight:600;">
+            Confirm subscription
+          </a>
+        </p>
+        <p style="font-size:12px;color:#94a3b8;line-height:1.6;">
+          Cyberclaims &mdash; Transparent Business Solutions B.V., The Hague
+        </p>
+      </div>
+    `,
+  });
+}
+
 /** Confirmation to the person who submitted. */
 export async function sendLeadConfirmation({ full_name, email }) {
   if (!transporter) return;

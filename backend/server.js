@@ -6,7 +6,8 @@
 // admin's session cookie is same-origin for free.
 
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { mkdir } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import express from 'express';
 import { env } from './src/config/env.js';
@@ -15,6 +16,9 @@ import { api } from './src/app.js';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_DIR = join(ROOT, 'dist', 'client');
 const SERVER_ENTRY = join(ROOT, 'dist', 'server', 'entry.mjs');
+const UPLOAD_DIR = resolve(ROOT, env.UPLOAD_DIR);
+
+await mkdir(UPLOAD_DIR, { recursive: true });
 
 const app = express();
 
@@ -24,6 +28,25 @@ app.set('trust proxy', env.TRUST_PROXY);
 app.disable('x-powered-by');
 
 app.use('/api', api);
+
+// Uploaded media. Filenames are content-random and never reused, so these are
+// immutable. `dotfiles: 'deny'` and no `index` because this directory holds user-
+// supplied content — it should serve exactly the files we wrote and nothing else.
+app.use(
+  '/uploads',
+  express.static(UPLOAD_DIR, {
+    maxAge: '1y',
+    immutable: true,
+    index: false,
+    dotfiles: 'deny',
+    setHeaders(res) {
+      // Belt and braces: even though every file was re-encoded to WebP by sharp,
+      // never let a browser sniff one of them into something executable.
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Disposition', 'inline');
+    },
+  })
+);
 
 if (existsSync(CLIENT_DIR)) {
   // Astro content-hashes everything under /_astro, so it can be cached forever.

@@ -35,6 +35,14 @@ const schema = z
     DB_PASSWORD: z.string().default(''), // a passwordless local MySQL is legitimate
     DB_NAME: z.string().min(1),
 
+    // Signs the admin session cookie. Rotating it logs everyone out — that's the
+    // intended emergency response, not a bug.
+    JWT_SECRET: z.string().min(32, 'must be at least 32 characters'),
+
+    // Where uploaded media is written and served from.
+    UPLOAD_DIR: z.string().default('uploads'),
+    MAX_UPLOAD_MB: z.coerce.number().int().positive().max(50).default(8),
+
     SMTP_HOST: optional,
     SMTP_PORT: z.coerce.number().int().positive().default(587),
     SMTP_USER: optional,
