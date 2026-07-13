@@ -177,26 +177,40 @@ export class Post {
     try {
       await conn.beginTransaction();
 
-      // Publishing with no date set means "now" — not "never", which is what a NULL
-      // published_at plus `published_at <= NOW()` would silently produce.
-      const publishedAt =
-        status === 'published' ? (published_at ? new Date(published_at) : new Date()) : null;
+      // published_at is stamped by MYSQL — never by `new Date()` in JavaScript.
+      //
+      // mysql2 sends a JS Date with its millisecond part, and MySQL ROUNDS that into a
+      // DATETIME(0): 13:09:40.812 is stored as 13:09:41 — one second in the FUTURE.
+      // The article then fails the `published_at <= NOW()` filter for that second, so
+      // it 404s... and the 404 is what gets cached, for five minutes. An editor clicks
+      // Publish, opens the article, sees "Page not found", and keeps seeing it. Any
+      // publish landing on .500ms or later — about half of them.
+      //
+      // NOW() also removes the whole class of JS-vs-MySQL clock-skew bugs, since only
+      // one clock is ever consulted.
+      //
+      // An explicit published_at (a scheduled publication) is still honoured; only the
+      // implicit "now" comes from the database.
+      const publishing = status === 'published';
+      const scheduled = publishing && published_at ? new Date(published_at) : null;
+      const stamp = publishing ? (scheduled ? '?' : 'NOW()') : 'NULL';
+      const stampArgs = scheduled ? [scheduled] : [];
 
       let postId = id;
       if (postId) {
         await conn.execute(
           `UPDATE posts SET category_id = ?, author_id = ?, cover_media_id = ?,
-                            featured = ?, status = ?, published_at = ?
+                            featured = ?, status = ?, published_at = ${stamp}
             WHERE id = ?`,
           [category_id ?? null, author_id ?? null, cover_media_id ?? null,
-           featured ? 1 : 0, status, publishedAt, postId]
+           featured ? 1 : 0, status, ...stampArgs, postId]
         );
       } else {
         const [result] = await conn.execute(
           `INSERT INTO posts (category_id, author_id, cover_media_id, featured, status, published_at)
-           VALUES (?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ${stamp})`,
           [category_id ?? null, author_id ?? null, cover_media_id ?? null,
-           featured ? 1 : 0, status, publishedAt]
+           featured ? 1 : 0, status, ...stampArgs]
         );
         postId = result.insertId;
       }
@@ -262,14 +276,16 @@ export class Post {
     }
   }
 
+  /** Publish / unpublish / archive from the list view, without loading the whole post. */
   static async setStatus(id, status) {
-    const publishedAt = status === 'published' ? new Date() : null;
+    // NOW(), not a JS Date — see the comment in save(). A first publish stamps the
+    // date; re-publishing something that was already dated keeps its original date.
     await pool.execute(
       `UPDATE posts
           SET status = ?,
-              published_at = CASE WHEN ? = 'published' AND published_at IS NULL THEN ? ELSE published_at END
+              published_at = IF(? = 'published' AND published_at IS NULL, NOW(), published_at)
         WHERE id = ?`,
-      [status, status, publishedAt, id]
+      [status, status, id]
     );
   }
 

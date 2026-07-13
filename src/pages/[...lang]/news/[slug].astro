@@ -12,7 +12,7 @@ import Layout from '../../../layouts/Layout.astro';
 import CtaStrip from '../../../components/CtaStrip.astro';
 import RecoveryCta from '../../../components/RecoveryCta.astro';
 import { link, absoluteUrl } from '../../../lib/paths';
-import { Post, cached, srcset, isEditor, type FullPost, type PostCard } from '../../../lib/content';
+import { Post, cached, srcset, isEditor, extractFaq, type FullPost, type PostCard } from '../../../lib/content';
 import { localeFromUrl } from '../../../i18n/config';
 import { useTranslations, formatDate } from '../../../i18n';
 
@@ -40,10 +40,31 @@ const related = (await cached(`related:${locale}:${post.id}`, () =>
 const url = absoluteUrl(`/news/${post.slug}/`, locale, Astro.site);
 const cover = post.cover_path ? new URL(post.cover_path, Astro.site ?? url).href : undefined;
 
+// The Q&A blocks the editor added, as plain text.
+//
+// Emitting FAQPage structured data is what makes Google render the questions as
+// expandable rows inside the search result itself. On queries like "is <platform> a
+// scam" — which is exactly how the people we want to reach search — that is the
+// difference between one blue link and half the page.
+const faq = extractFaq(post.body_html);
+
 // Structured data. The one thing TBSBV genuinely does well, kept.
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
+    ...(faq.length > 0
+      ? [
+          {
+            '@type': 'FAQPage',
+            '@id': `${url}#faq`,
+            mainEntity: faq.map((item) => ({
+              '@type': 'Question',
+              name: item.question,
+              acceptedAnswer: { '@type': 'Answer', text: item.answer },
+            })),
+          },
+        ]
+      : []),
     {
       '@type': 'Article',
       '@id': url,
@@ -338,6 +359,83 @@ if (!preview) {
     background: rgba(0, 0, 0, 0.35);
     overflow-x: auto;
   }
+  /* Q&A block — a native <details> accordion. No JavaScript, keyboard accessible, and
+     Google reads the answers even while they are collapsed. */
+  .prose :global(.faq) {
+    margin-top: 2.5rem;
+    border: 1px solid rgba(139, 91, 189, 0.28);
+    border-radius: 0.85rem;
+    overflow: hidden;
+    background: rgba(139, 91, 189, 0.05);
+  }
+  .prose :global(.faq-item) {
+    border-bottom: 1px solid rgba(139, 91, 189, 0.18);
+  }
+  .prose :global(.faq-item:last-child) {
+    border-bottom: 0;
+  }
+  .prose :global(.faq-item > summary) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.35rem;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.02rem;
+    color: #fff;
+    transition: background 0.2s, color 0.2s;
+  }
+  /* the default disclosure triangle, in both engines */
+  .prose :global(.faq-item > summary::-webkit-details-marker) {
+    display: none;
+  }
+  .prose :global(.faq-item > summary::marker) {
+    content: '';
+  }
+  /* our own chevron, which rotates when the answer opens */
+  .prose :global(.faq-item > summary::after) {
+    content: '';
+    flex-shrink: 0;
+    width: 0.65rem;
+    height: 0.65rem;
+    border-right: 2px solid var(--color-purple-300);
+    border-bottom: 2px solid var(--color-purple-300);
+    transform: rotate(45deg) translate(-0.1rem, -0.1rem);
+    transition: transform 0.25s var(--ease-out-brand);
+  }
+  .prose :global(.faq-item[open] > summary::after) {
+    transform: rotate(-135deg) translate(-0.15rem, -0.15rem);
+  }
+  .prose :global(.faq-item > summary:hover) {
+    background: rgba(139, 91, 189, 0.1);
+  }
+  .prose :global(.faq-item[open] > summary) {
+    background: rgba(139, 91, 189, 0.12);
+  }
+  /* the answer: everything after the summary */
+  .prose :global(.faq-item > summary ~ *) {
+    margin: 0;
+    padding: 0 1.35rem;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.96rem;
+  }
+  .prose :global(.faq-item > summary + *) {
+    padding-top: 1rem;
+  }
+  .prose :global(.faq-item > *:last-child) {
+    padding-bottom: 1.25rem;
+  }
+  .prose :global(.faq-item > summary ~ * + *) {
+    margin-top: 0.8rem;
+  }
+  .prose :global(.faq-item ul),
+  .prose :global(.faq-item ol) {
+    padding-left: 2.7rem;
+  }
+
   .prose :global(table) {
     width: 100%;
     border-collapse: collapse;

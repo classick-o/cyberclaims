@@ -863,31 +863,244 @@ tbody tr:last-child td {
   }
 }
 
-/* Checkboxes: the browser default is a white square, which looks like a bug next to
-   everything else here. accent-color is all it takes. */
-input[type='checkbox'] {
-  width: 1rem;
-  height: 1rem;
-  accent-color: var(--purple-500);
-  cursor: pointer;
+
+/* ── native controls ────────────────────────────────────────────────────────────
+ * <select> and <input type=checkbox] ship with the operating system's own widget,
+ * which on Windows is a grey chevron and a white square. Next to everything else here
+ * they read as unfinished. appearance:none and draw them ourselves.
+ */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.25rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  /* chevron, inlined so it costs no request and inherits no colour surprises */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a880d1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 0.7rem;
 }
-.check {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin-bottom: 0;
-  cursor: pointer;
-  text-transform: none;
-  letter-spacing: 0;
-  font-size: 0.85rem;
+select:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+/* The popup list is drawn by the OS; `option` background is the one hook we get. */
+select option {
+  background: var(--navy);
   color: var(--mist);
 }
 
-/* Colour swatch input — the default control is a chunky grey button. */
+input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: background 0.18s var(--ease-out-brand), border-color 0.18s,
+    box-shadow 0.18s var(--ease-out-brand);
+}
+input[type='checkbox']::before {
+  content: '';
+  width: 0.62rem;
+  height: 0.62rem;
+  transform: scale(0);
+  transition: transform 0.16s var(--ease-out-brand);
+  background: #fff;
+  /* a tick, drawn with clip-path so there is no glyph or image to load */
+  clip-path: polygon(14% 44%, 0 65%, 40% 100%, 100% 16%, 84% 0%, 39% 66%);
+}
+input[type='checkbox']:hover {
+  border-color: var(--purple-400);
+}
+input[type='checkbox']:checked {
+  background: var(--purple-500);
+  border-color: var(--purple-400);
+  box-shadow: 0 6px 16px -6px rgba(107, 63, 160, 0.9);
+}
+input[type='checkbox']:checked::before {
+  transform: scale(1);
+}
+input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--purple-400);
+  outline-offset: 2px;
+}
+
+/* A checkbox with its label beside it — not the uppercase field label used above inputs. */
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0;
+  cursor: pointer;
+  color: var(--mist);
+  font-size: 0.86rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 input[type='color'] {
-  padding: 0.2rem;
+  width: 2.75rem;
+  height: 2.4rem;
+  padding: 0.22rem;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.6rem;
   cursor: pointer;
+}
+input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type='color']::-webkit-color-swatch {
+  border: 0;
+  border-radius: 0.4rem;
+}
+
+/* ── Q&A block, in the editor ───────────────────────────────────────────────────
+ * The page ships a collapsed <details> accordion. Here it is always open — a
+ * collapsed accordion would hide the text you are trying to write.
+ */
+.faq-block {
+  margin: 1.5rem 0;
+  border: 1px solid rgba(139, 91, 189, 0.32);
+  border-radius: 0.7rem;
+  background: rgba(139, 91, 189, 0.06);
+  overflow: hidden;
+}
+.faq-block-head {
+  padding: 0.55rem 0.9rem;
+  background: rgba(139, 91, 189, 0.14);
+  border-bottom: 1px solid rgba(139, 91, 189, 0.22);
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--purple-200);
+  user-select: none;
+}
+.faq-block-items {
+  padding: 0.35rem;
+}
+.faq-block-foot {
+  padding: 0.35rem 0.6rem 0.7rem;
+}
+.faq-add {
+  padding: 0.4rem 0.75rem;
+  border: 1px dashed rgba(139, 91, 189, 0.45);
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--purple-200);
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+.faq-add:hover {
+  background: rgba(139, 91, 189, 0.16);
+  border-color: var(--purple-400);
+  color: #fff;
+}
+
+.faq-item-edit {
+  position: relative;
+  padding: 0.75rem 2.25rem 0.75rem 0.75rem;
+  border-radius: 0.55rem;
+}
+.faq-item-edit + .faq-item-edit {
+  border-top: 1px solid rgba(139, 91, 189, 0.18);
+}
+.faq-item-edit:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+.faq-remove {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.55rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  display: grid;
+  place-content: center;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--faint);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+.faq-item-edit:hover .faq-remove {
+  opacity: 1;
+}
+.faq-remove:hover {
+  background: rgba(248, 113, 113, 0.14);
+  color: var(--danger);
+}
+
+/* Q and A gutter markers, so the shape of the block is legible at a glance. */
+.faq-q,
+.faq-item-body > *:not(.faq-q) {
+  position: relative;
+  padding-left: 1.9rem;
+}
+.faq-q::before,
+.faq-item-body > .faq-q + *::before {
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  display: grid;
+  place-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 0.3rem;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.faq-q::before {
+  content: 'Q';
+  background: var(--purple-500);
+  color: #fff;
+}
+.faq-item-body > .faq-q + *::before {
+  content: 'A';
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--purple-200);
+}
+.faq-q {
+  margin-bottom: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  color: #fff;
+}
+.faq-mark {
+  display: none; /* the ::before marker draws it; the span stays for older node views */
+}
+.faq-q-text {
+  min-height: 1.5rem;
+  outline: none;
+}
+.faq-item-body > *:not(.faq-q) {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+/* Tiptap's Placeholder extension marks empty nodes; this is what draws the hint. */
+.tt-editor .is-empty::before,
+.tt-editor .is-editor-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--faint);
 }

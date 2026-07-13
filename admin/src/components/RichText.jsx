@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { Placeholder } from '@tiptap/extensions';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
+import { FAQ_EXTENSIONS, insertFaq } from '../extensions/Faq.js';
 
 // WYSIWYG, not Markdown.
 //
@@ -29,12 +31,23 @@ export default function RichText({ value, onChange, onPickImage, placeholder }) 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
+      // The CSS has always styled `p.is-editor-empty::before` to show a hint — but that
+      // class comes from this extension, which was never installed. The placeholder had
+      // simply never appeared.
+      Placeholder.configure({
+        includeChildren: true,
+        placeholder: ({ node }) => {
+          if (node.type.name === 'faqQuestion') return 'The question a reader would actually ask…';
+          if (node.type.name === 'heading') return 'Heading';
+          return placeholder ?? 'Write the article…';
+        },
+      }),
       Link.configure({ openOnClick: false, autolink: true }),
       Image.configure({ inline: false }),
+      ...FAQ_EXTENSIONS,
     ],
     content: value ?? '',
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
-    editorProps: { attributes: { 'data-placeholder': placeholder ?? 'Write the article...' } },
   });
 
   // Switching locale tabs swaps the whole document under the same editor instance.
@@ -56,7 +69,7 @@ export default function RichText({ value, onChange, onPickImage, placeholder }) 
     const url = window.prompt('Link URL (leave empty to remove)', prev);
     if (url === null) return;
     if (url === '') return editor.chain().focus().unsetLink().run();
-    editor.chain().focus().extendMarkAsRange?.('link').setLink({ href: url }).run();
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
 
   return (
@@ -78,7 +91,9 @@ export default function RichText({ value, onChange, onPickImage, placeholder }) 
             </button>
           )
         )}
+
         <div className="tt-sep" />
+
         <button
           type="button"
           className={`tt-btn${active('link') ? ' on' : ''}`}
@@ -91,15 +106,22 @@ export default function RichText({ value, onChange, onPickImage, placeholder }) 
           className="tt-btn"
           onClick={() =>
             onPickImage((media) =>
-              editor
-                .chain()
-                .focus()
-                .setImage({ src: media.path, alt: media.alt ?? '' })
-                .run()
+              editor.chain().focus().setImage({ src: media.path, alt: media.alt ?? '' }).run()
             )
           }
         >
           Image
+        </button>
+
+        <div className="tt-sep" />
+
+        <button
+          type="button"
+          className={`tt-btn${active('faq') ? ' on' : ''}`}
+          title="A block of questions and answers. Renders as an accordion, and tells Google it is an FAQ."
+          onClick={() => insertFaq(editor)}
+        >
+          Q&amp;A
         </button>
       </div>
 

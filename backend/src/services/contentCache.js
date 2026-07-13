@@ -36,8 +36,20 @@ export function cached(key, fn) {
   // key would otherwise both hit the database.
   store.set(key, { value, expires: Date.now() + TTL_MS });
 
-  // A rejected promise must not be cached, or one blip poisons the key for 5 minutes.
-  Promise.resolve(value).catch(() => store.delete(key));
+  Promise.resolve(value).then(
+    (resolved) => {
+      // NEVER cache a miss.
+      //
+      // "This article does not exist" is a transient answer, not a fact. It is exactly
+      // what a reader gets in the instant before a publish lands — and caching it turned
+      // a sub-second race into a five-minute outage: the editor hit Publish, opened the
+      // page, got a 404, and kept getting it. The lookup is a single indexed row; paying
+      // for it on every 404 is nothing next to serving a stale one.
+      if (resolved == null) store.delete(key);
+    },
+    // A rejected promise must not be cached either, or one blip poisons the key.
+    () => store.delete(key)
+  );
 
   if (store.size > MAX_ENTRIES) {
     store.delete(store.keys().next().value); // oldest insert wins the eviction

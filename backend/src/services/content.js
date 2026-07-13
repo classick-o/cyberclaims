@@ -1,6 +1,7 @@
 // Content hygiene: sanitising, slugging, reading time.
 
 import sanitizeHtml from 'sanitize-html';
+import { Parser } from 'htmlparser2';
 
 // Sanitise on WRITE, not on render.
 //
@@ -17,11 +18,24 @@ const ALLOWED = {
     'ul', 'ol', 'li',
     'a', 'img', 'figure', 'figcaption',
     'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    // The Q&A block. <details>/<summary> is a native accordion: no JavaScript, keyboard
+    // accessible, and Google indexes the answer even while it is collapsed. Note there
+    // is no <div> here and there never should be — <details> takes flow content
+    // directly after its <summary>, so the answer's paragraphs are simply its children.
+    'section', 'details', 'summary',
   ],
   allowedAttributes: {
     a: ['href', 'title', 'target', 'rel'],
     img: ['src', 'srcset', 'alt', 'width', 'height', 'loading'],
+    section: ['class'],
+    details: ['class'],
     '*': [],
+  },
+  // `class` is allowed on exactly two tags and may hold exactly one value each. An
+  // editor cannot smuggle in arbitrary classes to hijack the site's styles.
+  allowedClasses: {
+    section: ['faq'],
+    details: ['faq-item'],
   },
   allowedSchemes: ['http', 'https', 'mailto'],
   // Anything the editor emits with a relative /uploads/ src stays; everything else
@@ -60,6 +74,70 @@ export function toPlainText(html) {
 export function readingMinutes(html) {
   const words = toPlainText(html).split(' ').filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
+}
+
+/**
+ * Pulls the question/answer pairs out of an article's Q&A blocks, as plain text.
+ *
+ * Feeds the FAQPage structured data on the article page — which is what makes Google
+ * render the questions as expandable rows directly in the search result. For a site
+ * fighting for "is X a scam" queries, that is not a nice-to-have.
+ *
+ * A real parser, not a regex: the answer is ordinary article content and can contain
+ * anything the rest of the body can, so pattern-matching for the closing tag would
+ * break the first time someone put a list inside an answer.
+ */
+export function extractFaq(html) {
+  if (!html || !html.includes('faq-item')) return [];
+
+  const items = [];
+  let inItem = false;
+  let inQuestion = false;
+  let question = '';
+  let answer = '';
+
+  const parser = new Parser({
+    onopentag(name, attribs) {
+      if (name === 'details' && (attribs.class ?? '').includes('faq-item')) {
+        inItem = true;
+        question = '';
+        answer = '';
+        return;
+      }
+      if (inItem && name === 'summary') inQuestion = true;
+    },
+    ontext(text) {
+      if (!inItem) return;
+      if (inQuestion) question += text;
+      else answer += text;
+    },
+    onclosetag(name) {
+      if (!inItem) return;
+
+      if (name === 'summary') {
+        inQuestion = false;
+        return;
+      }
+
+      if (name === 'details') {
+        inItem = false;
+        const q = question.replace(/\s+/g, ' ').trim();
+        const a = answer.replace(/\s+/g, ' ').trim();
+        // A half-written pair is not an FAQ entry — and Google penalises FAQPage markup
+        // that doesn't match visible content.
+        if (q && a) items.push({ question: q, answer: a });
+        return;
+      }
+
+      // Block boundaries become spaces, so two paragraphs don't run into oneword.
+      if (['p', 'li', 'h2', 'h3', 'h4', 'blockquote'].includes(name)) answer += ' ';
+    },
+  });
+
+  parser.write(html);
+  parser.end();
+
+  return items;
 }
 
 export function slugify(input) {

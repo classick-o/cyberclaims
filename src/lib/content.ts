@@ -15,9 +15,10 @@ import type { AstroCookies } from 'astro';
 import { Post } from '../../backend/src/models/Post.js';
 import { Category } from '../../backend/src/models/Taxonomy.js';
 import { cached } from '../../backend/src/services/contentCache.js';
+import { extractFaq } from '../../backend/src/services/content.js';
 import { env } from '../../backend/src/config/env.js';
 
-export { Post, Category, cached };
+export { Post, Category, cached, extractFaq };
 
 export type PostCard = {
   id: number;
