@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "astro dev",
     "dev:api": "node --watch backend/server.js",
-    "build": "astro build",
+    "dev:admin": "vite --config admin/vite.config.js",
+    "build": "npm run build:site && npm run build:admin",
+    "build:site": "astro build",
+    "build:admin": "vite build --config admin/vite.config.js",
     "start": "node backend/server.js",
     "migrate": "node backend/scripts/migrate.js",
     "seed:admin": "node backend/scripts/seed-admin.js",
@@ -17,6 +20,11 @@
   },
   "dependencies": {
     "@astrojs/node": "^9.0.0",
+    "@tiptap/extension-image": "^3.27.3",
+    "@tiptap/extension-link": "^3.27.3",
+    "@tiptap/pm": "^3.27.3",
+    "@tiptap/react": "^3.27.3",
+    "@tiptap/starter-kit": "^3.27.3",
     "astro": "^5.6.1",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
@@ -29,6 +37,9 @@
     "multer": "^2.2.0",
     "mysql2": "^3.12.0",
     "nodemailer": "^6.10.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.1",
     "sanitize-html": "^2.17.6",
     "sharp": "^0.35.3",
     "three": "^0.185.1",
@@ -37,7 +48,10 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.17",
     "@types/three": "^0.185.0",
+    "@vitejs/plugin-react": "^6.0.3",
     "gsap": "^3.12.7",
-    "tailwindcss": "^4.0.17"
+    "playwright": "^1.61.1",
+    "tailwindcss": "^4.0.17",
+    "vite": "^8.1.4"
   }
 }

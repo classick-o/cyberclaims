@@ -16,6 +16,7 @@ import { api } from './src/app.js';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_DIR = join(ROOT, 'dist', 'client');
 const SERVER_ENTRY = join(ROOT, 'dist', 'server', 'entry.mjs');
+const ADMIN_DIR = join(ROOT, 'admin', 'dist');
 const UPLOAD_DIR = resolve(ROOT, env.UPLOAD_DIR);
 
 await mkdir(UPLOAD_DIR, { recursive: true });
@@ -47,6 +48,19 @@ app.use(
     },
   })
 );
+
+// The admin SPA. Same origin as the API, which is what lets the session cookie work
+// with SameSite=Lax and no CORS at all. `noindex` is set in its HTML, but say it in
+// the headers too — a CMS login page in Google results is an invitation.
+if (existsSync(ADMIN_DIR)) {
+  app.use('/admin', (_req, res, next) => {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    next();
+  });
+  app.use('/admin', express.static(ADMIN_DIR, { index: false }));
+  // Client-side routing: /admin/posts/12 is a React route, not a file on disk.
+  app.get(/^\/admin(\/.*)?$/, (_req, res) => res.sendFile(join(ADMIN_DIR, 'index.html')));
+}
 
 if (existsSync(CLIENT_DIR)) {
   // Astro content-hashes everything under /_astro, so it can be cached forever.
