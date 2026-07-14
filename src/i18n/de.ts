@@ -129,6 +129,17 @@ export const de: Record<UIKey, string> = {
   'home.tracingChip3': 'Auszahlung',
   'home.tracingFoot': 'Gelder über 5 Hops kartiert · 2 Auszahlungspunkte markiert',
 
+  'home.trace.victim': 'Opfer-Wallet',
+  'home.trace.mixer': 'Mixer',
+  'home.trace.contract': 'Token-Vertrag',
+  'home.trace.bridge': 'Bridge',
+  'home.trace.exchangeA': 'Börse A',
+  'home.trace.exchangeB': 'Börse B',
+  'home.trace.cashout': 'Auszahlung',
+  'home.trace.hop': 'Hop {n}',
+  'home.trace.alt':
+    'Illustrativer Transaktionsgraph: Gelder, die eine Opfer-Wallet verlassen, werden über einen Mixer, einen Token-Vertrag, eine Bridge und zwei Börsen bis zu einem finalen Auszahlungspunkt verfolgt.',
+
   'home.susTitle': 'Wir setzen auf {accent}',
   'home.susTitleA': 'Nachhaltigkeit',
   'home.susLead':

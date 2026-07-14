@@ -131,6 +131,17 @@ export const nl: Record<UIKey, string> = {
   'home.tracingChip3': 'Uitbetaling',
   'home.tracingFoot': 'Geld in kaart gebracht over 5 hops · 2 uitbetalingspunten gemarkeerd',
 
+  'home.trace.victim': 'Wallet slachtoffer',
+  'home.trace.mixer': 'Mixer',
+  'home.trace.contract': 'Tokencontract',
+  'home.trace.bridge': 'Bridge',
+  'home.trace.exchangeA': 'Exchange A',
+  'home.trace.exchangeB': 'Exchange B',
+  'home.trace.cashout': 'Uitbetaling',
+  'home.trace.hop': 'hop {n}',
+  'home.trace.alt':
+    'Illustratieve transactiegrafiek: geld dat een wallet van een slachtoffer verlaat, wordt gevolgd via een mixer, een tokencontract, een bridge en twee exchanges naar een uiteindelijk uitbetalingspunt.',
+
   'home.susTitle': 'Wij geven prioriteit aan {accent}',
   'home.susTitleA': 'duurzaamheid',
   'home.susLead':

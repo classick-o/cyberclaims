@@ -129,6 +129,17 @@ export const it: Record<UIKey, string> = {
   'home.tracingChip3': 'Prelievo',
   'home.tracingFoot': 'Fondi tracciati su 5 passaggi · 2 punti di prelievo segnalati',
 
+  'home.trace.victim': 'Wallet vittima',
+  'home.trace.mixer': 'Mixer',
+  'home.trace.contract': 'Contratto token',
+  'home.trace.bridge': 'Bridge',
+  'home.trace.exchangeA': 'Exchange A',
+  'home.trace.exchangeB': 'Exchange B',
+  'home.trace.cashout': 'Prelievo',
+  'home.trace.hop': 'passaggio {n}',
+  'home.trace.alt':
+    'Grafo di transazioni illustrativo: i fondi che lasciano il wallet di una vittima vengono seguiti attraverso un mixer, un contratto token, un bridge e due exchange fino a un punto di prelievo finale.',
+
   'home.susTitle': 'Diamo priorità alla {accent}',
   'home.susTitleA': 'sostenibilità',
   'home.susLead':

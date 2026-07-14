@@ -129,6 +129,17 @@ export const fr: Record<UIKey, string> = {
   'home.tracingChip3': 'Retrait',
   'home.tracingFoot': 'Fonds retracés sur 5 sauts · 2 points de retrait signalés',
 
+  'home.trace.victim': 'Portefeuille victime',
+  'home.trace.mixer': 'Mixeur',
+  'home.trace.contract': 'Contrat de jeton',
+  'home.trace.bridge': 'Pont',
+  'home.trace.exchangeA': 'Plateforme A',
+  'home.trace.exchangeB': 'Plateforme B',
+  'home.trace.cashout': 'Retrait',
+  'home.trace.hop': 'saut {n}',
+  'home.trace.alt':
+    'Graphique de transactions illustratif : les fonds quittant le portefeuille d’une victime sont suivis à travers un mixeur, un contrat de jeton, un pont et deux plateformes d’échange jusqu’à un point de retrait final.',
+
   'home.susTitle': 'Nous privilégions la {accent}',
   'home.susTitleA': 'durabilité',
   'home.susLead':

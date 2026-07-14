@@ -147,6 +147,19 @@ export const en = {
   'home.tracingChip3': 'Cashout',
   'home.tracingFoot': 'Funds mapped across 5 hops · 2 cashout points flagged',
 
+  // Node labels for the animated transaction graph (TraceGraph.astro). The amounts on the
+  // edges are deliberately NOT keys - they are illustrative data, not copy.
+  'home.trace.victim': 'Victim wallet',
+  'home.trace.mixer': 'Mixer',
+  'home.trace.contract': 'Token contract',
+  'home.trace.bridge': 'Bridge',
+  'home.trace.exchangeA': 'Exchange A',
+  'home.trace.exchangeB': 'Exchange B',
+  'home.trace.cashout': 'Cashout',
+  'home.trace.hop': 'hop {n}',
+  'home.trace.alt':
+    'Illustrative transaction graph: funds leaving a victim wallet are followed through a mixer, a token contract, a bridge and two exchanges to a final cashout point.',
+
   'home.susTitle': 'We prioritise {accent}',
   'home.susTitleA': 'sustainability',
   'home.susLead':
