@@ -12,6 +12,7 @@ import Blogs from './Blogs.astro';
 import Partners from './Partners.astro';
 import Press from './Press.astro';
 import CtaStrip from './CtaStrip.astro';
+import ImpersonatorPopup from './ImpersonatorPopup.astro';
 import type { Locale } from '../i18n/config';
 
 // The homepage composition, factored out of [...lang]/index.astro so the article route
@@ -62,4 +63,5 @@ const { locale } = Astro.props;
   <Partners />
   <Press />
   <CtaStrip />
+  <ImpersonatorPopup />
 </Layout>
