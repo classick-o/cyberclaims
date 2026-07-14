@@ -9,28 +9,23 @@ import CtaStrip from '../../components/CtaStrip.astro';
 import Icon from '../../components/Icon.astro';
 import { asset } from '../../lib/paths';
 import { localePaths, type Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n';
 
 // One file, one page per locale. The default locale maps to lang: undefined, and a
-// rest parameter matches zero segments — so English stays at /about-us/, not /en/about-us/.
+// rest parameter matches zero segments - so English stays at /about-us/, not /en/about-us/.
 export const getStaticPaths = localePaths;
 const { locale } = Astro.props as { locale: Locale };
+const t = useTranslations(locale);
 
-const points = [
-  'Certified experts in crypto & blockchain forensics',
-  'Global reach - we work with you from anywhere',
-  'Free case review with a 48-hour response',
-];
+const points = [t('home.aboutPoint1'), t('home.aboutPoint2'), t('home.aboutPoint3')];
 ---
 
-<Layout
-  title="About Us - Cyberclaims"
-  description="Discover who we are and how we help recover your lost funds and cryptocurrency with certified crypto & blockchain forensics."
->
+<Layout title={t('about.metaTitle')} description={t('about.metaDesc')}>
   <PageHero
     eyebrow="Turning the impossible into reality"
-    title="Discover who we are and how we help recover your lost funds"
+    title={t('about.heroTitle')}
     image="/about-us-hero.webp"
-    imageAlt="Five linked tiles climbing left to right: a cracked coin, a magnifying glass, a network of traced wallets, a case file, and a recovered wallet"
+    imageAlt={t('about.heroImageAlt')}
     imageWidth={1100}
     imageHeight={1072}
     fixedHeight
@@ -41,23 +36,17 @@ const points = [
     <div class="wrap">
       <div class="ab-split" data-reveal>
         <div class="ab-section">
-          <h2 class="ab-h">
-            Turning the Impossible into Reality: Recovering Lost Funds and
-            <span class="accent">Cryptocurrency</span>
-          </h2>
-          <p class="ab-p">
-            At Cyberclaims, we specialize in cutting-edge cryptocurrency intelligence and blockchain
-            analytics to protect your digital assets and recover lost funds. Whether you’re dealing
-            with crypto scams, fraud, or security threats, our expert solutions provide clarity and
-            support at every step. Trust us to navigate the complexities of cryptocurrency recovery,
-            empowering you to regain control of your financial future with confidence.
-          </p>
+          <h2
+            class="ab-h"
+            set:html={t('about.s1Title', { accent: `<span class="accent">${t('about.s1TitleA')}</span>` })}
+          />
+          <p class="ab-p">{t('about.s1Body')}</p>
         </div>
         <div class="ab-visual">
           <img
             class="ab-img"
             src={asset('/turning-impossible.webp')}
-            alt="A fractured ring reassembling, symbolising recovered assets"
+            alt={t('about.s1ImageAlt')}
             width="1100"
             height="871"
             loading="lazy"
@@ -75,23 +64,13 @@ const points = [
   <section class="ab-body">
     <div class="wrap ab-inner">
       <div class="ab-section" data-reveal>
-        <h2 class="ab-h">Hello, we are <span class="accent">Cyberclaims</span></h2>
-        <p class="ab-p">
-          We specialize in advanced cryptocurrency tracing to help victims of cyber fraud recover
-          lost digital assets. Our certified experts use cutting-edge blockchain analytics to track
-          the movement of stolen funds and identify the perpetrators behind crypto theft.
-        </p>
-        <p class="ab-p">
-          Whether your assets were transferred to untraceable wallets or moved across multiple
-          platforms, our team is equipped to follow the trail and assist you in navigating the
-          complexities of crypto recovery. With a global reach, our services are accessible from
-          anywhere in the world, providing you with the support you need to recover your funds
-          securely and efficiently.
-        </p>
-        <p class="ab-p">
-          Trust Cyberclaims to be your guide through the blockchain, ensuring you take the right
-          steps toward asset recovery.
-        </p>
+        <h2
+          class="ab-h"
+          set:html={t('home.aboutTitle', { accent: `<span class="accent">${t('home.aboutTitleA')}</span>` })}
+        />
+        <p class="ab-p">{t('about.s2Body1')}</p>
+        <p class="ab-p">{t('about.s2Body2')}</p>
+        <p class="ab-p">{t('about.s2Body3')}</p>
         <ul class="ab-points">
           {
             points.map((p) => (
@@ -106,7 +85,7 @@ const points = [
     </div>
   </section>
 
-  <ServicesRail lead="Explore our" accent="services" />
+  <ServicesRail lead={t('servicesRail.exploreOur')} accent={t('servicesRail.services')} />
 
   <section class="ab-body">
     <div class="wrap">
@@ -115,7 +94,7 @@ const points = [
           <img
             class="ab-img"
             src={asset('/values.webp')}
-            alt="Interlocking orbits around a glowing core, symbolising our values"
+            alt={t('about.s3ImageAlt')}
             width="1100"
             height="1008"
             loading="lazy"
@@ -123,14 +102,11 @@ const points = [
           />
         </div>
         <div class="ab-section">
-          <h2 class="ab-h">Our <span class="accent">values</span></h2>
-          <p class="ab-p">
-            At Cyberclaims, we create an environment that attracts top talent in the crypto and
-            blockchain recovery industry. Our team uses advanced blockchain analytics to help
-            victims of cyber fraud recover stolen digital assets. With a global presence and
-            expertise in crypto tracing, we deliver effective, results-driven solutions to clients
-            worldwide. Join us and make an impact in the fight against crypto crime.
-          </p>
+          <h2
+            class="ab-h"
+            set:html={t('about.s3Title', { accent: `<span class="accent">${t('about.s3TitleA')}</span>` })}
+          />
+          <p class="ab-p">{t('about.s3Body')}</p>
         </div>
       </div>
     </div>
@@ -174,7 +150,7 @@ const points = [
   }
   /* Full width of the site's container.
    *
-   * NOT `max-width: none` — this element carries .wrap as well, so removing the cap
+   * NOT `max-width: none` - this element carries .wrap as well, so removing the cap
    * entirely also removes .wrap's own 80rem, and the section runs edge-to-edge while
    * the header and footer above and below it stay boxed. Full width means the width
    * the page has, not more than it. The old 52rem cap left a narrow column of text

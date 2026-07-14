@@ -1,7 +1,7 @@
 // Image upload: accept, verify, re-encode, store.
 //
 // Three defences, in order:
-//   1. multer keeps the file in memory with a hard size cap — nothing untrusted ever
+//   1. multer keeps the file in memory with a hard size cap - nothing untrusted ever
 //      touches the disk under a name we didn't choose.
 //   2. file-type sniffs the actual magic bytes. An extension is a claim, not evidence;
 //      `payload.php.jpg` is a real technique.
@@ -10,7 +10,7 @@
 //      archive simply does not survive into the stored file.
 //
 // Filenames are random. The original name is kept in the database for the librarian,
-// never on disk — a user-controlled path is a directory-traversal invitation.
+// never on disk - a user-controlled path is a directory-traversal invitation.
 
 import { randomBytes } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -23,7 +23,7 @@ import { env } from '../config/env.js';
 const ACCEPTED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']);
 const WIDTHS = [480, 960, 1600];
 
-/** A 400 the media route renders as { field: 'file', message } — never a 500. */
+/** A 400 the media route renders as { field: 'file', message } - never a 500. */
 function badImage(message) {
   const err = new Error(message);
   err.status = 400;
@@ -60,7 +60,7 @@ export async function processImage(buffer, originalName) {
 
   const id = randomBytes(8).toString('hex');
   // .rotate() with no argument applies the EXIF orientation and then discards the
-  // EXIF block — which is also where GPS coordinates live. Photos of a scam victim's
+  // EXIF block - which is also where GPS coordinates live. Photos of a scam victim's
   // screen should not ship their home address to the internet.
   //
   // The magic-byte sniff only proves the HEADER is an image; the body can still be
@@ -71,10 +71,10 @@ export async function processImage(buffer, originalName) {
   try {
     ({ width = 0, height = 0 } = await sharp(buffer, { animated: false }).rotate().metadata());
   } catch {
-    throw badImage('We could not read that image — it may be corrupt or truncated.');
+    throw badImage('We could not read that image - it may be corrupt or truncated.');
   }
 
-  // Never upscale — but never truncate either. A 1200px source gets 480/960/1200,
+  // Never upscale - but never truncate either. A 1200px source gets 480/960/1200,
   // not 480/960: capping at the second-largest step would mean the biggest file we
   // serve is smaller than the file we were given, and a hero cover on a wide screen
   // would be a 960px image stretched to fill it.
@@ -83,7 +83,7 @@ export async function processImage(buffer, originalName) {
     .sort((a, b) => a - b);
 
   // A decodable header with no dimensions (0×0) would produce no variants and store a
-  // media row whose `path` is null — a "successful" upload of nothing, which then renders
+  // media row whose `path` is null - a "successful" upload of nothing, which then renders
   // as a broken <img>. Refuse it here instead.
   if (targets.length === 0) {
     throw badImage('That image has no readable dimensions.');
@@ -109,7 +109,7 @@ export async function processImage(buffer, originalName) {
       bytes = out.length;
     }
   } catch {
-    throw badImage('We could not process that image — it may be corrupt or truncated.');
+    throw badImage('We could not process that image - it may be corrupt or truncated.');
   }
 
   return {

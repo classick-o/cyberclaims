@@ -24,8 +24,8 @@ export default defineConfig({
   base,
 
   // `static` + an adapter is Astro's hybrid mode: pages prerender by default, and a
-  // route opts out with `export const prerender = false`. Only the blog will need
-  // that — the marketing pages stay HTML on disk and never touch the database.
+  // route opts out with `export const prerender = false`. Only the blog needs that —
+  // the marketing pages stay HTML on disk and never touch the database.
   // Locales live in src/i18n/config.ts (the single source of truth); this mirrors
   // them so Astro's own routing and the sitemap integration agree with us.
   // prefixDefaultLocale: false is what keeps English at / rather than /en/ — every

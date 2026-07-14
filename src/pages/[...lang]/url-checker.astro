@@ -5,17 +5,16 @@ import Sustainability from '../../components/Sustainability.astro';
 import RecoveryCta from '../../components/RecoveryCta.astro';
 import Icon from '../../components/Icon.astro';
 import { localePaths, type Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n';
 
 // One file, one page per locale. The default locale maps to lang: undefined, and a
-// rest parameter matches zero segments — so English stays at /about-us/, not /en/about-us/.
+// rest parameter matches zero segments - so English stays at /about-us/, not /en/about-us/.
 export const getStaticPaths = localePaths;
 const { locale } = Astro.props as { locale: Locale };
+const t = useTranslations(locale);
 ---
 
-<Layout
-  title="URL Checker - Cyberclaims"
-  description="Check whether a website URL is flagged as unsafe. Our URL scam checker protects you from phishing, malware and malicious sites."
->
+<Layout title={t('urlChecker.metaTitle')} description={t('urlChecker.metaDesc')}>
   <section class="uc">
     <Aurora />
 
@@ -23,30 +22,24 @@ const { locale } = Astro.props as { locale: Locale };
       <div class="glass uc-card" data-reveal>
         <h1 class="uc-title">
           <span class="uc-title-ic"><Icon name="forensics" class="w-6 h-6" /></span>
-          URL Scam Checker
+          {t('urlChecker.title')}
         </h1>
-        <p class="uc-lead">
-          Enter a website URL below to check if it’s flagged as unsafe. This tool protects you
-          from phishing, malware, and malicious sites that could harm your device or steal your
-          data.
-        </p>
+        <p class="uc-lead">{t('urlChecker.lead')}</p>
 
         <form class="uc-form">
           <input
             class="uc-input"
             type="url"
             name="url"
-            aria-label="Website URL"
-            placeholder="e.g., https://example.com"
+            aria-label={t('urlChecker.inputLabel')}
+            placeholder={t('urlChecker.placeholder')}
             autocomplete="url"
             spellcheck="false"
           />
-          <button type="button" class="btn uc-submit">Check URL</button>
+          <button type="button" class="btn uc-submit">{t('urlChecker.submit')}</button>
         </form>
 
-        <p class="uc-legal">
-          Results are indicative only. For a full investigation, start a case with our team.
-        </p>
+        <p class="uc-legal">{t('urlChecker.legal')}</p>
       </div>
     </div>
   </section>

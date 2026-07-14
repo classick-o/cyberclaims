@@ -4,7 +4,7 @@ import { z } from 'zod';
 // is optional even when the HTML marks it `required` (that's client-side UX).
 //
 // The people filling in these forms have just lost money to fraud. Rejecting a
-// submission because the "Country" box was blank loses a lead — and a lead is the
+// submission because the "Country" box was blank loses a lead - and a lead is the
 // entire point of the site. Validate lengths so nothing overflows the column, then
 // take whatever they give us.
 

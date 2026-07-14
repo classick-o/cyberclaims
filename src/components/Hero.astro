@@ -3,6 +3,7 @@
 import { CONTACT } from '../data/site';
 import { asset, link } from '../lib/paths';
 import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
 import Icon from './Icon.astro';
 import Turnstile from './Turnstile.astro';
 
@@ -10,6 +11,7 @@ import Turnstile from './Turnstile.astro';
 // 14 components, and a prop that one of them forgets to pass renders another
 // language's URLs on the page without erroring.
 const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
 ---
 
 <section class="hero">
@@ -29,21 +31,18 @@ const locale = localeFromUrl(Astro.url);
   <div class="wrap hero-grid">
     <!-- Left: headline -->
     <div class="hero-copy">
-      <h1 class="h-display hero-title" data-reveal>
-        Have you been a victim of <span class="accent">crypto scams?</span>
-      </h1>
-      <p class="hero-sub" data-reveal>
-        We can help you <strong>TRACE &amp; FREEZE</strong> your assets. Cyberclaims,
-        supported by world-leading cryptocurrency intelligence and blockchain analytics,
-        provides expert crypto tracing and investigation services to help consumers
-        navigate complex crypto-related fraud &amp; crypto scams cases.
-      </p>
+      <h1
+        class="h-display hero-title"
+        data-reveal
+        set:html={t('home.heroTitle', { accent: `<span class="accent">${t('home.heroTitleA')}</span>` })}
+      />
+      <p class="hero-sub" data-reveal set:html={t('home.heroSub')} />
       <div class="hero-cta" data-reveal>
-        <a href={link('/start-process/', locale)} class="btn">Start Process</a>
+        <a href={link('/start-process/', locale)} class="btn">{t('cta.startProcess')}</a>
       </div>
       <div class="hero-trust" data-reveal>
-        <span><span class="dot"></span> Dutch MOJ · POB {CONTACT.pob}</span>
-        <span><span class="dot"></span> Featured in 350+ news outlets</span>
+        <span><span class="dot"></span> {t('trust.moj', { pob: CONTACT.pob })}</span>
+        <span><span class="dot"></span> {t('trust.press')}</span>
       </div>
     </div>
 
@@ -52,37 +51,37 @@ const locale = localeFromUrl(Astro.url);
     <div class="hero-form-wrap" id="lead">
       <div class="glass hero-form">
         <div class="form-head" id="heroFormHead">
-          <h2 class="form-title">Start your recovery</h2>
-          <p class="form-note">Free case review · 48-hour response</p>
+          <h2 class="form-title">{t('home.heroFormTitle')}</h2>
+          <p class="form-note">{t('cta.freeReview')}</p>
         </div>
         <form class="lead-form" id="heroForm" method="post" action="/api/lead" novalidate>
           <div class="field">
             <input type="text" name="full_name" required placeholder=" " />
-            <label>Full Name</label>
+            <label>{t('form.fullName')}</label>
           </div>
           <div class="field-row">
             <div class="field">
               <input type="email" name="email" required placeholder=" " />
-              <label>Email</label>
+              <label>{t('form.email')}</label>
             </div>
             <div class="field">
               <input type="tel" name="phone" required placeholder=" " />
-              <label>Phone Number</label>
+              <label>{t('form.phone')}</label>
             </div>
           </div>
           <div class="field-row">
             <div class="field">
               <input type="text" name="country" required placeholder=" " />
-              <label>Country of Residence</label>
+              <label>{t('form.country')}</label>
             </div>
             <div class="field">
               <input type="text" name="amount" required placeholder=" " />
-              <label>Amount Lost</label>
+              <label>{t('form.amountLost')}</label>
             </div>
           </div>
           <div class="field">
             <textarea name="message" rows="3" required placeholder=" "></textarea>
-            <label>Message</label>
+            <label>{t('form.message')}</label>
           </div>
           <input
             class="hp"
@@ -94,19 +93,14 @@ const locale = localeFromUrl(Astro.url);
           />
           <Turnstile />
           <p class="form-status" data-form-status role="alert" hidden></p>
-          <button type="submit" class="btn form-submit">Start Process</button>
-          <p class="form-legal">
-            Protected by CAPTCHA. Your details are confidential and reviewed by certified experts.
-          </p>
+          <button type="submit" class="btn form-submit">{t('cta.startProcess')}</button>
+          <p class="form-legal">{t('form.legal')}</p>
         </form>
 
         <div class="form-success" id="heroSuccess" hidden>
           <span class="form-success-icon"><Icon name="check" class="w-full h-full" /></span>
-          <h2 class="form-title">We have your details</h2>
-          <p class="form-success-p">
-            A certified investigator will review your case and respond within 48 hours.
-            Everything you sent us is confidential.
-          </p>
+          <h2 class="form-title">{t('form.successTitle')}</h2>
+          <p class="form-success-p">{t('form.successBody')}</p>
         </div>
       </div>
     </div>
@@ -247,11 +241,11 @@ const locale = localeFromUrl(Astro.url);
   /* Form */
   .hero-form {
     padding: 1.75rem;
-    /* Thin, and only lightly blurred — the 3D object should be recognisable through the
+    /* Thin, and only lightly blurred - the 3D object should be recognisable through the
        panel, not smeared into a purple wash. What keeps the text legible at this tint is
        not the panel but the fields: they carry their own darker fill (below), so the
        words sit on a solid surface even where the object is bright behind them.
-       (Prefixed first, standard last — see the note on .glass in global.css.) */
+       (Prefixed first, standard last - see the note on .glass in global.css.) */
     background: rgba(20, 20, 40, 0.24);
     -webkit-backdrop-filter: blur(10px) saturate(140%);
     backdrop-filter: blur(10px) saturate(140%);
@@ -260,7 +254,7 @@ const locale = localeFromUrl(Astro.url);
   }
   /* The fields need to stay readable against a translucent panel over a moving object. */
   /* This is what buys the panel its transparency. The fields are the only thing that has
-     to stay readable, so they — not the whole card — carry the contrast. */
+     to stay readable, so they - not the whole card - carry the contrast. */
   .hero-form .field input,
   .hero-form .field textarea {
     background: rgba(10, 10, 24, 0.55);
@@ -532,7 +526,7 @@ const locale = localeFromUrl(Astro.url);
       });
     } catch (err) {
       // Say so. Swallowing this silently means the hero's centrepiece just isn't there
-      // and nothing anywhere tells you why — which is exactly how it gets reported as
+      // and nothing anywhere tells you why - which is exactly how it gets reported as
       // "the 3D object is gone" with no way to tell a code regression apart from a
       // browser with hardware acceleration switched off (see chrome://gpu).
       console.warn('Hero: WebGL is unavailable, so the 3D object will not render.', err);

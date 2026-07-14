@@ -10,7 +10,7 @@ import { env } from '../config/env.js';
 // collected for.
 //
 // So: leads marked `closed` are deleted once they have been closed for
-// LEAD_RETENTION_DAYS. Open leads are never touched — a case still being worked is
+// LEAD_RETENTION_DAYS. Open leads are never touched - a case still being worked is
 // still necessary. The deletion is a real DELETE, not a flag.
 //
 // Set LEAD_RETENTION_DAYS=0 to disable, but be able to justify that to a regulator.
@@ -22,7 +22,7 @@ export function startRetentionJob() {
 
   if (!days) {
     console.warn(
-      'LEAD_RETENTION_DAYS is 0 — closed leads are kept indefinitely. ' +
+      'LEAD_RETENTION_DAYS is 0 - closed leads are kept indefinitely. ' +
         'That is a GDPR Article 5(1)(e) exposure, not a feature.'
     );
     return;

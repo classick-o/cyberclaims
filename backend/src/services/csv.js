@@ -1,7 +1,7 @@
 // CSV export.
 //
 // The escaping matters more than it looks. A cell that begins with =, +, -, or @ is
-// interpreted as a FORMULA by Excel and Google Sheets — so a lead who types
+// interpreted as a FORMULA by Excel and Google Sheets - so a lead who types
 // `=cmd|'/c calc'!A1` into the "Platform Name" box executes it on the machine of
 // whoever opens the export. That's CSV injection, and it turns our own lead form into
 // a delivery mechanism aimed at our own staff. Prefix those cells with a quote.

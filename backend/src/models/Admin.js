@@ -33,6 +33,38 @@ export class Admin {
   }
 
   /**
+   * Guarantee a bootstrap admin exists. Called on every server start so a freshly
+   * hosted copy of the site is never locked out - the account is created if missing,
+   * and its password/name/role are realigned to the configured values if they drift
+   * (there is no in-app password change, so the environment is the source of truth).
+   *
+   * Idempotent: when the row already matches the config it does nothing, so a restart
+   * costs neither a bcrypt hash nor a write. Returns 'created' | 'updated' | 'unchanged'
+   * for the boot log.
+   */
+  static async ensureSeedAccount({ email, password, name, role = 'admin' }) {
+    const lower = email.toLowerCase();
+    const existing = await this.findByEmail(lower);
+
+    if (!existing) {
+      await this.create({ email: lower, password, name, role });
+      return 'created';
+    }
+
+    const inSync =
+      existing.name === name &&
+      existing.role === role &&
+      (await bcrypt.compare(password, existing.password_hash));
+    if (inSync) return 'unchanged';
+
+    await pool.execute(
+      'UPDATE admins SET password_hash = ?, name = ?, role = ? WHERE id = ?',
+      [await bcrypt.hash(password, ROUNDS), name, role, existing.id]
+    );
+    return 'updated';
+  }
+
+  /**
    * Always runs a hash comparison, even when the account doesn't exist. Returning
    * early on an unknown email makes the response measurably faster, which turns the
    * login form into an account-enumeration oracle.

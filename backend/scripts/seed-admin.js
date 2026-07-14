@@ -1,4 +1,4 @@
-// Creates an admin account. The only way one comes into existence — there is no
+// Creates an admin account. The only way one comes into existence - there is no
 // public signup route, deliberately.
 //
 //   npm run seed:admin -- --email julia@cyberclaims.net --name "Julia Blokhina" --role admin
@@ -33,7 +33,7 @@ if (values.password && values.password.length < 12) {
   fail('Password must be at least 12 characters. Or omit --password and let one be generated.');
 }
 
-// 24 bytes of base64url ≈ 192 bits. Not memorable — it belongs in a password manager.
+// 24 bytes of base64url ≈ 192 bits. Not memorable - it belongs in a password manager.
 const password = values.password ?? randomBytes(24).toString('base64url');
 const generated = !values.password;
 

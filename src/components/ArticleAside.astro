@@ -1,18 +1,18 @@
 ---
 // The rail beside an article: what we do, and how to pass this on.
 //
-// It is sticky, so it stays with the reader the whole way down a long piece — which is
+// It is sticky, so it stays with the reader the whole way down a long piece - which is
 // the point. Someone reading "Five red flags of a fake crypto exchange" has, by the time
 // they reach the bottom, usually worked out that they are describing themselves. The
 // services list is there so the next click is one click away, at the moment they want it.
 import Icon from './Icon.astro';
-import { SERVICES, URL_CHECKER } from '../data/site';
+import { URL_CHECKER } from '../data/site';
 import { link, serviceUrl } from '../lib/paths';
-import { useTranslations } from '../i18n';
+import { useTranslations, getServices } from '../i18n';
 import type { Locale } from '../i18n/config';
 
 interface Props {
-  /** Absolute URL of the article — the share targets need the real thing, not a path. */
+  /** Absolute URL of the article - the share targets need the real thing, not a path. */
   url: string;
   title: string;
   locale: Locale;
@@ -20,6 +20,7 @@ interface Props {
 
 const { url, title, locale } = Astro.props;
 const t = useTranslations(locale);
+const SERVICES = getServices(locale);
 
 const u = encodeURIComponent(url);
 const text = encodeURIComponent(title);
@@ -51,7 +52,7 @@ const SHARE = [
     <nav class="aside-card" aria-labelledby="aside-services">
       <h2 class="aside-h" id="aside-services">{t('aside.services')}</h2>
 
-      {/* Each service's own icon, from site.ts — the same glyph its page uses, so a reader
+      {/* Each service's own icon, from site.ts - the same glyph its page uses, so a reader
           who has seen the page recognises the row instead of reading ten near-identical
           lines of text.
           Its `accent` is deliberately NOT used. On a service page one accent owns the
@@ -72,11 +73,11 @@ const SHARE = [
         }
       </ul>
 
-      {/* Not one of the ten — it is a tool, not a service. A button, because it is the
+      {/* Not one of the ten - it is a tool, not a service. A button, because it is the
           one thing here you DO rather than read about. */}
       <a href={link(URL_CHECKER.href, locale)} class="btn aside-btn">
         <Icon name={URL_CHECKER.icon} class="w-4 h-4" />
-        {URL_CHECKER.title}
+        {t('nav.urlChecker')}
       </a>
     </nav>
 
@@ -113,7 +114,7 @@ const SHARE = [
   }
   /* Sticky on the INNER element, not on .art-aside itself. A grid item stretches to the
      height of its row by default, so `position: sticky` on it has nothing to travel
-     within — it is already as tall as the article beside it, and never moves. The child
+     within - it is already as tall as the article beside it, and never moves. The child
      is what sticks. */
   .aside-sticky {
     position: sticky;
@@ -164,7 +165,7 @@ const SHARE = [
     color: #fff;
     background: rgba(139, 91, 189, 0.14);
   }
-  /* The tile stays put while the label wraps to a second line — a `Consultancy &
+  /* The tile stays put while the label wraps to a second line - a `Consultancy &
      Documentation Support` that pushed its own icon off-centre would break the column. */
   .aside-ico {
     flex-shrink: 0;
@@ -190,7 +191,7 @@ const SHARE = [
     /* .btn's own 1.9rem side padding is sized for a hero, not for an 18rem rail */
     padding-inline: 1rem;
     font-size: 0.88rem;
-    /* .btn carries a hero's glow — 24px of purple haze, which at this size lights up the
+    /* .btn carries a hero's glow - 24px of purple haze, which at this size lights up the
        whole card behind it. A hint of lift is all a sidebar button needs. */
     box-shadow: 0 4px 12px -8px rgba(107, 63, 160, 0.6);
   }

@@ -9,13 +9,13 @@ import { leadSchema } from './src/schemas/lead.schema.js';
 let pass = 0, fail = 0;
 const fails = [];
 const ok = (name, cond, detail = '') => {
-  if (cond) { pass++; } else { fail++; fails.push(`${name}${detail ? ' — ' + detail : ''}`); }
+  if (cond) { pass++; } else { fail++; fails.push(`${name}${detail ? ' - ' + detail : ''}`); }
 };
 const eq = (name, got, want) => ok(name, got === want, `got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
 const has = (name, hay, needle) => ok(name, String(hay).includes(needle), `"${needle}" not in ${JSON.stringify(String(hay).slice(0,120))}`);
 const not = (name, hay, needle) => ok(name, !String(hay).includes(needle), `"${needle}" LEAKED into ${JSON.stringify(String(hay).slice(0,160))}`);
 
-// ─── slugify ────────────────────────────────────────────────────────────────
+// slugify
 eq('slugify basic', slugify('Hello World'), 'hello-world');
 eq('slugify accents', slugify('Café Déjà'), 'cafe-deja');
 eq('slugify trims hyphens', slugify('  --Hi!!  '), 'hi');
@@ -28,7 +28,7 @@ ok('slugify 200 cap', slugify('a'.repeat(500)).length === 200, `len ${slugify('a
 eq('slugify cyrillic (no latin)', slugify('Привет'), ''); // NFKD does not latinise Cyrillic
 eq('slugify path chars', slugify('a/b\\c'), 'a-b-c');
 
-// ─── slugConflict ───────────────────────────────────────────────────────────
+// slugConflict
 ok('reserved about-us', slugConflict('about-us') !== null);
 ok('reserved news', slugConflict('news') !== null);
 ok('reserved admin', slugConflict('admin') !== null);
@@ -37,7 +37,7 @@ ok('empty slug rejected', slugConflict('') !== null);
 eq('normal slug ok', slugConflict('five-red-flags'), null);
 eq('reserved is case/exact', slugConflict('about-us-2'), null);
 
-// ─── sanitizeBody: XSS vectors ──────────────────────────────────────────────
+// sanitizeBody: XSS vectors
 not('strips <script>', sanitizeBody('<p>hi</p><script>alert(1)</script>'), 'alert');
 not('strips onerror', sanitizeBody('<img src=x onerror="alert(1)">'), 'onerror');
 not('strips onclick', sanitizeBody('<p onclick="steal()">x</p>'), 'onclick');
@@ -61,30 +61,30 @@ eq('sanitize undefined', sanitizeBody(undefined), '');
 not('strips JavaScript: (mixed case)', sanitizeBody('<a href="JaVaScRiPt:alert(1)">x</a>'), 'alert');
 not('strips vbscript:', sanitizeBody('<a href="vbscript:msgbox(1)">x</a>'), 'vbscript');
 
-// ─── toPlainText / block spacing ────────────────────────────────────────────
+// toPlainText / block spacing
 eq('block boundary space', toPlainText('<p>a</p><p>b</p>'), 'a b');
 eq('list boundary space', toPlainText('<ul><li>a</li><li>b</li></ul>'), 'a b');
 eq('nested strip', toPlainText('<p>Hello <strong>there</strong> world</p>'), 'Hello there world');
 eq('plain empty', toPlainText(''), '');
 
-// ─── toExcerptText: skips FAQ ───────────────────────────────────────────────
+// toExcerptText: skips FAQ
 const withFaq = '<p>Intro prose here.</p><section class="faq"><details class="faq-item"><summary>Question?</summary><p>Answer body.</p></details></section>';
 eq('excerpt skips faq', toExcerptText(withFaq), 'Intro prose here.');
 has('plaintext keeps faq words', toPlainText(withFaq), 'Question');
 
-// ─── autoExcerpt ────────────────────────────────────────────────────────────
+// autoExcerpt
 ok('short excerpt no ellipsis', !autoExcerpt('<p>short</p>').endsWith('…'));
 const long = '<p>' + 'word '.repeat(80) + '</p>';
 ok('long excerpt ellipsis', autoExcerpt(long).endsWith('…'));
 ok('long excerpt <= ~201', autoExcerpt(long).length <= 201, `len ${autoExcerpt(long).length}`);
 ok('excerpt cuts on word', !/\bwor$/.test(autoExcerpt(long).replace('…','')), 'cut mid-word');
 
-// ─── readingMinutes ─────────────────────────────────────────────────────────
+// readingMinutes
 eq('reading floor 1', readingMinutes('<p>one two three</p>'), 1);
 eq('reading empty floor 1', readingMinutes(''), 1);
 eq('reading 400 words = 2', readingMinutes('<p>' + 'w '.repeat(400) + '</p>'), 2);
 
-// ─── extractFaq ─────────────────────────────────────────────────────────────
+// extractFaq
 const faqHtml = '<section class="faq"><details class="faq-item"><summary>Is X a scam?</summary><p>Yes because <strong>reasons</strong>.</p></details><details class="faq-item"><summary>How to recover?</summary><p>Call us.</p></details></section>';
 const faq = extractFaq(faqHtml);
 eq('faq count', faq.length, 2);
@@ -97,7 +97,7 @@ eq('faq half-pair dropped', extractFaq('<section class="faq"><details class="faq
 const faqList = extractFaq('<section class="faq"><details class="faq-item"><summary>Q?</summary><ul><li>one</li><li>two</li></ul></details></section>');
 eq('faq answer with list', faqList[0]?.answer, 'one two');
 
-// ─── postSchema: the GET→PUT round-trip contract (null-tolerant) ────────────
+// postSchema: the GET→PUT round-trip contract (null-tolerant)
 const nullish = postSchema.safeParse({
   status: 'published', featured: false, category_id: null, author_id: null, cover_media_id: null,
   translations: { en: { title: 'A valid title', body_html: '<p>x</p>', excerpt: null, seo_title: null, seo_description: null, keywords: null } },
@@ -121,7 +121,7 @@ ok('postSchema strips unknown top-level key', stripped.success && !('evil' in st
 // bad status
 ok('postSchema rejects bad status', !postSchema.safeParse({ status: 'nope', translations: { en: { title: 'Valid title', body_html: '<p>x</p>' } } }).success);
 
-// ─── leadSchema ─────────────────────────────────────────────────────────────
+// leadSchema
 ok('leadSchema needs a source', !leadSchema.safeParse({ full_name: 'Jo Bloggs', email: 'a@b.co' }).success);
 ok('leadSchema minimal ok', leadSchema.safeParse({ source: 'hero', full_name: 'Jo Bloggs', email: 'a@b.co' }).success);
 ok('leadSchema rejects bad email', !leadSchema.safeParse({ source: 'hero', full_name: 'Jo Bloggs', email: 'not-an-email' }).success);
@@ -132,7 +132,7 @@ ok('leadSchema bad date rejected', !leadSchema.safeParse({ source: 'hero', full_
 ok('leadSchema honeypot filled rejected', !leadSchema.safeParse({ source: 'hero', full_name: 'Jo Bloggs', email: 'a@b.co', _honey: 'bot' }).success);
 
 // (jsonLdScript's escaping is verified end-to-end against the built site in test-deep.mjs
-//  — the JSON-LD XSS block — rather than a hand-copied reimplementation here.)
+//  - the JSON-LD XSS block - rather than a hand-copied reimplementation here.)
 
 console.log(`\n  UNIT: ${pass} passed, ${fail} failed`);
 if (fails.length) { console.log('\n  FAILURES:'); fails.forEach((f) => console.log('    ✗ ' + f)); }

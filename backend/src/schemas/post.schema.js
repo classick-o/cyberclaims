@@ -10,7 +10,7 @@ import { z } from 'zod';
  *
  * ...and the columns behind these fields are nullable, so `null` is exactly what
  * `GET /api/admin/posts/:id` hands back for an excerpt or an SEO title nobody filled in.
- * The editor loads the post, changes the body, and PUTs back the object it was given —
+ * The editor loads the post, changes the body, and PUTs back the object it was given -
  * so with `.optional()` the API was rejecting its own output. Editing any article whose
  * SEO fields were left blank failed, with "Expected string, received null" and no clue
  * which field it meant.
@@ -61,7 +61,7 @@ export const categorySchema = z.object({
     .trim()
     .regex(/^[a-z0-9-]+$/, 'Use lowercase letters, numbers and hyphens only.')
     .max(100),
-  // `categories.color` is nullable, so GET returns null for one that has none — and the
+  // `categories.color` is nullable, so GET returns null for one that has none - and the
   // same round-trip rule applies here as it does to the article's SEO fields above.
   color: z
     .string()

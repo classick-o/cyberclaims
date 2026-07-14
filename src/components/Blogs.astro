@@ -1,8 +1,8 @@
 ---
-// Latest articles — 3 cards (brief §4 News card spec).
+// Latest articles - 3 cards (brief §4 News card spec).
 //
 // Rendered as a SERVER ISLAND: <Blogs server:defer /> in index.astro. The homepage
-// stays prerendered HTML on disk — so it keeps serving even if MySQL is down — and
+// stays prerendered HTML on disk - so it keeps serving even if MySQL is down - and
 // only this strip renders on the server, on demand. Making the whole homepage SSR
 // just to show three cards would have put the site's most-hit page behind a database.
 //
@@ -12,17 +12,33 @@ import Cover from './Cover.astro';
 import Icon from './Icon.astro';
 import { link } from '../lib/paths';
 import { Post, cached, type PostCard } from '../lib/content';
-import { localeFromUrl } from '../i18n/config';
+import { localeFromUrl, DEFAULT_LOCALE, type Locale } from '../i18n/config';
 import { useTranslations, formatDate } from '../i18n';
 
-const locale = localeFromUrl(Astro.url);
+// A server island (`server:defer`) renders in its OWN request to /_server-islands/…, so
+// Astro.url is that endpoint, not the page - localeFromUrl(Astro.url) would always read
+// 'en' and the strip would show English headings and English article links on /nl/,
+// /fr/, … . The homepage passes the resolved locale in as a prop; the fallback covers
+// any non-island use.
+const { locale = localeFromUrl(Astro.url) } = Astro.props as { locale?: Locale };
 const t = useTranslations(locale);
 
-// If the database is unreachable the island renders nothing rather than throwing —
+// If the database is unreachable the island renders nothing rather than throwing -
 // the point of keeping the homepage static is that it survives a bad day downstream.
-const posts = (await cached(`latest:${locale}`, () =>
+let posts = (await cached(`latest:${locale}`, () =>
   Post.findPublished(locale, { limit: 3 })
 ).catch(() => [])) as PostCard[];
+
+// Fall back to the default locale's articles when this language has none of its own yet.
+// Otherwise every non-English homepage launches with the whole "Latest" section missing
+// until someone has translated an article - an English card with a working link beats a
+// hole in the page. Once localised articles exist, they take over automatically.
+const articlesLocale = posts.length > 0 ? locale : DEFAULT_LOCALE;
+if (posts.length === 0 && locale !== DEFAULT_LOCALE) {
+  posts = (await cached(`latest:${DEFAULT_LOCALE}`, () =>
+    Post.findPublished(DEFAULT_LOCALE, { limit: 3 })
+  ).catch(() => [])) as PostCard[];
+}
 ---
 
 {
@@ -31,18 +47,19 @@ const posts = (await cached(`latest:${locale}`, () =>
       <div class="wrap">
         <div class="blogs-head" data-reveal>
           <div>
-            <h2 class="h-section">
-              Latest <span class="accent">blogs</span>
-            </h2>
+            <h2
+              class="h-section"
+              set:html={t('home.blogsTitle', { accent: `<span class="accent">${t('home.blogsTitleA')}</span>` })}
+            />
           </div>
           <a href={link('/news/', locale)} class="btn">
-            All news
+            {t('home.blogsAll')}
           </a>
         </div>
 
         <div class="blogs-grid">
           {posts.map((p) => (
-            <a href={link(`/${p.slug}/`, locale)} class="blog-card" data-reveal>
+            <a href={link(`/${p.slug}/`, articlesLocale)} class="blog-card" data-reveal>
               <div class="cover blog-thumb">
                 {p.category_name && <span class="blog-cat">{p.category_name}</span>}
                 <Cover

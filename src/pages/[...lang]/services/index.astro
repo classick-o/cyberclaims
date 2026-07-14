@@ -5,29 +5,27 @@ import PageHero from '../../../components/PageHero.astro';
 import ArcGlow from '../../../components/ArcGlow.astro';
 import CtaStrip from '../../../components/CtaStrip.astro';
 import Icon from '../../../components/Icon.astro';
-import { SERVICES, URL_CHECKER } from '../../../data/site';
+import { URL_CHECKER } from '../../../data/site';
 import { SERVICE_IMAGE } from '../../../data/services-content';
 import { asset, link, serviceUrl } from '../../../lib/paths';
 import { localePaths, type Locale } from '../../../i18n/config';
+import { useTranslations, getServices } from '../../../i18n';
 
 // One file, one page per locale. The default locale maps to lang: undefined, and a
-// rest parameter matches zero segments — so English stays at /about-us/, not /en/about-us/.
+// rest parameter matches zero segments - so English stays at /about-us/, not /en/about-us/.
 export const getStaticPaths = localePaths;
 const { locale } = Astro.props as { locale: Locale };
+const t = useTranslations(locale);
+const SERVICES = getServices(locale);
 ---
 
-<Layout
-  title="Our Services - Cyberclaims"
-  description="From tracing stolen crypto to website takedowns, our certified experts cover the full spectrum of cyber-fraud investigation and asset recovery."
->
+<Layout title={t('services.metaTitle')} description={t('services.metaDesc')}>
   <PageHero
     eyebrow="What we do"
-    title="Our Services"
-    intro={[
-      'From tracing stolen crypto to taking down fraudulent websites, our certified experts cover the full spectrum of cyber-fraud investigation and asset recovery.',
-    ]}
+    title={t('services.heroTitle')}
+    intro={[t('services.heroIntro')]}
     image="/services-hero.webp"
-    imageAlt="Floating tiles showing bitcoin, a shield, a magnifier, scales, a document and a blocked site"
+    imageAlt={t('services.heroImageAlt')}
     imageWidth={1100}
     imageHeight={942}
     imageMaxWidth="24rem"
@@ -52,7 +50,7 @@ const { locale } = Astro.props as { locale: Locale };
                 <h2 class="svc-card-title">{s.title}</h2>
                 <p class="svc-card-blurb">{s.blurb}</p>
                 <span class="svc-card-more">
-                  Explore service <Icon name="arrow" class="w-4 h-4" />
+                  {t('home.servicesExplore')} <Icon name="arrow" class="w-4 h-4" />
                 </span>
               </div>
             </a>
@@ -69,12 +67,10 @@ const { locale } = Astro.props as { locale: Locale };
             loading="lazy"
           />
           <div class="svc-card-body">
-            <h2 class="svc-card-title">{URL_CHECKER.title}</h2>
-            <p class="svc-card-blurb">
-              Check whether a website is flagged as unsafe before you trust it with your data.
-            </p>
+            <h2 class="svc-card-title">{t('nav.urlChecker')}</h2>
+            <p class="svc-card-blurb">{t('services.urlCheckerBlurb')}</p>
             <span class="svc-card-more">
-              Open checker <Icon name="arrow" class="w-4 h-4" />
+              {t('services.openChecker')} <Icon name="arrow" class="w-4 h-4" />
             </span>
           </div>
         </a>

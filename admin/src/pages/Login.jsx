@@ -50,7 +50,6 @@ export default function Login({ onSignedIn }) {
             <Brand size="2.4rem" />
           </div>
 
-          <span className="eyebrow">Content &amp; leads</span>
           <h1>Sign in</h1>
           <p className="sub">Manage articles, media and the cases coming in from the site.</p>
 

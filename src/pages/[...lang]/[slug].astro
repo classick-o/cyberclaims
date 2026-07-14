@@ -1,5 +1,5 @@
 ---
-// /news/<slug>/ — the article.
+// /news/<slug>/ - the article.
 //
 // This route did not exist. The three cards on /news/ have been linking to it since
 // launch, and every one of them 404'd in production.
@@ -13,50 +13,77 @@ import CtaStrip from '../../components/CtaStrip.astro';
 import RecoveryCta from '../../components/RecoveryCta.astro';
 import Cover from '../../components/Cover.astro';
 import ArticleAside from '../../components/ArticleAside.astro';
+import Homepage from '../../components/Homepage.astro';
 import { link, absoluteUrl } from '../../lib/paths';
 import { jsonLdScript } from '../../lib/jsonld';
 import { srcset, smallest } from '../../lib/media';
 import { Post, cached, isEditor, extractFaq, type FullPost, type PostCard } from '../../lib/content';
-import { localeFromUrl } from '../../i18n/config';
+import { localeFromUrl, isLocale } from '../../i18n/config';
 import { useTranslations, formatDate } from '../../i18n';
 
 const locale = localeFromUrl(Astro.url);
 const t = useTranslations(locale);
 const { slug } = Astro.params;
 
+// A bare locale root - /nl/, /fr/ - is the homepage, not an article whose slug is a
+// language code. It matches this SSR article route (as slug="nl"); the article work
+// below is skipped for it and the template renders <Homepage/> instead. In production
+// the prerendered index answers /nl/ off disk, so this only arises in dev.
+const homeLocale = isLocale(slug) ? slug : null;
+
+// Article data - populated only when this really is an article.
+let post: FullPost | null = null;
+let related: PostCard[] = [];
+let body = '';
+let url = '';
+let jsonLd: Record<string, unknown> = {};
+let preview = false;
+// locale -> this article's slug in that locale, for the language switcher + hreflang.
+let localeSlugs: Record<string, string> = {};
+
+if (!homeLocale) {
+
 // A draft is visible only to someone holding a valid admin session cookie. It's
-// httpOnly and same-origin, so there is no preview token to mint, leak or expire —
+// httpOnly and same-origin, so there is no preview token to mint, leak or expire -
 // and to anyone else the draft 404s exactly as it should.
 const editor = isEditor(Astro.cookies);
 const wantsPreview = Astro.url.searchParams.get('preview') === '1';
-const preview = wantsPreview && editor;
+preview = wantsPreview && editor;
 
-const post = (preview
+post = (preview
   ? await Post.findBySlug(locale, slug, { preview: true })
   : await cached(`post:${locale}:${slug}`, () => Post.findBySlug(locale, slug))) as FullPost | null;
 
 if (!post) return new Response(null, { status: 404, statusText: 'Not found' });
 
+// `post` is a `let` now (so the template can also render the homepage branch), and TS
+// won't narrow a mutable through the related() closure below. A const does narrow.
+const article = post;
+
+// Where this same article lives in every other language - the switcher and hreflang need
+// it because the slug is translated, so a naive prefix swap would land on a 404.
+localeSlugs = await Post.localeSlugs(article.id);
+
 // The ten most recent articles other than this one, shown as a rail rather than a row
 // of three. A three-card grid is a dead end: it either shows everything you have (and
 // looks thin) or hides everything else (and looks like there is nothing else).
-const related = (await cached(`related:${locale}:${post.id}`, () =>
-  Post.findRelated(locale, post.id, null, 10)
+related = (await cached(`related:${locale}:${article.id}`, () =>
+  Post.findRelated(locale, article.id, null, 10)
 )) as PostCard[];
 
-const url = absoluteUrl(`/${post.slug}/`, locale, Astro.site);
+url = absoluteUrl(`/${post.slug}/`, locale, Astro.site);
 const cover = post.cover_path ? new URL(post.cover_path, Astro.site ?? url).href : undefined;
 
 // The Q&A blocks the editor added, as plain text.
 //
 // Emitting FAQPage structured data is what makes Google render the questions as
 // expandable rows inside the search result itself. On queries like "is <platform> a
-// scam" — which is exactly how the people we want to reach search — that is the
+// scam" - which is exactly how the people we want to reach search - that is the
 // difference between one blue link and half the page.
 const faq = extractFaq(post.body_html);
 
 // Structured data. The one thing TBSBV genuinely does well, kept.
-const jsonLd = {
+jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
     ...(faq.length > 0
@@ -108,7 +135,7 @@ const jsonLd = {
 // The heading that sits above a Q&A block.
 //
 // Injected here rather than emitted by the editor's node. If the editor wrote it, the
-// copy would be duplicated into every article's stored HTML — editable, deletable,
+// copy would be duplicated into every article's stored HTML - editable, deletable,
 // impossible to translate, and impossible to change without touching every row. This
 // way it lives in the dictionary, renders server-side (so it is indexed and works with
 // JavaScript off), and the article's body stays pure content.
@@ -121,7 +148,7 @@ const faqHeading =
       `</header>`
     : '';
 
-const body = faqHeading
+body = faqHeading
   ? post.body_html.replaceAll('<section class="faq">', `<section class="faq">${faqHeading}`)
   : post.body_html;
 
@@ -134,13 +161,17 @@ if (!preview) {
   // A draft must never end up in a shared cache.
   Astro.response.headers.set('Cache-Control', 'private, no-store');
 }
+}
 ---
 
+{homeLocale && <Homepage locale={homeLocale} />}
+{!homeLocale && post && (
 <Layout
   title={`${post.seo_title ?? post.title} - Cyberclaims`}
   description={post.seo_description ?? post.excerpt ?? ''}
   path={`/${post.slug}/`}
   locale={locale}
+  localeSlugs={localeSlugs}
   noindex={preview}
 >
   <script type="application/ld+json" slot="head" set:html={jsonLdScript(jsonLd)} />
@@ -212,7 +243,7 @@ if (!preview) {
 
     <div class="wrap art-grid">
       {/* Sanitised on write against a strict allowlist (backend/src/services/content.js),
-          never on render — a single forgotten call site would otherwise be an XSS. */}
+          never on render - a single forgotten call site would otherwise be an XSS. */}
       <div class="prose" set:html={body} />
       <ArticleAside url={url} title={post.title} locale={locale} />
     </div>
@@ -224,7 +255,7 @@ if (!preview) {
         <div class="wrap">
           <h2 class="h-section rel-h">{t('news.related')}</h2>
 
-          {/* A rail, not a grid — but a rail that lines up with everything else on the
+          {/* A rail, not a grid - but a rail that lines up with everything else on the
               page rather than running off the side of it. What tells you it scrolls is
               the soft fade at whichever end still has cards behind it, put there by the
               script at the bottom of this file. */}
@@ -265,6 +296,7 @@ if (!preview) {
   <RecoveryCta />
   <CtaStrip />
 </Layout>
+)}
 
 <style>
   .draft-bar {
@@ -390,14 +422,14 @@ if (!preview) {
     opacity: 0.6;
   }
   /* Article body. The editor emits h2/h3/p/ul/ol/blockquote/img/table and the Q&A
-     block, and nothing else survives the sanitiser — so this is the complete set of
+     block, and nothing else survives the sanitiser - so this is the complete set of
      what can appear here. :global because the HTML is injected with set:html and never
      sees Astro's scoping. */
   /* Article, then the rail beside it. One column until there is genuinely room for two:
      squeezing an 18rem sidebar in earlier costs the article the width it needs to be
      readable, and reading is what this page is for. Below the breakpoint the aside falls
      underneath, where the share buttons land right where someone finishes reading. */
-  /* The leading lives on the GRID, not on .prose — both columns have to start at the
+  /* The leading lives on the GRID, not on .prose - both columns have to start at the
      same height, and a margin on one of them only moves that one. */
   .art-grid {
     display: grid;
@@ -413,7 +445,7 @@ if (!preview) {
        *
        * A sticky element travels inside its containing block, and it can only travel as
        * far as that block is taller than itself. `align-items: start` shrinks the aside
-       * column to its own content — so the sticky card inside it fills the whole thing,
+       * column to its own content - so the sticky card inside it fills the whole thing,
        * has nowhere to go, and scrolls away with the page like any other element. Left
        * to stretch, the column is as tall as the article beside it, and the card has the
        * whole length of the piece to slide down. */
@@ -463,7 +495,7 @@ if (!preview) {
   /* list-style, explicitly.
    *
    * Tailwind's preflight resets `ol, ul { list-style: none }` on every list on the
-   * site. Setting only the padding here left the markers switched off — the article's
+   * site. Setting only the padding here left the markers switched off - the article's
    * lists rendered as unindented, unnumbered runs of text, and so did the legal pages'.
    * Say what the list is. */
   .prose :global(ul) {
@@ -515,11 +547,11 @@ if (!preview) {
     background: rgba(0, 0, 0, 0.35);
     overflow-x: auto;
   }
-  /* ── Q&A block ──────────────────────────────────────────────────────────────
+  /*  Q&A block 
      Separate cards rather than one divided slab: each question is its own object, so
      the open one can lift out of the stack instead of just changing colour inside it.
 
-     Still a native <details>/<summary> underneath — keyboard accessible, and Google
+     Still a native <details>/<summary> underneath - keyboard accessible, and Google
      reads the answers even while collapsed. The height animation is layered on top by
      src/lib/faq-accordion.ts; without JavaScript this is still a working accordion,
      just an instant one. */
@@ -574,7 +606,7 @@ if (!preview) {
   .prose :global(.faq-item > summary) {
     position: relative;
     /* the right inset clears the chevron's circle (2.75rem wide, 1.35rem from the edge)
-       with room to spare — a question that runs up against it reads as clipped */
+       with room to spare - a question that runs up against it reads as clipped */
     padding: 1.35rem 5.1rem 1.35rem 1.6rem;
     cursor: pointer;
     list-style: none;
@@ -600,7 +632,7 @@ if (!preview) {
    *
    * Both pseudo-elements occupy the SAME box, so the chevron is centred in the circle
    * by construction and rotates about its middle. Drawing the chevron from two rotated
-   * borders instead meant its visual centre was not its box centre — the arrow sat
+   * borders instead meant its visual centre was not its box centre - the arrow sat
    * slightly low and left of the circle, and rotating it moved it again. */
   .prose :global(.faq-item > summary::before),
   .prose :global(.faq-item > summary::after) {
@@ -631,10 +663,10 @@ if (!preview) {
     background: rgba(139, 91, 189, 0.22);
   }
 
-  /* ── the OPEN look ──────────────────────────────────────────────────────────
+  /*  the OPEN look 
      Two selector sets, deliberately.
 
-     Before the script runs — and if it never does — [open] is the only signal there
+     Before the script runs - and if it never does - [open] is the only signal there
      is. Once it has run (.faq gains .js), .is-open leads instead: [open] has to STAY
      set for the whole closing animation, or the browser hides the content mid-slide.
      Hanging the colours and the chevron off [open] therefore held them until the
@@ -646,7 +678,7 @@ if (!preview) {
     box-shadow: 0 18px 42px -24px rgba(0, 0, 0, 0.75);
   }
   /* Filled, not lit. The glow this used to cast made the open card's chevron the
-     brightest thing on the page — louder than the answer you opened it to read. */
+     brightest thing on the page - louder than the answer you opened it to read. */
   .prose :global(.faq:not(.js) .faq-item[open] > summary::before),
   .prose :global(.faq.js .faq-item.is-open > summary::before) {
     background: var(--color-purple-500);
@@ -658,7 +690,7 @@ if (!preview) {
   }
 
   /* The answer. TWO boxes: the outer one is what the script animates and carries NO
-     padding — with box-sizing: border-box a box cannot render shorter than its own
+     padding - with box-sizing: border-box a box cannot render shorter than its own
      padding, so `height: 0` on a padded box stops dead at 24px and those last 24px
      only disappear when `open` is finally removed. That was the stall halfway through
      the close. The padding lives on the inner box, which nothing animates. */
@@ -699,7 +731,7 @@ if (!preview) {
     color: #fff;
   }
 
-  /* ── related reading: a rail ────────────────────────────────────────────────── */
+  /*  related reading: a rail  */
   .rel {
     background: var(--color-navy-deep);
     padding: 3.5rem 0;
@@ -711,7 +743,7 @@ if (!preview) {
 
   /* The two fade widths are custom properties so the script can move them, and they are
      registered with @property so that move ANIMATES. An unregistered custom property is
-     just a string to the engine — it has no idea 0px and 3.5rem are two ends of the same
+     just a string to the engine - it has no idea 0px and 3.5rem are two ends of the same
      scale, so it cannot interpolate between them and the fade would snap on and off. */
   @property --fade-start {
     syntax: '<length>';
@@ -724,7 +756,7 @@ if (!preview) {
     initial-value: 0px;
   }
 
-  /* Inside the container, the same width as the CTA below it — not bleeding past the
+  /* Inside the container, the same width as the CTA below it - not bleeding past the
      viewport edge. The affordance is the fade, not a card sliced in half by the screen. */
   .rel-rail {
     --fade: 4rem;
@@ -738,7 +770,7 @@ if (!preview) {
 
     /* Headroom for the hover lift.
      *
-     * `overflow-x: auto` does not leave the other axis alone — CSS promotes overflow-y
+     * `overflow-x: auto` does not leave the other axis alone - CSS promotes overflow-y
      * from `visible` to `auto` whenever its partner is not visible. So the rail clips
      * vertically too, and a card that rises 4px on hover had its top 4px sliced off and
      * its drop shadow with it: the card appeared to sink INTO the rail rather than lift
@@ -748,9 +780,9 @@ if (!preview) {
     margin-block: -0.9rem -1.2rem;
 
     /* Fade only the end that still has cards behind it. Both start at 0, and the script
-       raises whichever side has somewhere to scroll — so at rest, with everything in
+       raises whichever side has somewhere to scroll - so at rest, with everything in
        view, there is no fade at all and the first card is not dimmed for no reason.
-       (Prefixed first, standard last — see the note on .glass in global.css.) */
+       (Prefixed first, standard last - see the note on .glass in global.css.) */
     -webkit-mask-image: linear-gradient(
       to right,
       transparent 0,
@@ -879,14 +911,14 @@ if (!preview) {
 
   // Fade whichever end of the related-reading rail still has cards behind it.
   //
-  // Both fades start at 0 in the stylesheet, so with JavaScript off — or before this
-  // runs — the rail simply has no fade. That is the right failure: a permanently dimmed
+  // Both fades start at 0 in the stylesheet, so with JavaScript off - or before this
+  // runs - the rail simply has no fade. That is the right failure: a permanently dimmed
   // first card would be a lie about being able to scroll left.
   const rail = document.getElementById('relRail');
   if (rail) {
     const FADE = '4rem';
     const update = () => {
-      // A sub-pixel scrollWidth/clientWidth difference is not "more content" — round
+      // A sub-pixel scrollWidth/clientWidth difference is not "more content" - round
       // trips through devicePixelRatio leave a pixel or two on the table, and without
       // the slack the right-hand fade never switches off at the end of the rail.
       const max = rail.scrollWidth - rail.clientWidth;
@@ -897,7 +929,7 @@ if (!preview) {
     update();
     rail.addEventListener('scroll', update, { passive: true });
     // The rail's own width changes with the viewport, and so does whether it overflows
-    // at all — at a wide enough window every card fits and neither fade belongs.
+    // at all - at a wide enough window every card fits and neither fade belongs.
     new ResizeObserver(update).observe(rail);
   }
 </script>

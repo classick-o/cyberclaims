@@ -5,7 +5,7 @@
 //
 // It does two things:
 //
-//  1. Prefixes the locale — except for the default one, which stays unprefixed. So
+//  1. Prefixes the locale - except for the default one, which stays unprefixed. So
 //     English keeps living at /about-us/ and Dutch would be at /nl/about-us/. The
 //     brief (§Scope) says "keep all copy and page URLs"; this is what keeps that true.
 //
@@ -15,7 +15,7 @@
 //
 // External links, anchors, mailto: and tel: are returned untouched.
 
-import { DEFAULT_LOCALE, type Locale } from '../i18n/config';
+import { DEFAULT_LOCALE, LOCALES, type Locale } from '../i18n/config';
 
 const BASE = import.meta.env.BASE_URL; // '/', or '/cyberclaims/'
 
@@ -30,12 +30,12 @@ export function link(path: string, locale: Locale = DEFAULT_LOCALE): string {
 }
 
 /**
- * A file in public/ — an image, a font, the 3D model, the Draco decoder.
+ * A file in public/ - an image, a font, the 3D model, the Draco decoder.
  *
  * Base-prefixed like link(), but NEVER locale-prefixed. This distinction is the whole
  * reason the function exists: public/values.webp lives at /values.webp in every
  * language. Route it through link() and the Dutch site asks for /nl/values.webp,
- * which does not exist — every image on the page silently 404s, and nothing in the
+ * which does not exist - every image on the page silently 404s, and nothing in the
  * build warns you.
  */
 export function asset(path: string): string {
@@ -67,7 +67,7 @@ export function absoluteUrl(path: string, locale: Locale, site: URL | undefined)
  * The same page in another locale, for the language switcher and hreflang.
  *
  * Strips whatever locale prefix the current path carries, then reapplies the target
- * one — so switching language keeps you on the page you were reading instead of
+ * one - so switching language keeps you on the page you were reading instead of
  * dumping you on the homepage.
  */
 export function swapLocale(pathname: string, target: Locale, locales: readonly string[]): string {
@@ -78,4 +78,26 @@ export function swapLocale(pathname: string, target: Locale, locales: readonly s
   if (locales.includes(segments[0]) && segments[0] !== DEFAULT_LOCALE) segments.shift();
 
   return link(`/${segments.join('/')}${segments.length ? '/' : ''}`, target);
+}
+
+/**
+ * The href for switching to `target` locale - for the language switcher and hreflang.
+ *
+ * Most pages exist at the same path in every language, so swapLocale (prefix swap) is
+ * right. Articles are the exception: the slug itself is translated, so /how-to-spot.../
+ * in English is /nl/hoe-herken.../ in Dutch, NOT /nl/how-to-spot.../ (which 404s). The
+ * article page passes `localeSlugs` - a map of locale to that locale's slug for THIS post
+ * - and this builds the real URL. A locale the article was never translated into falls
+ * back to that language's article index rather than to a dead link.
+ */
+export function localeHref(
+  target: Locale,
+  pathname: string,
+  localeSlugs?: Partial<Record<Locale, string>>
+): string {
+  if (localeSlugs) {
+    const slug = localeSlugs[target];
+    return slug ? link(`/${slug}/`, target) : link('/news/', target);
+  }
+  return swapLocale(pathname, target, LOCALES);
 }

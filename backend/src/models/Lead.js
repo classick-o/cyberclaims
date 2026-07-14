@@ -45,10 +45,10 @@ export class Lead {
     return result.insertId;
   }
 
-  // ─── Admin ─────────────────────────────────────────────────────────────────
+  // Admin
   //
   // TBSBV's leads table has the same `status` column and nothing in the codebase can
-  // change it — the leads are triaged by hand in phpMyAdmin. These are the methods
+  // change it - the leads are triaged by hand in phpMyAdmin. These are the methods
   // that were missing.
 
   static async list({ status = null, source = null, q = null, limit = 50, offset = 0 } = {}) {
@@ -85,7 +85,7 @@ export class Lead {
 
   /**
    * Hard delete. This is the GDPR right-to-erasure endpoint, so it must actually
-   * remove the row — a soft-delete flag would leave the personal data (how much they
+   * remove the row - a soft-delete flag would leave the personal data (how much they
    * lost, on which platform, when) sitting in the table after we told them it was gone.
    */
   static async remove(id) {

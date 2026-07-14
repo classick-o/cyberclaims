@@ -23,16 +23,16 @@ api.use(cookieParser());
 api.use(express.json({ limit: '1mb' })); // 1mb: an article body, not a form
 
 // The forms keep their native `method="post" action="/api/lead"`, so if the client JS
-// ever fails to load the browser still submits — as urlencoded, and the lead still
+// ever fails to load the browser still submits - as urlencoded, and the lead still
 // lands. See routes/public/leads.js for the redirect that closes that path.
 api.use(express.urlencoded({ extended: false, limit: '32kb' }));
 
-// ─── Public ──────────────────────────────────────────────────────────────────
+// Public
 api.use('/lead', leadsRouter);
 api.use('/health', healthRouter);
 
-// ─── Admin ───────────────────────────────────────────────────────────────────
-// /auth is mounted OUTSIDE requireAuth — you cannot be authenticated in order to log
+// Admin
+// /auth is mounted OUTSIDE requireAuth - you cannot be authenticated in order to log
 // in. It carries its own CSRF exemption on /login for the same reason: the token is
 // issued by that call, so requiring it beforehand is a chicken-and-egg lock-out.
 api.use('/admin/auth', authRouter);

@@ -9,7 +9,7 @@ export function srcset(variants: Record<string, string> | null | undefined): str
     .join(', ');
 }
 
-/** The smallest variant — enough for a thumbnail or a blurred backdrop. */
+/** The smallest variant - enough for a thumbnail or a blurred backdrop. */
 export function smallest(
   variants: Record<string, string> | null | undefined,
   fallback: string

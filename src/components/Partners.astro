@@ -3,21 +3,23 @@
 import { PARTNERS } from '../data/site';
 import { asset, link } from '../lib/paths';
 import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
 
 // Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
 // 14 components, and a prop that one of them forgets to pass renders another
 // language's URLs on the page without erroring.
 const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
 ---
 
 <section class="partners">
   <div class="wrap">
     <div class="partners-head" data-reveal>
-      <h2 class="h-section">Industry <span class="accent">allies</span></h2>
-      <p class="partners-lead">
-        We work alongside leading intelligence providers, law firms and compliance networks
-        to give every case the reach it needs.
-      </p>
+      <h2
+        class="h-section"
+        set:html={t('home.partnersTitle', { accent: `<span class="accent">${t('home.partnersTitleA')}</span>` })}
+      />
+      <p class="partners-lead">{t('home.partnersLead')}</p>
     </div>
 
     <div class="partners-grid" data-reveal>

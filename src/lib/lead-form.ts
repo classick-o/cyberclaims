@@ -20,7 +20,7 @@ type FieldError = { field: string; message: string };
 type Options = {
   /** Where to POST. Same-origin path. */
   endpoint: string;
-  /** Which form this is — the lead endpoint stores it, so we know where a case came from. */
+  /** Which form this is - the lead endpoint stores it, so we know where a case came from. */
   source?: 'hero' | 'contact' | 'start_process' | 'url_checker';
   /** Called only once the server confirms. Never on a failure. */
   onSuccess: () => void;
@@ -29,10 +29,10 @@ type Options = {
 const GENERIC =
   'Something went wrong on our side. Please try again, or email contact@cyberclaims.net.';
 
-// ── captcha ───────────────────────────────────────────────────────────────────
+// captcha
 //
 // The challenge runs when the user presses the button, not when the page loads. So
-// the form is just a form until they commit to sending it — and for a real person it
+// the form is just a form until they commit to sending it - and for a real person it
 // resolves silently in milliseconds, with nothing to click.
 //
 // One form per page, so a single pending resolver is enough. Turnstile's callbacks are
@@ -70,7 +70,7 @@ function solveCaptcha(form: HTMLFormElement): Promise<string | null> {
     pending = {
       resolve,
       // Never hold the form hostage to Cloudflare. If the challenge doesn't come back,
-      // send without a token — the server fails open on an unreachable Turnstile for
+      // send without a token - the server fails open on an unreachable Turnstile for
       // exactly the same reason, and losing a fraud victim's case because a captcha
       // stalled is the worse failure.
       timer: window.setTimeout(() => settle(null), 20_000),
@@ -84,7 +84,7 @@ function solveCaptcha(form: HTMLFormElement): Promise<string | null> {
   });
 }
 
-// ── submit ────────────────────────────────────────────────────────────────────
+// submit
 
 export function initForm(form: HTMLFormElement, { endpoint, source, onSuccess }: Options): void {
   const status = form.querySelector<HTMLElement>('[data-form-status]');
@@ -124,7 +124,7 @@ export function initForm(form: HTMLFormElement, { endpoint, source, onSuccess }:
         if (typeof value === 'string') payload[key] = value;
       });
       // Set it from the token we were handed rather than trusting the hidden input to
-      // exist yet — the widget writes it, but only after its callback has fired.
+      // exist yet - the widget writes it, but only after its callback has fired.
       if (token) payload['cf-turnstile-response'] = token;
 
       const res = await fetch(endpoint, {

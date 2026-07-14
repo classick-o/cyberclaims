@@ -1,12 +1,17 @@
 import { DEFAULT_LOCALE, LOCALE_META, type Locale } from './config';
 import { en, type UIKey } from './en';
+import { nl } from './nl';
+import { fr } from './fr';
+import { de } from './de';
+import { it } from './it';
+import { SERVICES as SERVICE_DATA } from '../data/site';
 
 // One dictionary per locale. `satisfies` means a new entry in LOCALES without a
 // matching dictionary here is a compile error rather than a runtime `undefined`.
-const DICTIONARIES = { en } satisfies Record<Locale, Record<UIKey, string>>;
+const DICTIONARIES = { en, nl, fr, de, it } satisfies Record<Locale, Record<UIKey, string>>;
 
 /**
- * t('nav.about') — typed against the English keys, so a typo is a build failure.
+ * t('nav.about') - typed against the English keys, so a typo is a build failure.
  *
  * Falls back to English for a key a translation is missing. That fallback should
  * never fire: nl.ts is declared as Record<UIKey, string>, so tsc rejects an
@@ -51,6 +56,30 @@ export function formatDate(iso: string | Date, locale: Locale) {
     month: 'long',
     year: 'numeric',
   }).format(date);
+}
+
+/**
+ * The services, with their name/description resolved for a locale.
+ *
+ * The STRUCTURE (href, icon, accent) is locale-independent and lives in site.ts; the
+ * COPY (title, blurb, short) lives in the dictionaries, keyed by the service's URL slug
+ * - `svc.<slug>.title` etc. Components import this instead of the raw SERVICES so a
+ * single call gives them fully-localised service objects with the same shape as before.
+ *
+ * The key strings are built dynamically, so they are cast to UIKey; the parity check
+ * (every dict has every key) is what guarantees the cast is sound at runtime.
+ */
+export function getServices(locale: Locale) {
+  const t = useTranslations(locale);
+  return SERVICE_DATA.map((s) => {
+    const slug = s.href.replace(/^\/|\/$/g, '');
+    return {
+      ...s,
+      title: t(`svc.${slug}.title` as UIKey),
+      blurb: t(`svc.${slug}.blurb` as UIKey),
+      short: t(`svc.${slug}.short` as UIKey),
+    };
+  });
 }
 
 export { DEFAULT_LOCALE, LOCALES, LOCALE_META, isLocale, localeFromUrl, localePaths } from './config';

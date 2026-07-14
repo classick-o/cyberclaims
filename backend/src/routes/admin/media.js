@@ -65,7 +65,7 @@ router.delete('/:id', async (req, res, next) => {
     const media = await Media.remove(req.params.id);
     if (!media) return res.status(404).json({ success: false, message: 'No such image.' });
 
-    // Delete the row first, then the files. If a file is already gone, that's fine —
+    // Delete the row first, then the files. If a file is already gone, that's fine -
     // an orphaned row would be worse than an orphaned file (a broken <img> on a live
     // article vs. a few stray KB on disk).
     for (const rel of Object.values(media.variants ?? {})) {

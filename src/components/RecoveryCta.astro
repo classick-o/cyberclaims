@@ -3,11 +3,13 @@
 import Icon from './Icon.astro';
 import { link } from '../lib/paths';
 import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
 
 // Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
 // 14 components, and a prop that one of them forgets to pass renders another
 // language's URLs on the page without erroring.
 const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
 ---
 
 <section class="rec">
@@ -23,14 +25,14 @@ const locale = localeFromUrl(Astro.url);
 
       <div class="rec-content">
         <div class="rec-left">
-          <h2 class="rec-title">Start your <span class="accent">recovery</span> now</h2>
-          <p class="rec-sub">
-            Talk to a certified expert about your case. No obligation - just a clear picture
-            of your options and next steps.
-          </p>
+          <h2
+            class="rec-title"
+            set:html={t('home.recTitle', { accent: `<span class="accent">${t('home.recTitleA')}</span>` })}
+          />
+          <p class="rec-sub">{t('home.recSub')}</p>
         </div>
         <div class="rec-actions">
-          <a href={link('/start-process/', locale)} class="btn">Start Process <Icon name="arrow" class="w-4 h-4" /></a>
+          <a href={link('/start-process/', locale)} class="btn">{t('cta.startProcess')} <Icon name="arrow" class="w-4 h-4" /></a>
         </div>
       </div>
     </div>

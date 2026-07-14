@@ -1,7 +1,7 @@
 ---
 // The four legal pages, from src/content/legal/<locale>/<page>.md.
 //
-// They were four separate .astro files with the text inlined in JSX — the Data
+// They were four separate .astro files with the text inlined in JSX - the Data
 // Protection Addendum alone was 868 lines of markup wrapped around the copy. That is
 // unmaintainable for a developer, untouchable for a lawyer, and impossible to
 // translate without duplicating the whole file. One route, one Markdown file per
@@ -18,7 +18,7 @@ import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../i18n/config';
 import { formatDate } from '../../i18n';
 
 // Astro evaluates getStaticPaths in isolation, so it cannot see helpers declared
-// elsewhere in this frontmatter — everything it needs is either imported or inline.
+// elsewhere in this frontmatter - everything it needs is either imported or inline.
 export async function getStaticPaths() {
   const docs = await getCollection('legal');
 
@@ -122,7 +122,7 @@ const { Content } = await render(doc);
     text-underline-offset: 3px;
   }
   /* Tailwind's preflight resets `ol, ul { list-style: none }` site-wide, so setting only
-     the padding left every list here unmarked and unindented — in a regulated document
+     the padding left every list here unmarked and unindented - in a regulated document
      whose numbered clauses are load-bearing. Say what the list is. */
   .legal-prose :global(ul) {
     list-style: disc;

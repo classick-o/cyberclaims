@@ -11,7 +11,7 @@ const BASE = 'http://localhost:3000';
 const ADMIN = { email: 'qa-admin@cyberclaims.net', password: 'QaTest!2026x' };
 
 let pass = 0, fail = 0; const fails = []; const findings = [];
-const ok = (n, c, d = '') => { if (c) { pass++; process.stdout.write('.'); } else { fail++; fails.push(`${n}${d ? ' — ' + d : ''}`); process.stdout.write('F'); } };
+const ok = (n, c, d = '') => { if (c) { pass++; process.stdout.write('.'); } else { fail++; fails.push(`${n}${d ? ' - ' + d : ''}`); process.stdout.write('F'); } };
 const finding = (s, w) => findings.push(`[${s}] ${w}`);
 
 function jarStr(j) { return Object.entries(j).map(([k, v]) => `${k}=${v}`).join('; '); }
@@ -35,8 +35,8 @@ const clean = [];
 (async () => {
   const jar = await login();
 
-  // ── CSV injection escaping (unit-level, the real security control) ──────────
-  console.log('\n── CSV ESCAPING ──');
+  // CSV injection escaping (unit-level, the real security control)
+  console.log('\n CSV ESCAPING ');
   const csv = toCsv([{ a: '=cmd|calc', b: '+1+1', c: '-2', d: '@SUM', e: 'normal', f: 'has "quote"' }], ['a', 'b', 'c', 'd', 'e', 'f']);
   ok('formula = neutralised', csv.includes(`"'=cmd|calc"`), csv.split('\r\n')[1]);
   ok('formula + neutralised', csv.includes(`"'+1+1"`));
@@ -45,8 +45,8 @@ const clean = [];
   ok('normal cell not touched', csv.includes('"normal"'));
   ok('quotes doubled', csv.includes('"has ""quote"""'));
 
-  // ── publish-time correctness (the historical NOW()-rounds-up bug) ───────────
-  console.log('\n── PUBLISH TIMING ──');
+  // publish-time correctness (the historical NOW()-rounds-up bug)
+  console.log('\n PUBLISH TIMING ');
   const pub = await api('POST', '/api/admin/posts', mk('deep-immediate', { title: 'Deep immediate publish' }), jar);
   if (pub.json?.id) clean.push(pub.json.id);
   await api('POST', `/api/admin/posts/${pub.json.id}/status`, { status: 'published' }, jar);
@@ -64,8 +64,8 @@ const clean = [];
   ok('future-dated publish is NOT publicly visible', future === null);
   if (future !== null) finding('HIGH', 'A post with a future published_at is served publicly before its date');
 
-  // ── featured exclusivity under concurrency ──────────────────────────────────
-  console.log('\n── FEATURED RACE ──');
+  // featured exclusivity under concurrency
+  console.log('\n FEATURED RACE ');
   const ids = [];
   for (const s of ['deep-feat-1', 'deep-feat-2', 'deep-feat-3']) {
     const r = await api('POST', '/api/admin/posts', mk(s), jar);
@@ -77,10 +77,10 @@ const clean = [];
   ));
   const [[{ n }]] = await pool.query('SELECT COUNT(*) n FROM posts WHERE featured = 1');
   ok('at most one featured post after concurrent writes', n <= 1, `found ${n} featured`);
-  if (n > 1) finding('MEDIUM', `Concurrent featured writes left ${n} posts featured — the "only one hero" invariant races`);
+  if (n > 1) finding('MEDIUM', `Concurrent featured writes left ${n} posts featured - the "only one hero" invariant races`);
 
-  // ── slug collision race ─────────────────────────────────────────────────────
-  console.log('\n── SLUG RACE ──');
+  // slug collision race
+  console.log('\n SLUG RACE ');
   const race = await Promise.all([0, 1, 2].map((i) =>
     api('POST', '/api/admin/posts', mk('deep-samerace', { title: `Deep race ${i}` }), jar)
   ));
@@ -89,10 +89,10 @@ const clean = [];
   const [[{ c }]] = await pool.query("SELECT COUNT(*) c FROM post_translations WHERE slug = 'deep-samerace'");
   ok('concurrent identical slugs: exactly one row exists', c === 1, `found ${c} rows with that slug`);
   ok('the losers got a 4xx, not a 500', race.filter((r) => r.status >= 500).length === 0, `statuses ${race.map((r) => r.status)}`);
-  if (c > 1) finding('HIGH', 'Two posts share one slug — the SELECT-then-INSERT slug guard races past the unique key');
+  if (c > 1) finding('HIGH', 'Two posts share one slug - the SELECT-then-INSERT slug guard races past the unique key');
 
-  // ── multi-locale reserved slug ──────────────────────────────────────────────
-  console.log('\n── MULTI-LOCALE RESERVED SLUG ──');
+  // multi-locale reserved slug
+  console.log('\n MULTI-LOCALE RESERVED SLUG ');
   const ml = await api('POST', '/api/admin/posts', {
     status: 'draft', featured: false,
     translations: { en: { title: 'Fine english title', body_html: '<p>x</p>', slug: 'deep-fine-en' }, nl: { title: 'Reserved dutch', body_html: '<p>x</p>', slug: 'about-us' } },
@@ -101,8 +101,8 @@ const clean = [];
   ok('the error names the offending locale', /nl/.test(JSON.stringify(ml.json?.errors ?? '')), JSON.stringify(ml.json));
   if (ml.json?.id) clean.push(ml.json.id);
 
-  // ── draft visibility on the public SSR route ────────────────────────────────
-  console.log('\n── DRAFT VISIBILITY ──');
+  // draft visibility on the public SSR route
+  console.log('\n DRAFT VISIBILITY ');
   const draft = await api('POST', '/api/admin/posts', mk('deep-draft-secret', { title: 'Deep draft secret' }), jar);
   if (draft.json?.id) clean.push(draft.json.id);
   const anon = await fetch(BASE + '/deep-draft-secret/');
@@ -114,8 +114,8 @@ const clean = [];
   const draftBody = await withCookie.text();
   ok('draft preview is marked noindex', /noindex/i.test(draftBody), 'no noindex meta on the draft');
 
-  // ── JSON-LD must not let admin fields break out of the <script> block ───────
-  console.log('\n── JSON-LD XSS ──');
+  // JSON-LD must not let admin fields break out of the <script> block
+  console.log('\n JSON-LD XSS ');
   const payload = '</scr' + 'ipt><script>window.__pwn__=1</scr' + 'ipt>';
   const xssPost = await api('POST', '/api/admin/posts', {
     status: 'published', featured: false,
@@ -129,7 +129,7 @@ const clean = [];
   ok('ld+json block has no raw </script>', ld && !/<\/script>/i.test(ld[1]), ld ? 'breakout present' : 'no block found');
   // Defence in depth: blank out every double-quoted attribute value (where the payload
   // sits inertly as text), then assert no raw <script> element carries the payload. This
-  // is what a DOM parser would conclude — the naive substring match cannot tell a
+  // is what a DOM parser would conclude - the naive substring match cannot tell a
   // <script> inside content="…" from a real one.
   const noAttrs = rendered.replace(/"[^"]*"/g, '""');
   ok('payload is not a live <script> element', !/<script[^>]*>[^<]*__pwn__/i.test(noAttrs));
@@ -141,16 +141,16 @@ const clean = [];
     catch { return false; }
   })(), 'ld+json no longer parses or lost the data');
 
-  // ── multipart upload requires CSRF (SameSite=Lax does not cover it) ──────────
-  console.log('\n── UPLOAD CSRF ──');
+  // multipart upload requires CSRF (SameSite=Lax does not cover it)
+  console.log('\n UPLOAD CSRF ');
   const img = new Uint8Array(readFileSync(new URL('../public/logo-mark.webp', import.meta.url)));
   const fd = new FormData();
   fd.append('file', new Blob([img], { type: 'image/webp' }), 'x.webp');
   const noCsrfUpload = await fetch(BASE + '/api/admin/media', { method: 'POST', headers: { Cookie: `cc_session=${jar.cc_session}` }, body: fd });
   ok('upload without CSRF token → 403', noCsrfUpload.status === 403, `got ${noCsrfUpload.status}`);
 
-  // ── media delete unlinks the files on disk ──────────────────────────────────
-  console.log('\n── MEDIA DISK CLEANUP ──');
+  // media delete unlinks the files on disk
+  console.log('\n MEDIA DISK CLEANUP ');
   const fd2 = new FormData();
   fd2.append('file', new Blob([img], { type: 'image/webp' }), 'todelete.webp');
   const up = await fetch(BASE + '/api/admin/media', { method: 'POST', headers: { Cookie: jarStr(jar), 'x-csrf-token': jar.cc_csrf }, body: fd2 });
@@ -162,8 +162,8 @@ const clean = [];
   ok('deleted media file is gone from disk', !existsSync(abs), abs);
   if (existsSync(abs)) finding('LOW', 'Deleting media leaves the re-encoded files orphaned on disk');
 
-  // ── admin pagination: stable total, correct slices, no overlap ──────────────
-  console.log('\n── ADMIN PAGINATION ──');
+  // admin pagination: stable total, correct slices, no overlap
+  console.log('\n ADMIN PAGINATION ');
   const [[{ base }]] = await pool.query("SELECT COUNT(*) base FROM posts");
   const seeded = [];
   for (let i = 0; i < 30; i++) {
@@ -189,15 +189,15 @@ const clean = [];
   ok('media list carries a total', typeof (await api('GET', '/api/admin/media?limit=50', undefined, jar)).json.total === 'number');
   ok('leads list carries a total', typeof (await api('GET', '/api/admin/leads?limit=50', undefined, jar)).json.total === 'number');
 
-  // ── SSR pagination param robustness ─────────────────────────────────────────
-  console.log('\n── SSR PARAM ROBUSTNESS ──');
+  // SSR pagination param robustness
+  console.log('\n SSR PARAM ROBUSTNESS ');
   for (const qs of ['?page=abc', '?page=-5', '?page=999999', '?category=%27%20OR%201=1', '?page=1e9']) {
     const r = await fetch(BASE + `/news/${qs}`);
     ok(`/news/${qs} → 200`, r.status === 200, `got ${r.status}`);
     if (r.status >= 500) finding('MEDIUM', `/news/${qs} returns ${r.status}`);
   }
 
-  // ── cleanup ─────────────────────────────────────────────────────────────────
+  // cleanup
   for (const id of clean) await pool.query('DELETE FROM posts WHERE id = ?', [id]);
   await pool.end();
 

@@ -21,7 +21,7 @@ export function validate(schema) {
 }
 
 // Bots fill in every field they can see, including the ones they can't.
-// A hit returns a fake 200 so the bot logs a success and doesn't retry —
+// A hit returns a fake 200 so the bot logs a success and doesn't retry -
 // no lead is written, no email is sent.
 export function honeypot(req, res, next) {
   if (req.body?._honey) {

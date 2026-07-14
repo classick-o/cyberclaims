@@ -2,14 +2,21 @@
 // Sticky header: transparent → dark on scroll (brief §4 Nav). Mega-menu for services.
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
-import { SERVICES, URL_CHECKER } from '../data/site';
-import { link, serviceUrl } from '../lib/paths';
-import { localeFromUrl } from '../i18n/config';
+import LangSwitch from './LangSwitch.astro';
+import { URL_CHECKER } from '../data/site';
+import { link, serviceUrl, localeHref, asset } from '../lib/paths';
+import { localeFromUrl, LOCALES, LOCALE_META } from '../i18n/config';
+import { useTranslations, getServices } from '../i18n';
 
 // Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
 // 14 components, and a prop that one of them forgets to pass renders another
 // language's URLs on the page without erroring.
 const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
+const services = getServices(locale);
+const pathname = Astro.url.pathname;
+// Present only on pages whose URL differs per locale (articles); threaded to the switcher.
+const localeSlugs = Astro.props.localeSlugs;
 ---
 
 <header id="site-header" class="site-header" data-at-top="true">
@@ -17,19 +24,19 @@ const locale = localeFromUrl(Astro.url);
     <Logo />
 
     <nav class="nav-desktop" aria-label="Primary">
-      <a href={link('/', locale)} class="nav-link">Home</a>
-      <a href={link('/about-us/', locale)} class="nav-link">About Us</a>
+      <a href={link('/', locale)} class="nav-link">{t('nav.home')}</a>
+      <a href={link('/about-us/', locale)} class="nav-link">{t('nav.about')}</a>
 
       <div class="nav-has-mega">
         <a href={link('/services/', locale)} class="nav-link nav-trigger" aria-haspopup="true">
-          Our Services
+          {t('nav.services')}
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6" /></svg>
         </a>
 
         <div class="mega" role="menu">
           <div class="mega-grid">
             {
-              SERVICES.map((s) => (
+              services.map((s) => (
                 <a href={link(serviceUrl(s.href), locale)} class="mega-item" role="menuitem">
                   <span class="mega-icon">
                     <Icon name={s.icon} class="w-4 h-4" />
@@ -43,19 +50,22 @@ const locale = localeFromUrl(Astro.url);
             }
           </div>
           <a href={link(URL_CHECKER.href, locale)} class="mega-foot">
-            <Icon name={URL_CHECKER.icon} class="w-4 h-4" /> {URL_CHECKER.title} - verify a suspicious
+            <Icon name={URL_CHECKER.icon} class="w-4 h-4" /> {t('nav.urlChecker')} - verify a suspicious
             link
           </a>
         </div>
       </div>
 
-      <a href={link('/news/', locale)} class="nav-link">News</a>
-      <a href={link('/contact-us/', locale)} class="nav-link">Contact Us</a>
+      <a href={link('/news/', locale)} class="nav-link">{t('nav.news')}</a>
+      <a href={link('/contact-us/', locale)} class="nav-link">{t('nav.contact')}</a>
     </nav>
 
-    <a href={link('/start-process/', locale)} class="btn btn-header">Start Process</a>
+    <div class="header-actions">
+      <LangSwitch localeSlugs={localeSlugs} />
+      <a href={link('/start-process/', locale)} class="btn btn-header">{t('nav.startProcess')}</a>
+    </div>
 
-    <button id="burger" class="burger" aria-label="Open menu" aria-expanded="false">
+    <button id="burger" class="burger" aria-label={t('nav.menu')} aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
   </div>
@@ -63,11 +73,11 @@ const locale = localeFromUrl(Astro.url);
   <!-- Mobile drawer -->
   <div id="mobile-drawer" class="mobile-drawer">
     <nav class="mobile-nav" aria-label="Mobile">
-      <a href={link('/', locale)}>Home</a>
-      <a href={link('/about-us/', locale)}>About Us</a>
+      <a href={link('/', locale)}>{t('nav.home')}</a>
+      <a href={link('/about-us/', locale)}>{t('nav.about')}</a>
       <details class="mobile-details">
         <summary>
-          <span>Our Services</span>
+          <span>{t('nav.services')}</span>
           <svg
             class="mobile-chevron"
             width="18"
@@ -84,13 +94,30 @@ const locale = localeFromUrl(Astro.url);
           </svg>
         </summary>
         <div class="mobile-services">
-          {SERVICES.map((s) => <a href={link(serviceUrl(s.href), locale)}>{s.title}</a>)}
-          <a href={link(URL_CHECKER.href, locale)}>{URL_CHECKER.title}</a>
+          {services.map((s) => <a href={link(serviceUrl(s.href), locale)}>{s.title}</a>)}
+          <a href={link(URL_CHECKER.href, locale)}>{t('nav.urlChecker')}</a>
         </div>
       </details>
-      <a href={link('/news/', locale)}>News</a>
-      <a href={link('/contact-us/', locale)}>Contact Us</a>
-      <a href={link('/start-process/', locale)} class="btn mobile-cta">Start Process</a>
+      <a href={link('/news/', locale)}>{t('nav.news')}</a>
+      <a href={link('/contact-us/', locale)}>{t('nav.contact')}</a>
+      <a href={link('/start-process/', locale)} class="btn mobile-cta">{t('nav.startProcess')}</a>
+
+      <div class="mobile-lang" role="group" aria-label="Change language">
+        {
+          LOCALES.map((l) => (
+            <a
+              href={localeHref(l, pathname, localeSlugs)}
+              hreflang={LOCALE_META[l].htmlLang}
+              lang={LOCALE_META[l].htmlLang}
+              class={`mobile-lang-link${l === locale ? ' is-current' : ''}`}
+              aria-current={l === locale ? 'true' : undefined}
+            >
+              <img class="mobile-lang-flag" src={asset(`/flags/${LOCALE_META[l].flag}.svg`)} alt="" width="20" height="13" />
+              {LOCALE_META[l].label}
+            </a>
+          ))
+        }
+      </div>
     </nav>
   </div>
 </header>
@@ -261,8 +288,12 @@ const locale = localeFromUrl(Astro.url);
     height: 1rem;
   }
 
-  .btn-header {
+  /* Desktop-only cluster in the right grid column: language switcher + CTA. Hidden on
+     mobile, where the burger opens a drawer that carries both instead. */
+  .header-actions {
     display: none;
+  }
+  .btn-header {
     padding: 0.7rem 1.4rem;
     font-size: 0.88rem;
   }
@@ -367,6 +398,34 @@ const locale = localeFromUrl(Astro.url);
     margin-top: 1rem;
     justify-content: center;
   }
+  .mobile-lang {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 1.5rem;
+  }
+  .mobile-lang-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.72);
+    text-decoration: none;
+  }
+  .mobile-lang-flag {
+    width: 1.15rem;
+    height: auto;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
+  }
+  .mobile-lang-link.is-current {
+    color: #fff;
+    border-color: var(--color-purple-400);
+    background: rgba(139, 91, 189, 0.18);
+  }
 
   /* ---- page state while the mobile drawer is open ---- */
   /* Freeze the page behind the menu. This must sit on <html>, not <body>: global
@@ -405,9 +464,14 @@ const locale = localeFromUrl(Astro.url);
     .nav-desktop {
       display: flex;
     }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      justify-self: end;
+    }
     .btn-header {
       display: inline-flex;
-      justify-self: end;
     }
     .burger {
       display: none;

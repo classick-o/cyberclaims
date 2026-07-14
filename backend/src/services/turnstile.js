@@ -1,7 +1,7 @@
 // Cloudflare Turnstile verification.
 //
 // The forms have always claimed "Protected by CAPTCHA" while having none. This makes
-// that true. Turnstile is standalone — it does not require the site to be behind
+// that true. Turnstile is standalone - it does not require the site to be behind
 // Cloudflare's CDN, only a (free) Cloudflare account for the key pair.
 //
 // Without TURNSTILE_SECRET this is a no-op, so local dev needs no setup. Production
@@ -39,7 +39,7 @@ export function verifyTurnstile(req, res, next) {
       });
     })
     .catch((err) => {
-      // Fail OPEN. Turnstile being unreachable is our problem, not the victim's —
+      // Fail OPEN. Turnstile being unreachable is our problem, not the victim's -
       // dropping a lead because Cloudflare timed out is the worse failure. The rate
       // limiter and honeypot still stand between us and a spam flood.
       console.error('Turnstile unreachable, allowing submission through:', err.message);

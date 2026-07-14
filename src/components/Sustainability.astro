@@ -3,16 +3,20 @@
 // NOTE: placeholder figures - live site currently shows 0 (see data/site.ts).
 import Icon from './Icon.astro';
 import { SUSTAINABILITY } from '../data/site';
+import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
+
+const t = useTranslations(localeFromUrl(Astro.url));
 ---
 
 <section class="sus">
   <div class="wrap">
     <div class="sus-head" data-reveal>
-      <h2 class="h-section">We prioritise <span class="accent">sustainability</span></h2>
-      <p class="sus-lead">
-        Fighting digital crime shouldn’t cost the planet. A part of every case we resolve
-        goes back into offsetting our footprint.
-      </p>
+      <h2
+        class="h-section"
+        set:html={t('home.susTitle', { accent: `<span class="accent">${t('home.susTitleA')}</span>` })}
+      />
+      <p class="sus-lead">{t('home.susLead')}</p>
     </div>
 
     <div class="sus-grid">
@@ -28,7 +32,7 @@ import { SUSTAINABILITY } from '../data/site';
                   data-suffix={s.suffix ?? ''}
                 >0</span><span class="sus-fix">{s.suffix}</span>
               </div>
-              <div class="sus-label">{s.label}</div>
+              <div class="sus-label">{t(s.labelKey)}</div>
             </div>
           </div>
         ))

@@ -8,7 +8,7 @@ import { Parser } from 'htmlparser2';
 // TBSBV stores raw HTML in a TypeScript literal and pipes it straight through
 // `set:html`. That's survivable only because the author is a developer with commit
 // access. Ours comes from a rich-text editor used by a non-technical person, so the
-// database must never hold anything we wouldn't be willing to inject — sanitising at
+// database must never hold anything we wouldn't be willing to inject - sanitising at
 // render time instead would mean one forgotten call site is an XSS on the whole site.
 const ALLOWED = {
   allowedTags: [
@@ -20,7 +20,7 @@ const ALLOWED = {
     'table', 'thead', 'tbody', 'tr', 'th', 'td',
     // The Q&A block. <details>/<summary> is a native accordion: no JavaScript, keyboard
     // accessible, and Google indexes the answer even while it is collapsed. Note there
-    // is no <div> here and there never should be — <details> takes flow content
+    // is no <div> here and there never should be - <details> takes flow content
     // directly after its <summary>, so the answer's paragraphs are simply its children.
     'section', 'details', 'summary',
   ],
@@ -39,7 +39,7 @@ const ALLOWED = {
   },
   allowedSchemes: ['http', 'https', 'mailto'],
   // Anything the editor emits with a relative /uploads/ src stays; everything else
-  // must be an absolute http(s) URL. No data: URIs — that's an XSS vector dressed
+  // must be an absolute http(s) URL. No data: URIs - that's an XSS vector dressed
   // up as an image.
   allowedSchemesByTag: { img: ['http', 'https'] },
   allowProtocolRelative: false,
@@ -64,11 +64,11 @@ export function sanitizeBody(html) {
 }
 
 // Stripping tags is not the same as reading the text. `<p>a</p><p>b</p>` with the tags
-// simply deleted is "ab" — so an excerpt read "…the same every time.How do I know if…"
+// simply deleted is "ab" - so an excerpt read "…the same every time.How do I know if…"
 // and the word count was wrong too. Put a space where a block ends.
 const BLOCK_END = /<\/(p|h[1-6]|li|ul|ol|blockquote|section|details|summary|figcaption|td|th|tr|pre|div)\s*>/gi;
 
-/** Strips markup and normalises whitespace — for word counts. */
+/** Strips markup and normalises whitespace - for word counts. */
 export function toPlainText(html) {
   return sanitizeHtml(String(html ?? '').replace(BLOCK_END, ' </$1>'), {
     allowedTags: [],
@@ -83,7 +83,7 @@ export function toPlainText(html) {
  *
  * An auto-excerpt is a taste of the article. Pulling the FAQ into it produces a card
  * that reads "…the pattern was the same every time. How do I know if I have been a
- * victim of a crypto scam? Unexpected requests for transfers in cryptocurr" — the
+ * victim of a crypto scam? Unexpected requests for transfers in cryptocurr" - the
  * questions are not prose, and half of one is not a summary.
  *
  * Reading time still counts the FAQ, because the reader still reads it.
@@ -141,7 +141,7 @@ export function readingMinutes(html) {
 /**
  * Pulls the question/answer pairs out of an article's Q&A blocks, as plain text.
  *
- * Feeds the FAQPage structured data on the article page — which is what makes Google
+ * Feeds the FAQPage structured data on the article page - which is what makes Google
  * render the questions as expandable rows directly in the search result. For a site
  * fighting for "is X a scam" queries, that is not a nice-to-have.
  *
@@ -185,7 +185,7 @@ export function extractFaq(html) {
         inItem = false;
         const q = question.replace(/\s+/g, ' ').trim();
         const a = answer.replace(/\s+/g, ' ').trim();
-        // A half-written pair is not an FAQ entry — and Google penalises FAQPage markup
+        // A half-written pair is not an FAQ entry - and Google penalises FAQPage markup
         // that doesn't match visible content.
         if (q && a) items.push({ question: q, answer: a });
         return;
@@ -215,7 +215,7 @@ export function slugify(input) {
 /**
  * Slugs an article may not have.
  *
- * Articles are served from the ROOT of the site — /<slug>/, not /news/<slug>/ — so they
+ * Articles are served from the ROOT of the site - /<slug>/, not /news/<slug>/ - so they
  * share one namespace with every page on it. A static page always wins the route. An
  * article slugged `about-us` would therefore save cleanly, report itself as published,
  * and be permanently unreachable, with nothing anywhere to say why. The editor would
@@ -231,11 +231,11 @@ export function slugify(input) {
  * Compared against the SLUGGED value, which is the only thing that ever becomes a URL.
  * That is also why /sitemap.xml, /robots.txt and /_astro/ are absent: slugify() emits
  * [a-z0-9-] and nothing else, so no title on earth can slug to a path containing a dot
- * or an underscore. Listing them would be a guard that can never fire — worse than no
+ * or an underscore. Listing them would be a guard that can never fire - worse than no
  * guard, because it reads like one that can.
  */
 export const RESERVED_SLUGS = new Set([
-  // pages — src/pages/[...lang]/
+  // pages - src/pages/[...lang]/
   'about-us',
   'contact-us',
   'news',
@@ -244,7 +244,7 @@ export const RESERVED_SLUGS = new Set([
   'thank-you',
   'url-checker',
   '404',
-  // legal documents — src/content/legal/
+  // legal documents - src/content/legal/
   'privacy-policy',
   'cookie-policy',
   'terms-and-conditions',

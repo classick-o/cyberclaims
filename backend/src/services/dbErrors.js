@@ -17,7 +17,7 @@ export function asUserError(err) {
   if (!err?.code) return err;
 
   if (err.code === 'ER_DUP_ENTRY') {
-    // The raw message is `Duplicate entry 'x' for key 'categories.key_slug'` — it names
+    // The raw message is `Duplicate entry 'x' for key 'categories.key_slug'` - it names
     // the table and column, which is exactly what a 500 must not leak. Map the known
     // constraints to a field the admin can act on; everything else stays generic.
     if (/key_slug/.test(err.message)) {

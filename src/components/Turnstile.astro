@@ -1,17 +1,17 @@
 ---
-// Cloudflare Turnstile — run ON SUBMIT, not on page load.
+// Cloudflare Turnstile - run ON SUBMIT, not on page load.
 //
 // data-execution="execute" stops the challenge from running when the widget renders;
 // src/lib/lead-form.ts calls turnstile.execute() when the user presses the button.
 // data-appearance="interaction-only" keeps the box out of the form entirely unless
-// Cloudflare decides a human actually has to click something — which, for a real
+// Cloudflare decides a human actually has to click something - which, for a real
 // person filling in a real form, is almost never.
 //
 // So the form is just a form. No Cloudflare panel sitting under the fields announcing
 // that we suspect you, on a page whose visitors have already been defrauded once.
 //
 // Renders nothing when PUBLIC_TURNSTILE_SITEKEY is unset, which keeps local dev
-// frictionless — the backend skips verification in the same case. Production refuses
+// frictionless - the backend skips verification in the same case. Production refuses
 // to boot without the key pair.
 const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITEKEY;
 ---

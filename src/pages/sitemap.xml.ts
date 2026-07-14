@@ -1,7 +1,7 @@
 // sitemap.xml
 //
 // Generated on demand, not by @astrojs/sitemap. The integration only knows the routes
-// that exist at build time, and the articles do not — they live in the database and
+// that exist at build time, and the articles do not - they live in the database and
 // appear the moment an editor hits Publish. A sitemap that silently omits the blog is
 // worse than useless for a site whose whole SEO case rests on it.
 
@@ -37,7 +37,7 @@ const STATIC_PAGES: { path: string; priority: number; changefreq: string }[] = [
 ];
 
 // The service pages live under /services/<slug>/, but their href in the data is the
-// bare slug — same shape the site itself uses.
+// bare slug - same shape the site itself uses.
 const url = (path: string, locale: Locale, origin: string) => {
   const isService = /^\/(cryptocurrency|website|brand|dispute|consultancy|due-diligence|social-media|business)/.test(path);
   const full = isService ? `/services${path}` : path;

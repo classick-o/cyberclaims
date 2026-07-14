@@ -1,7 +1,7 @@
 // Admin session + CSRF.
 //
 // The session is a JWT in an httpOnly cookie. Because the admin, the API and the
-// public site share one origin, `SameSite=Lax` already blocks cross-site POSTs — but
+// public site share one origin, `SameSite=Lax` already blocks cross-site POSTs - but
 // Lax does NOT cover the multipart upload endpoint, which a cross-site <form> can
 // legitimately submit. So every mutation also carries a double-submit CSRF token:
 // the value is in a JS-readable cookie, and the client must echo it in a header
@@ -15,7 +15,7 @@ import { Admin } from '../models/Admin.js';
 const SESSION_COOKIE = 'cc_session';
 const CSRF_COOKIE = 'cc_csrf';
 const CSRF_HEADER = 'x-csrf-token';
-const MAX_AGE_MS = 12 * 60 * 60 * 1000; // 12h — a working day, not a month
+const MAX_AGE_MS = 12 * 60 * 60 * 1000; // 12h - a working day, not a month
 
 export function issueSession(res, admin) {
   const token = jwt.sign({ sub: admin.id, role: admin.role }, env.JWT_SECRET, {

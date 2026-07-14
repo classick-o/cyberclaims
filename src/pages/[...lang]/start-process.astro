@@ -6,12 +6,17 @@ import CtaStrip from '../../components/CtaStrip.astro';
 import Icon from '../../components/Icon.astro';
 import Turnstile from '../../components/Turnstile.astro';
 import { localePaths, type Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n';
 
 // One file, one page per locale. The default locale maps to lang: undefined, and a
-// rest parameter matches zero segments — so English stays at /about-us/, not /en/about-us/.
+// rest parameter matches zero segments - so English stays at /about-us/, not /en/about-us/.
 export const getStaticPaths = localePaths;
 const { locale } = Astro.props as { locale: Locale };
+const t = useTranslations(locale);
 
+// Numeric brackets, kept in one format across locales on purpose: this string is ALSO
+// the value stored for the lead (name="amount"), so translating the thousands separator
+// would fork the stored data by language.
 const amounts = [
   '1,000 - 5,000',
   '5,000 - 10,000',
@@ -21,31 +26,26 @@ const amounts = [
   '100,000 +',
 ];
 const steps = [
-  { label: 'Contact', icon: 'user' },
-  { label: 'Amount', icon: 'coins' },
-  { label: 'Incident', icon: 'alert' },
-  { label: 'Confirm', icon: 'check' },
+  { label: t('startProcess.step1'), icon: 'user' },
+  { label: t('startProcess.step2'), icon: 'coins' },
+  { label: t('startProcess.step3'), icon: 'alert' },
+  { label: t('startProcess.step4'), icon: 'check' },
 ];
 ---
 
-<Layout
-  title="Start Process - Cyberclaims"
-  description="File a complaint with Cyberclaims. Answer as detailed as possible and receive a response within 24-72 business hours."
->
+<Layout title={t('startProcess.metaTitle')} description={t('startProcess.metaDesc')}>
   <PageHero
     eyebrow="File a complaint"
-    title="Start Process"
-    intro={[
-      'Please fill the form below to file a complaint. Please answer as detailed as possible.',
-    ]}
+    title={t('nav.startProcess')}
+    intro={[t('startProcess.heroIntro')]}
     image="/start-process-hero.webp"
-    imageAlt="A checklist tile linked to document, review and verification steps"
+    imageAlt={t('startProcess.heroImageAlt')}
     imageWidth={1100}
     imageHeight={768}
     imageMaxWidth="26rem"
     imageMaxWidthMobile="20rem"
     ctaHref="/contact-us/"
-    ctaLabel="Contact Us"
+    ctaLabel={t('cta.contactUs')}
   />
 
   <section class="sp">
@@ -68,30 +68,30 @@ const steps = [
       <form class="glass sp-form" id="spForm" method="post" action="/api/lead" novalidate>
         <!-- Step 1 -->
         <div class="sp-panel is-active" data-step="1">
-          <h2 class="sp-h">Contact details</h2>
+          <h2 class="sp-h">{t('startProcess.s1Title')}</h2>
           <div class="field">
             <input type="text" name="full_name" required placeholder=" " />
-            <label>Full Name</label>
+            <label>{t('form.fullName')}</label>
           </div>
           <div class="field-row">
             <div class="field">
               <input type="email" name="email" required placeholder=" " />
-              <label>Email</label>
+              <label>{t('form.email')}</label>
             </div>
             <div class="field">
               <input type="tel" name="phone" required placeholder=" " />
-              <label>Phone</label>
+              <label>{t('form.phone')}</label>
             </div>
           </div>
           <div class="field">
             <input type="text" name="country" required placeholder=" " />
-            <label>Country of Residence</label>
+            <label>{t('form.country')}</label>
           </div>
         </div>
 
         <!-- Step 2 -->
         <div class="sp-panel" data-step="2">
-          <h2 class="sp-h">Amount lost</h2>
+          <h2 class="sp-h">{t('startProcess.s2Title')}</h2>
           <div class="sp-radios">
             {
               amounts.map((a, i) => (
@@ -106,36 +106,33 @@ const steps = [
 
         <!-- Step 3 -->
         <div class="sp-panel" data-step="3">
-          <h2 class="sp-h">Incident information</h2>
+          <h2 class="sp-h">{t('startProcess.s3Title')}</h2>
           <div class="field-row">
             <div class="field">
               <input type="text" name="platform_name" required placeholder=" " />
-              <label>Platform Name</label>
+              <label>{t('form.platformName')}</label>
             </div>
             <div class="field">
               <input type="text" name="platform_website" required placeholder=" " />
-              <label>Platform Website</label>
+              <label>{t('form.platformWebsite')}</label>
             </div>
           </div>
           <div class="field-row">
             <div class="field">
               <input type="date" name="first_transaction" required />
-              <label class="static">Date of First Transaction</label>
+              <label class="static">{t('form.firstTransaction')}</label>
             </div>
             <div class="field">
               <input type="date" name="last_transaction" required />
-              <label class="static">Date of Last Transaction</label>
+              <label class="static">{t('form.lastTransaction')}</label>
             </div>
           </div>
         </div>
 
         <!-- Step 4 -->
         <div class="sp-panel" data-step="4">
-          <h2 class="sp-h">Confirmation</h2>
-          <p class="sp-confirm">
-            Almost there! Please review all the information and click “Submit” to send off your
-            complaint and receive a response from us within 24-72 business hours.
-          </p>
+          <h2 class="sp-h">{t('startProcess.s4Title')}</h2>
+          <p class="sp-confirm">{t('startProcess.confirm')}</p>
           <Turnstile />
         </div>
 
@@ -150,24 +147,19 @@ const steps = [
         <p class="form-status sp-status" data-form-status role="alert" hidden></p>
 
         <div class="sp-nav">
-          <button type="button" class="btn btn-ghost sp-back" hidden>Back</button>
-          <button type="button" class="btn sp-next">Next</button>
-          <button type="submit" class="btn sp-submit" hidden>Submit</button>
+          <button type="button" class="btn btn-ghost sp-back" hidden>{t('form.back')}</button>
+          <button type="button" class="btn sp-next">{t('form.next')}</button>
+          <button type="submit" class="btn sp-submit" hidden>{t('form.submit')}</button>
         </div>
 
-        <p class="sp-legal">
-          Protected by CAPTCHA. Your details are confidential and reviewed by certified experts.
-        </p>
+        <p class="sp-legal">{t('form.legal')}</p>
       </form>
 
       <!-- Success state (revealed after submit) -->
       <div class="glass sp-success" id="spSuccess" hidden>
         <span class="sp-success-icon"><Icon name="check" class="w-full h-full" /></span>
-        <h2 class="sp-success-h">Your complaint has been submitted</h2>
-        <p class="sp-success-p">
-          Thank you - our team will review the details you provided and respond within 24-72
-          business hours.
-        </p>
+        <h2 class="sp-success-h">{t('startProcess.successTitle')}</h2>
+        <p class="sp-success-p">{t('startProcess.successBody')}</p>
       </div>
     </div>
   </section>
@@ -520,7 +512,7 @@ const steps = [
     back.addEventListener('click', () => show(step - 1));
 
     // Until now this form called preventDefault() and revealed the success panel
-    // without sending anything anywhere — telling fraud victims their complaint was
+    // without sending anything anywhere - telling fraud victims their complaint was
     // filed while dropping every field on the floor. It now posts to /api/lead, and
     // the panel is only shown once the API confirms the lead was stored.
     initLeadForm(form, 'start_process', () => {

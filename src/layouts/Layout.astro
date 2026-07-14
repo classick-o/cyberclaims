@@ -13,6 +13,13 @@ interface Props {
   locale?: Locale;
   /** Locale-independent path of this page, e.g. '/about-us/'. Used for canonical + hreflang. */
   path?: string;
+  /**
+   * For pages whose URL differs per locale (articles - the slug is translated too): a map
+   * of locale to that locale's slug. Drives hreflang and the language switcher so they
+   * point at the real translated URL rather than a prefix-swapped 404. Omit it and every
+   * locale is assumed to share `path`, which is true for every static page.
+   */
+  localeSlugs?: Partial<Record<Locale, string>>;
   /** Keep this page out of search results (draft previews, the thank-you page). */
   noindex?: boolean;
 }
@@ -37,6 +44,16 @@ const path =
     if (segments[0] === locale && locale !== DEFAULT_LOCALE) segments.shift();
     return `/${segments.join('/')}${segments.length ? '/' : ''}`;
   })();
+
+// Language alternates. For a page that shares one path across locales this is just that
+// path in each language; an article passes localeSlugs and each alternate points at that
+// locale's own slug. The switcher (in the header) is fed the same map.
+const localeSlugs = Astro.props.localeSlugs;
+const alternates: [Locale, string][] =
+  localeSlugs && Object.keys(localeSlugs).length > 0
+    ? (Object.entries(localeSlugs) as [Locale, string][]).map(([l, slug]) => [l, `/${slug}/`])
+    : LOCALES.map((l) => [l, path]);
+const xDefaultPath = localeSlugs?.[DEFAULT_LOCALE] ? `/${localeSlugs[DEFAULT_LOCALE]}/` : path;
 ---
 
 <!doctype html>
@@ -52,13 +69,13 @@ const path =
     {/* hreflang. Inert while LOCALES has one entry; correct the moment it doesn't. */}
     {
       LOCALES.length > 1 &&
-        LOCALES.map((l) => (
-          <link rel="alternate" hreflang={LOCALE_META[l].htmlLang} href={absoluteUrl(path, l, Astro.site)} />
+        alternates.map(([l, p]) => (
+          <link rel="alternate" hreflang={LOCALE_META[l].htmlLang} href={absoluteUrl(p, l, Astro.site)} />
         ))
     }
     {
       LOCALES.length > 1 && (
-        <link rel="alternate" hreflang="x-default" href={absoluteUrl(path, DEFAULT_LOCALE, Astro.site)} />
+        <link rel="alternate" hreflang="x-default" href={absoluteUrl(xDefaultPath, DEFAULT_LOCALE, Astro.site)} />
       )
     }
 
@@ -82,7 +99,7 @@ const path =
     <slot name="head" />
   </head>
   <body>
-    <Header locale={locale} />
+    <Header locale={locale} localeSlugs={localeSlugs} />
     <main>
       <slot />
     </main>
@@ -129,7 +146,7 @@ const path =
   //
   // The homepage's article strip is a server island: Astro fetches it and injects it
   // into the page once this script is long done. Everything inside it carries
-  // [data-reveal], which starts at opacity: 0 — so it was sitting in the DOM at its
+  // [data-reveal], which starts at opacity: 0 - so it was sitting in the DOM at its
   // full height, permanently invisible, because nothing was ever watching for it.
   // A whole section of the homepage, gone, with a 520px hole where it should have been.
   new MutationObserver((records) => {

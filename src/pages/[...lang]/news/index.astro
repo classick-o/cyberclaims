@@ -1,5 +1,5 @@
 ---
-// /news/ — the magazine listing (brief §4): featured hero card, category tabs,
+// /news/ - the magazine listing (brief §4): featured hero card, category tabs,
 // reading time, excerpts.
 //
 // SSR, not prerendered: the articles come from the database and publishing has to be
@@ -28,7 +28,7 @@ const activeCategory = Astro.url.searchParams.get('category');
 // Articles arrive fifteen at a time.
 //
 // "Load more" is a real link to ?page=N, not a button. It works with JavaScript off,
-// a crawler can walk the archive, and the reader can middle-click it — and the script
+// a crawler can walk the archive, and the reader can middle-click it - and the script
 // at the bottom then upgrades it into an append-in-place, so nobody actually navigates.
 // A button that only exists in JS would have made every article past the fifteenth
 // reachable only from the sitemap.
@@ -39,7 +39,7 @@ const featured = (await cached(`featured:${locale}`, () =>
   Post.findFeatured(locale)
 )) as PostCard | null;
 
-// The featured article headlines the page, so it must not appear in the grid at all —
+// The featured article headlines the page, so it must not appear in the grid at all -
 // not just on page 1. Excluded from the query rather than filtered from the results,
 // so every page is a full fifteen and the offsets keep lining up.
 // Only when no filter is active, though: a filtered view is a plain list, and a hero
@@ -76,11 +76,11 @@ const pageUrl = (n: number) => {
 };
 
 // Page 2 and beyond are the same articles a reader can already reach by pressing the
-// button — indexing them separately would compete with /news/ for the same content.
+// button - indexing them separately would compete with /news/ for the same content.
 const noindex = page > 1;
 
 // SSR + CDN. Publishing drops the in-process cache instantly, so the only staleness a
-// reader can see is whatever a CDN in front of us chooses to hold — and s-maxage
+// reader can see is whatever a CDN in front of us chooses to hold - and s-maxage
 // bounds that to five minutes while stale-while-revalidate keeps the page fast.
 Astro.response.headers.set(
   'Cache-Control',
@@ -95,7 +95,7 @@ if (noindex) Astro.response.headers.set('X-Robots-Tag', 'noindex, follow');
   path="/news/"
   locale={locale}
 >
-  {/* The same hero every other page has — artwork, intro and the Start Process button.
+  {/* The same hero every other page has - artwork, intro and the Start Process button.
       Rewriting this page for SSR replaced it with a bare title, which quietly cost /news/
       its picture, its copy and its only call to action. The category filters slot in
       underneath, where they were. */}
@@ -182,7 +182,7 @@ if (noindex) Astro.response.headers.set('X-Robots-Tag', 'noindex, follow');
             <div class="news-grid" id="newsGrid">
               {rest.map((p) => (
                 <a href={link(`/${p.slug}/`, locale)} class="news-card" data-reveal>
-                  {/* The category rides on the cover, as it does on the homepage cards —
+                  {/* The category rides on the cover, as it does on the homepage cards -
                       not in the body, where it was pushing the title down a line. */}
                   <span class="cover news-card-media">
                     {p.category_name && (
@@ -243,14 +243,14 @@ if (noindex) Astro.response.headers.set('X-Robots-Tag', 'noindex, follow');
 </Layout>
 
 <style>
-  /* category tabs — slotted into <PageHero>, under the Start Process button */
+  /* category tabs - slotted into <PageHero>, under the Start Process button */
   .news-tabs {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-top: 1.75rem;
   }
-  /* Below 1024px the hero centres its copy — but these are flex children, and
+  /* Below 1024px the hero centres its copy - but these are flex children, and
      `text-align` does not reach them. Without this the tabs stay hard left under a
      centred headline, and read as though they belong to something else. */
   @media (max-width: 1023px) {
@@ -294,7 +294,7 @@ if (noindex) Astro.response.headers.set('X-Robots-Tag', 'noindex, follow');
     padding: 3rem 0 4rem;
   }
   /* the aurora is taller than this section, so `overflow: hidden` cuts it while it is
-     still lit — fade the last stretch back to navy so there is no seam */
+     still lit - fade the last stretch back to navy so there is no seam */
   .news-body::after {
     content: '';
     position: absolute;
@@ -361,7 +361,7 @@ if (noindex) Astro.response.headers.set('X-Robots-Tag', 'noindex, follow');
     border-color: var(--color-purple-400);
   }
   /* The cover is a fixed box (see .cover in global.css) whose contents are all
-   * absolutely positioned — so it contributes no intrinsic height of its own.
+   * absolutely positioned - so it contributes no intrinsic height of its own.
    *
    * That is the point. As a plain <img> grid item it sized itself from its aspect
    * ratio (a 1200x800 cover across half the container is 400px+ tall), the grid row
@@ -440,12 +440,12 @@ if (noindex) Astro.response.headers.set('X-Robots-Tag', 'noindex, follow');
     flex: 1;
   }
 
-  /* Two lines for a title, four for an excerpt — and where the text runs past that, it
+  /* Two lines for a title, four for an excerpt - and where the text runs past that, it
    * fades out rather than stopping at an ellipsis.
    *
    * The box is always the full height (2 or 4 lines), so cards in a row line up whatever
    * their titles do. The fade is a mask, and it is applied ONLY when the text actually
-   * overflows — `.is-clipped`, set by the script at the bottom of this file. A mask that
+   * overflows - `.is-clipped`, set by the script at the bottom of this file. A mask that
    * was always on would dim the bottom of a title that fits perfectly well, which reads
    * as "there is more here" when there is not: a fade is a promise of hidden text, and
    * it should not be made falsely. */
@@ -519,7 +519,7 @@ if (noindex) Astro.response.headers.set('X-Robots-Tag', 'noindex, follow');
   // Mark the titles and excerpts that are actually cut off.
   //
   // CSS alone cannot tell. A mask on [data-clamp] would fade the bottom of every box,
-  // including the ones whose text ends comfortably inside it — and a fade means "there
+  // including the ones whose text ends comfortably inside it - and a fade means "there
   // is more of this", so making that promise about a two-word title is a small lie the
   // reader can catch. scrollHeight vs clientHeight is the only thing that knows.
   //
@@ -539,12 +539,12 @@ if (noindex) Astro.response.headers.set('X-Robots-Tag', 'noindex, follow');
 
   // Upgrade the "Load more" link into an append-in-place.
   //
-  // The link already works on its own — it navigates to ?page=2, which the server
+  // The link already works on its own - it navigates to ?page=2, which the server
   // renders. All this does is fetch that same page, lift the fifteen cards out of it
   // and drop them into the grid we are already looking at, so the reader keeps their
   // scroll position.
   //
-  // The cards therefore have exactly ONE definition — the Astro template above. A
+  // The cards therefore have exactly ONE definition - the Astro template above. A
   // JSON endpoint plus a template literal in here would have been a second one, and
   // the two drift the first time someone edits a card and forgets the other copy.
   const btn = document.getElementById('newsMore') as HTMLAnchorElement | null;

@@ -27,13 +27,13 @@ router.post('/', honeypot, leadLimiter, validate(leadSchema), verifyTurnstile, a
     // operational problem for us, not a reason to tell the user their submission
     // failed and have them walk away.
     sendLeadNotification(lead, leadId).catch((err) =>
-      console.error(`Lead #${leadId}: notification email failed —`, err.message)
+      console.error(`Lead #${leadId}: notification email failed -`, err.message)
     );
     sendLeadConfirmation(lead).catch((err) =>
-      console.error(`Lead #${leadId}: confirmation email failed —`, err.message)
+      console.error(`Lead #${leadId}: confirmation email failed -`, err.message)
     );
 
-    // A urlencoded body means the browser submitted natively — the client JS didn't
+    // A urlencoded body means the browser submitted natively - the client JS didn't
     // run. It can't render our inline success state, so send it somewhere that can.
     if (!req.is('application/json')) {
       return res.redirect(303, '/thank-you/');

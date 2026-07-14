@@ -2,6 +2,10 @@
 // Testimonials - two auto-scrolling marquee rows (pause on hover). Frosted cards.
 import ArcGlow from './ArcGlow.astro';
 import { TESTIMONIALS } from '../data/site';
+import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
+
+const t = useTranslations(localeFromUrl(Astro.url));
 
 const initials = (n: string) =>
   n.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -17,7 +21,10 @@ const rowB = TESTIMONIALS.filter((_, i) => i % 2 === 1);
   <ArcGlow />
 
   <div class="wrap testi-head" data-reveal>
-    <h2 class="h-section">Trusted by people we’ve <span class="accent">helped recover</span></h2>
+    <h2
+      class="h-section"
+      set:html={t('home.testiTitle', { accent: `<span class="accent">${t('home.testiTitleA')}</span>` })}
+    />
   </div>
 
   <div class="marquee-mask">

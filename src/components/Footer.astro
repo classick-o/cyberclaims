@@ -2,26 +2,28 @@
 // 4-column footer + trust badges (brief §4 Footer).
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
-import { SERVICES, CONTACT } from '../data/site';
+import { CONTACT } from '../data/site';
 import { asset, link, serviceUrl } from '../lib/paths';
 import { localeFromUrl } from '../i18n/config';
+import { useTranslations, getServices } from '../i18n';
 
 // Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
 // 14 components, and a prop that one of them forgets to pass renders another
 // language's URLs on the page without erroring.
 const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
 
 const quickLinks = [
-  { label: 'About Us', href: '/about-us/' },
-  { label: 'News', href: '/news/' },
-  { label: 'Start Process', href: '/start-process/' },
-  { label: 'Contact Us', href: '/contact-us/' },
+  { label: t('nav.about'), href: '/about-us/' },
+  { label: t('nav.news'), href: '/news/' },
+  { label: t('nav.startProcess'), href: '/start-process/' },
+  { label: t('nav.contact'), href: '/contact-us/' },
 ];
 const resources = [
-  { label: 'Cookie Policy', href: '/cookie-policy/' },
-  { label: 'Privacy Policy', href: '/privacy-policy/' },
-  { label: 'Terms and Conditions', href: '/terms-and-conditions/' },
-  { label: 'Data Protection Addendum', href: '/data-protection-addendum/' },
+  { label: t('legal.cookieTitle'), href: '/cookie-policy/' },
+  { label: t('legal.privacyTitle'), href: '/privacy-policy/' },
+  { label: t('legal.termsTitle'), href: '/terms-and-conditions/' },
+  { label: t('legal.dpaTitle'), href: '/data-protection-addendum/' },
 ];
 // map a phone region to its ISO flag file (UK uses the GB flag)
 const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
@@ -33,29 +35,29 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
       <!-- Company -->
       <div class="footer-col footer-brand">
         <Logo />
-        <p class="footer-tag">Securing Your Digital World, One Claim at a Time</p>
+        <p class="footer-tag">{t('footer.tag')}</p>
         <div class="badges">
-          <span class="badge"><Icon name="shield" class="w-4 h-4" /> Dutch MOJ · POB {CONTACT.pob}</span>
-          <span class="badge"><Icon name="check" class="w-4 h-4" /> TBS B.V. registered</span>
-          <span class="badge"><Icon name="lock" class="w-4 h-4" /> GDPR compliant</span>
+          <span class="badge"><Icon name="shield" class="w-4 h-4" /> {t('trust.moj', { pob: CONTACT.pob })}</span>
+          <span class="badge"><Icon name="check" class="w-4 h-4" /> {t('footer.badgeRegistered')}</span>
+          <span class="badge"><Icon name="lock" class="w-4 h-4" /> {t('footer.badgeGdpr')}</span>
         </div>
       </div>
 
       <!-- Services -->
       <div class="footer-col">
-        <h4 class="footer-h">Services</h4>
+        <h4 class="footer-h">{t('nav.services')}</h4>
         <ul>
-          {SERVICES.slice(0, 8).map((s) => <li><a href={link(serviceUrl(s.href), locale)}>{s.title}</a></li>)}
+          {getServices(locale).slice(0, 8).map((s) => <li><a href={link(serviceUrl(s.href), locale)}>{s.title}</a></li>)}
         </ul>
       </div>
 
       <!-- Quick links + Resources -->
       <div class="footer-col">
-        <h4 class="footer-h">Company</h4>
+        <h4 class="footer-h">{t('footer.colCompany')}</h4>
         <ul>
           {quickLinks.map((l) => <li><a href={link(l.href, locale)}>{l.label}</a></li>)}
         </ul>
-        <h4 class="footer-h footer-h-sub">Resources</h4>
+        <h4 class="footer-h footer-h-sub">{t('footer.colResources')}</h4>
         <ul>
           {resources.map((l) => <li><a href={link(l.href, locale)}>{l.label}</a></li>)}
         </ul>
@@ -63,7 +65,7 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
 
       <!-- Contact -->
       <div class="footer-col">
-        <h4 class="footer-h">Contact</h4>
+        <h4 class="footer-h">{t('footer.colContact')}</h4>
         <ul class="contact-list">
           {CONTACT.phones.map((p) => (
             <li>
@@ -80,22 +82,17 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
           ))}
         </ul>
         <a class="contact-email" href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
-        <p class="contact-addr">{CONTACT.address}</p>
+        <p class="contact-addr">{t('contact.address')}</p>
       </div>
     </div>
 
-    <p class="legal">
-      Transparent Business Solutions B.V. (dba Cyberclaims), offers free consultations.
-      Other services involve applicable retainers, fees, or commissions. Transparent Business
-      Solutions B.V. is an authorized private investigation agency under POB number {CONTACT.pob}
-      from the Dutch Ministry of Justice and Security.
-    </p>
+    <p class="legal">{t('footer.legal', { pob: CONTACT.pob })}</p>
 
     <div class="footer-bottom">
-      <span>© 2026 Copyright Cyberclaims. All rights reserved.</span>
+      <span>{t('footer.copyright', { year: new Date().getFullYear() })}</span>
       <span class="footer-bottom-links">
-        <a href={link('/privacy-policy/', locale)}>Privacy Policy</a>
-        <a href={link('/cookie-policy/', locale)}>Cookie Policy</a>
+        <a href={link('/privacy-policy/', locale)}>{t('legal.privacyTitle')}</a>
+        <a href={link('/cookie-policy/', locale)}>{t('legal.cookieTitle')}</a>
       </span>
     </div>
   </div>

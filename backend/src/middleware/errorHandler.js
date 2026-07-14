@@ -6,7 +6,7 @@ import { isProd } from '../config/env.js';
  *
  * There used to be a `if (!req.path.startsWith('/api/')) return next()` guard in front
  * of this, and it never once fired. Inside a router mounted at /api, `req.path` is
- * RELATIVE to the mount point — a request for /api/nope arrives here as '/nope'. So the
+ * RELATIVE to the mount point - a request for /api/nope arrives here as '/nope'. So the
  * guard always took the next() branch, every unknown API call escaped the router, and
  * Astro was handed it instead: a GET came back as the site's HTML 404 page (so the admin
  * SPA got HTML where it expected JSON), and a POST came back a 500, because express.json()
@@ -18,7 +18,7 @@ export function notFound(_req, res) {
   res.status(404).json({ success: false, message: 'Not found.' });
 }
 
-// Express recognises an error handler by its arity — the unused `next` is load-bearing.
+// Express recognises an error handler by its arity - the unused `next` is load-bearing.
 // eslint-disable-next-line no-unused-vars
 export function errorHandler(err, req, res, next) {
   const status = err.status || 500;

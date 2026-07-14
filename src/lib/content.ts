@@ -1,6 +1,6 @@
 // The site's window onto the content database.
 //
-// Astro and Express run in ONE Node process, so these are direct model calls — no
+// Astro and Express run in ONE Node process, so these are direct model calls - no
 // fetch, no JSON round-trip, no public content API to secure and version. That is the
 // main dividend of the single-process architecture, and the reason there is no
 // /api/public/posts endpoint anywhere in this codebase.
@@ -50,7 +50,7 @@ export type FullPost = PostCard & { body_html: string; status: string; updated_a
  * Is this request coming from a signed-in editor?
  *
  * Used to gate draft previews. The admin session cookie is httpOnly and same-origin,
- * so the SSR route can read it directly — no preview tokens to mint, leak or expire.
+ * so the SSR route can read it directly - no preview tokens to mint, leak or expire.
  * If the cookie doesn't verify, the draft simply 404s like it does for everyone else.
  */
 export function isEditor(cookies: AstroCookies): boolean {

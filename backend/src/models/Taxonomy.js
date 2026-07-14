@@ -15,7 +15,7 @@ export class Category {
     return rows;
   }
 
-  /** Only categories that actually have published posts — an empty filter tab is noise. */
+  /** Only categories that actually have published posts - an empty filter tab is noise. */
   static async listWithPosts(locale = 'en') {
     const [rows] = await pool.execute(
       `SELECT c.id, c.key_slug, c.color,

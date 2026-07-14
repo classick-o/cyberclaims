@@ -1,13 +1,11 @@
 ---
 // Site-wide fraud warning (present on every page of the live site, above the footer).
 import { CONTACT } from '../data/site';
-import { asset, link } from '../lib/paths';
+import { asset } from '../lib/paths';
 import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
 
-// Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
-// 14 components, and a prop that one of them forgets to pass renders another
-// language's URLs on the page without erroring.
-const locale = localeFromUrl(Astro.url);
+const t = useTranslations(localeFromUrl(Astro.url));
 ---
 
 <aside class="imp" role="note">
@@ -26,19 +24,14 @@ const locale = localeFromUrl(Astro.url);
         />
       </div>
       <div class="imp-text">
-        <h3 class="imp-title">Beware of Impersonators!</h3>
-        <p>
-          We have been alerted that individuals are impersonating CyberClaims representatives
-          to deceive victims. Scammers may call, pretending to be us, and direct you to our site.
-        </p>
-        <p>
-          <strong>All emails, contracts, and payment requests will come strictly from
-            @cyberclaims.net.</strong>
-        </p>
-        <p>
-          If you’re unsure, verify with us at
-          <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>. Stay vigilant and stay safe.
-        </p>
+        <h3 class="imp-title">{t('impersonator.title')}</h3>
+        <p>{t('impersonator.body1')}</p>
+        <p><strong>{t('impersonator.body2')}</strong></p>
+        <p
+          set:html={t('impersonator.body3', {
+            email: `<a href="mailto:${CONTACT.email}">${CONTACT.email}</a>`,
+          })}
+        />
       </div>
     </div>
   </div>

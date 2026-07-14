@@ -1,6 +1,6 @@
 ---
 // The site had no 404 page. Every mistyped or retired URL fell through to the
-// server's default — a blank page with no way back and no branding.
+// server's default - a blank page with no way back and no branding.
 //
 // It matters more here than on most sites: people arrive at Cyberclaims URLs from
 // links sent to them by strangers, and some of those strangers are the scammers
@@ -17,7 +17,7 @@ const locale = localeFromUrl(Astro.url);
 const t = useTranslations(locale);
 ---
 
-<Layout title="Page not found - Cyberclaims" description="That page does not exist." noindex>
+<Layout title={t('notFound.metaTitle')} description={t('notFound.body')} noindex>
   <section class="nf">
     <div class="glow-blob" style="background:#6b3fa0;width:34rem;height:34rem;top:-10rem;left:-8rem;"></div>
     <div class="wrap nf-inner">
@@ -33,8 +33,12 @@ const t = useTranslations(locale);
 
       <p class="nf-help">
         <span class="nf-help-ic"><Icon name="alert" class="w-4 h-4" /></span>
-        Looking for help with a case? <a href={link('/start-process/', locale)}>Start here</a>,
-        or email <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>.
+        <span
+          set:html={t('notFound.help', {
+            start: `<a href="${link('/start-process/', locale)}">${t('notFound.helpStart')}</a>`,
+            email: `<a href="mailto:${CONTACT.email}">${CONTACT.email}</a>`,
+          })}
+        />
       </p>
     </div>
   </section>

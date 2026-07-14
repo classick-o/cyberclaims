@@ -4,7 +4,7 @@
 // hidden and shown with nothing in between, and there is nothing to transition anyway:
 // the answer is a run of sibling elements, not a box, and only a box has a height.
 //
-// So we build one — at runtime, not in the stored HTML. The database keeps clean
+// So we build one - at runtime, not in the stored HTML. The database keeps clean
 // semantic <details>/<summary>, and if this script never runs the block is still a
 // working native accordion. The animation is an enhancement, not a dependency.
 
@@ -15,7 +15,7 @@ export function initFaq(root: ParentNode = document): void {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Tells the stylesheet that JS is driving. Open/closed visuals then follow .is-open
-  // rather than [open] — see below for why they cannot follow [open].
+  // rather than [open] - see below for why they cannot follow [open].
   root.querySelectorAll<HTMLElement>('.faq').forEach((section) => section.classList.add('js'));
 
   root.querySelectorAll<HTMLDetailsElement>('details.faq-item').forEach((item) => {
@@ -28,7 +28,7 @@ export function initFaq(root: ParentNode = document): void {
     // TWO boxes, not one.
     //
     // The outer box is the one being animated, and it must carry NO padding. With
-    // box-sizing: border-box a box cannot render shorter than its own padding — so
+    // box-sizing: border-box a box cannot render shorter than its own padding - so
     // `height: 0` on a box with 1.5rem of bottom padding stops dead at 24px, and those
     // last 24px only vanish later, when `open` is finally removed. That is the
     // two-stage close: it slides most of the way shut, pauses, then jumps.
@@ -64,7 +64,7 @@ export function initFaq(root: ParentNode = document): void {
       // Flip the visuals NOW, not when the animation ends.
       //
       // Hanging them off [open] meant the card's colour and the chevron only moved
-      // once the height had finished collapsing — because [open] has to stay set for
+      // once the height had finished collapsing - because [open] has to stay set for
       // the whole closing animation, or the browser hides the content we are animating.
       // The close read as two separate movements instead of one.
       paint(!closing);

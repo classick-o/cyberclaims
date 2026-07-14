@@ -10,7 +10,7 @@ const fails = [];
 const findings = [];
 function ok(name, cond, detail = '') {
   if (cond) { pass++; process.stdout.write('.'); }
-  else { fail++; fails.push(`${name}${detail ? ' — ' + detail : ''}`); process.stdout.write('F'); }
+  else { fail++; fails.push(`${name}${detail ? ' - ' + detail : ''}`); process.stdout.write('F'); }
 }
 const finding = (sev, what) => findings.push(`[${sev}] ${what}`);
 
@@ -55,7 +55,7 @@ const created = { posts: [], categories: [], authors: [], leads: [], media: [] }
 // AUTH
 // ═══════════════════════════════════════════════════════════════════════════
 async function testAuth() {
-  console.log('\n\n── AUTH ──');
+  console.log('\n\n AUTH ');
   ok('GET /me without cookie → 401', (await req('GET', '/api/admin/auth/me')).status === 401);
   const bad = await req('POST', '/api/admin/auth/login', { body: { email: ADMIN.email, password: 'wrong' } });
   ok('login wrong password → 401', bad.status === 401);
@@ -72,7 +72,7 @@ async function testAuth() {
   ok('login returns no password_hash', jar._admin && !('password_hash' in jar._admin));
   ok('GET /me with cookie → 200', (await req('GET', '/api/admin/auth/me', { jar })).status === 200);
 
-  // CSRF — sent via direct fetch so the req() helper can't auto-fill the token
+  // CSRF - sent via direct fetch so the req() helper can't auto-fill the token
   const noCsrf = await req('POST', '/api/admin/posts', { body: { status: 'draft', translations: {} }, jar: { cc_session: jar.cc_session } });
   ok('mutation without CSRF header → 403', noCsrf.status === 403, `got ${noCsrf.status}`);
   const wrongCsrf = await fetch(BASE + '/api/admin/posts', {
@@ -104,14 +104,14 @@ async function testAuth() {
   ok('logout → 200', lo.status === 200);
   ok('logout clears session cookie', 'cc_session' in lo.setCookies && lo.setCookies.cc_session === '');
 
-  return jar; // (still valid — logout only tells the browser to drop it)
+  return jar; // (still valid - logout only tells the browser to drop it)
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // POSTS
 // ═══════════════════════════════════════════════════════════════════════════
 async function testPosts(jar) {
-  console.log('\n\n── POSTS ──');
+  console.log('\n\n POSTS ');
   ok('list posts → 200', (await req('GET', '/api/admin/posts', { jar })).status === 200);
   ok('GET missing post → 404', (await req('GET', '/api/admin/posts/999999', { jar })).status === 404);
 
@@ -131,7 +131,7 @@ async function testPosts(jar) {
   });
   ok('GET→PUT round-trip → 200', rt.status === 200, `status ${rt.status} ${JSON.stringify(rt.json)}`);
 
-  // XSS in body is sanitised on write — verify via GET
+  // XSS in body is sanitised on write - verify via GET
   const xss = await req('POST', '/api/admin/posts', { body: mk({ slug: 'qa-xss', title: 'QA XSS test', body_html: '<p>ok</p><script>alert(document.cookie)</script><img src=x onerror=alert(1)>' }), jar });
   if (xss.json?.id) created.posts.push(xss.json.id);
   const xssGot = await req('GET', `/api/admin/posts/${xss.json.id}`, { jar });
@@ -189,13 +189,13 @@ async function testPosts(jar) {
 // TAXONOMY
 // ═══════════════════════════════════════════════════════════════════════════
 async function testTaxonomy(jar) {
-  console.log('\n\n── TAXONOMY ──');
+  console.log('\n\n TAXONOMY ');
   const cat = (over = {}) => ({ key_slug: 'qa-cat', color: '#8b5bbd', sort_order: 0, translations: { en: { name: 'QA Cat' } }, ...over });
   const c1 = await req('POST', '/api/admin/categories', { body: cat(), jar });
   ok('create category → 201', c1.status === 201, `got ${c1.status} ${JSON.stringify(c1.json)}`);
   if (c1.json?.id) created.categories.push(c1.json.id);
 
-  // duplicate key_slug — a friendly 400, and no raw MySQL text leaked
+  // duplicate key_slug - a friendly 400, and no raw MySQL text leaked
   const cdup = await req('POST', '/api/admin/categories', { body: cat(), jar });
   ok('duplicate category key_slug → 400 (not 500)', cdup.status === 400, `got ${cdup.status} ${JSON.stringify(cdup.json)}`);
   ok('duplicate category error does not leak the DB constraint',
@@ -220,7 +220,7 @@ async function testTaxonomy(jar) {
 // MEDIA
 // ═══════════════════════════════════════════════════════════════════════════
 async function testMedia(jar) {
-  console.log('\n\n── MEDIA ──');
+  console.log('\n\n MEDIA ');
   ok('list media → 200', (await req('GET', '/api/admin/media', { jar })).status === 200);
   // upload with no file
   const noFile = await fetch(BASE + '/api/admin/media', { method: 'POST', headers: { Cookie: cookieHeader(jar), 'x-csrf-token': jar.cc_csrf, 'Content-Type': 'multipart/form-data; boundary=X' }, body: '--X--\r\n' });
@@ -254,7 +254,7 @@ async function testMedia(jar) {
   ok('corrupt image error does not leak libvips internals',
      !/vips|libpng|libjpeg|VipsJpeg/i.test(JSON.stringify(badJson)), JSON.stringify(badJson));
 
-  // PATCH alt with an over-length locale — must not 500
+  // PATCH alt with an over-length locale - must not 500
   if (upJson?.media?.id) {
     const badLocale = await req('PATCH', `/api/admin/media/${upJson.media.id}`, { body: { locale: 'this-locale-is-way-too-long', alt: 'x' }, jar });
     ok('PATCH media with over-length locale does not 500', badLocale.status !== 500, `got ${badLocale.status}`);
@@ -263,16 +263,16 @@ async function testMedia(jar) {
   // list with junk limit
   const nan = await req('GET', '/api/admin/media?limit=abc', { jar });
   ok('media list ?limit=abc → 200', nan.status === 200, `got ${nan.status}`);
-  // the picker asks for exactly 200 — the cap must not clip a legitimate request
+  // the picker asks for exactly 200 - the cap must not clip a legitimate request
   ok('media list ?limit=200 → 200', (await req('GET', '/api/admin/media?limit=200', { jar })).status === 200);
   if (nan.status === 500) finding('MEDIUM', 'GET /admin/media?limit=abc returns 500');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// PUBLIC LEADS  (turnstile is ON — budget is 5 non-honeypot requests / 15min)
+// PUBLIC LEADS  (turnstile is ON - budget is 5 non-honeypot requests / 15min)
 // ═══════════════════════════════════════════════════════════════════════════
 async function testLeads(jar) {
-  console.log('\n\n── LEADS ──');
+  console.log('\n\n LEADS ');
   // honeypot: caught BEFORE the limiter, returns a fake 200 with no insert
   const hp = await req('POST', '/api/lead', { body: { source: 'hero', full_name: 'Bot Bot', email: 'bot@bot.test', _honey: 'gotcha' } });
   ok('honeypot → 200 fake success', hp.status === 200 && hp.json?.success === true, `got ${hp.status}`);
@@ -303,7 +303,7 @@ async function testLeads(jar) {
 // SECURITY / ROBUSTNESS
 // ═══════════════════════════════════════════════════════════════════════════
 async function testSecurity(jar) {
-  console.log('\n\n── SECURITY / ROBUSTNESS ──');
+  console.log('\n\n SECURITY / ROBUSTNESS ');
   // unmatched /api routes → JSON 404 for every method (the notFound bug we fixed)
   for (const m of ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']) {
     const r = await req(m, '/api/does-not-exist', { body: m === 'GET' ? undefined : {}, jar });
@@ -346,7 +346,7 @@ async function testSecurity(jar) {
 
 // ═══════════════════════════════════════════════════════════════════════════
 async function cleanup() {
-  console.log('\n\n── CLEANUP ──');
+  console.log('\n\n CLEANUP ');
   const jar = await login(ADMIN);
   for (const id of created.posts) await req('DELETE', `/api/admin/posts/${id}`, { jar });
   for (const id of created.categories) await req('DELETE', `/api/admin/categories/${id}`, { jar });

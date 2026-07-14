@@ -2,7 +2,7 @@
 //
 // Blog pages render on demand, so without this every visitor costs a MySQL round
 // trip for content that changes a few times a month. The whole cache is dropped on
-// any write — no key-level invalidation, because working out which cached listings a
+// any write - no key-level invalidation, because working out which cached listings a
 // given post appears in (featured? related? which category tab? which locale?) is
 // exactly the kind of cleverness that eventually serves a stale article and nobody
 // notices for a week. Blowing away a few dozen entries costs nothing.
@@ -18,8 +18,8 @@ const MAX_ENTRIES = 200;
 // module instances, each with its own Map.
 //
 // The failure that produced this comment: an anonymous visitor loaded a draft's URL,
-// findBySlug cached `null`, the editor published — invalidateContent() cleared
-// EXPRESS's Map — and the article stayed 404 for five minutes, because Astro was
+// findBySlug cached `null`, the editor published - invalidateContent() cleared
+// EXPRESS's Map - and the article stayed 404 for five minutes, because Astro was
 // reading the other one. The cache was, in effect, never invalidated.
 //
 // There is exactly one globalThis per process, so this is the shared ground.
@@ -41,7 +41,7 @@ export function cached(key, fn) {
       // NEVER cache a miss.
       //
       // "This article does not exist" is a transient answer, not a fact. It is exactly
-      // what a reader gets in the instant before a publish lands — and caching it turned
+      // what a reader gets in the instant before a publish lands - and caching it turned
       // a sub-second race into a five-minute outage: the editor hit Publish, opened the
       // page, got a 404, and kept getting it. The lookup is a single indexed row; paying
       // for it on every 404 is nothing next to serving a stale one.

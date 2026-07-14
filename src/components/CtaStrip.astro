@@ -2,12 +2,14 @@
 // Final conversion CTA strip with diagonal top edge + mesh glow.
 import { link } from '../lib/paths';
 import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
 import WaveLines from './WaveLines.astro';
 
 // Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
 // 14 components, and a prop that one of them forgets to pass renders another
 // language's URLs on the page without erroring.
 const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
 ---
 
 <section class="cta">
@@ -15,13 +17,15 @@ const locale = localeFromUrl(Astro.url);
     <WaveLines color="#ffffff" opacityBoost={2.4} />
     <div class="glow-blob" style="background:#6b3fa0;width:26rem;height:26rem;top:-8rem;right:-4rem;opacity:0.4;"></div>
     <div class="wrap cta-content">
-      <h2 class="h-section cta-title" data-reveal>
-        Have you been a victim of <span class="accent">crypto scams?</span>
-      </h2>
-      <p class="cta-sub" data-reveal>We can help you trace &amp; freeze your assets. Act now.</p>
+      <h2
+        class="h-section cta-title"
+        data-reveal
+        set:html={t('cta.stripTitle', { accent: `<span class="accent">${t('cta.stripTitleA')}</span>` })}
+      />
+      <p class="cta-sub" data-reveal>{t('cta.stripSub')}</p>
       <div class="cta-actions">
-        <a href={link('/start-process/', locale)} class="btn">Start Process</a>
-        <a href={link('/contact-us/', locale)} class="btn btn-ghost">Contact Us</a>
+        <a href={link('/start-process/', locale)} class="btn">{t('cta.startProcess')}</a>
+        <a href={link('/contact-us/', locale)} class="btn btn-ghost">{t('cta.contactUs')}</a>
       </div>
     </div>
   </div>

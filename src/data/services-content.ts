@@ -47,7 +47,7 @@ export type ServicePage = {
   sections: ServiceSection[];
 };
 
-export const SERVICE_CONTENT: Record<string, ServicePage> = {
+const en: Record<string, ServicePage> = {
   '/cryptocurrency-tracing/': {
     eyebrow: 'Crypto currency Tracing Certified Examiner',
     intro: [
@@ -1022,7 +1022,7 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
             layout: 'cards',
             // Three audiences, three columns. At two, the third card dropped onto a row
             // of its own and read as an afterthought rather than a peer of the other
-            // two. (`cols` was also being ignored by the stylesheet until now — see the
+            // two. (`cols` was also being ignored by the stylesheet until now - see the
             // note on .svc-cards.bento.n3 in services/[service].astro.)
             cols: 3,
             items: [
@@ -1082,7 +1082,7 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
             type: 'list',
             // Four peers of equal weight: two columns, two rows, four cells of the same
             // width. The old `grid: '1.9fr 1fr'` made the left column half again as wide
-            // as the right for no reason a reader could infer — and simply dropping the
+            // as the right for no reason a reader could infer - and simply dropping the
             // override falls through to the 3-column default, which is worse: three
             // across and one orphan underneath.
             cols: 2,
@@ -1179,4 +1179,42 @@ export const SERVICE_CONTENT: Record<string, ServicePage> = {
       },
     ],
   },
+};
+
+// Per-locale service page content. English is the source of truth; the other locales
+// reuse its exact structure and swap only the leaf copy (eyebrow, intro, heading, text,
+// term) via a flat English-to-translation map, so the shape is defined once here and
+// never re-typed per language. Any string missing from a map falls back to English, and
+// the `id` on bento items stays fixed so artwork lookup never depends on translated text.
+import { T_nl, T_fr, T_de, T_it, type ServiceStrings } from './services-content.i18n';
+
+const tr = (m: ServiceStrings, s: string): string => m[s] ?? s;
+
+function translateBlock(b: ServiceBlock, m: ServiceStrings): ServiceBlock {
+  if (b.type === 'p') return { ...b, text: tr(m, b.text) };
+  if (b.type === 'list') return { ...b, items: b.items.map((x) => tr(m, x)) };
+  return { ...b, items: b.items.map((it) => ({ ...it, term: tr(m, it.term), text: tr(m, it.text) })) };
+}
+
+function translatePage(p: ServicePage, m: ServiceStrings): ServicePage {
+  return {
+    eyebrow: tr(m, p.eyebrow),
+    intro: p.intro.map((x) => tr(m, x)),
+    sections: p.sections.map((sec) => ({
+      ...sec,
+      heading: sec.heading === undefined ? undefined : tr(m, sec.heading),
+      blocks: sec.blocks.map((b) => translateBlock(b, m)),
+    })),
+  };
+}
+
+const localize = (m: ServiceStrings): Record<string, ServicePage> =>
+  Object.fromEntries(Object.entries(en).map(([href, page]) => [href, translatePage(page, m)]));
+
+export const SERVICE_CONTENT: Record<string, Record<string, ServicePage>> = {
+  en,
+  nl: localize(T_nl),
+  fr: localize(T_fr),
+  de: localize(T_de),
+  it: localize(T_it),
 };

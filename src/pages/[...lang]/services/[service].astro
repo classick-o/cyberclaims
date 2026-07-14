@@ -6,16 +6,18 @@ import Aurora from '../../../components/Aurora.astro';
 import CtaStrip from '../../../components/CtaStrip.astro';
 import Icon from '../../../components/Icon.astro';
 import ServicesRail from '../../../components/ServicesRail.astro';
-import { SERVICES } from '../../../data/site';
-import { SERVICE_CONTENT, SERVICE_IMAGE } from '../../../data/services-content';
+import { SERVICE_CONTENT, SERVICE_IMAGE, type ServiceBlock } from '../../../data/services-content';
 import { asset } from '../../../lib/paths';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
+import { useTranslations, getServices } from '../../../i18n';
 
 // Two dynamic segments, so this is the cartesian product: every service in every
 // locale. With one locale that is exactly the ten pages we had before.
 export function getStaticPaths() {
+  // getServices(locale) yields the services with their name/blurb already localised, so
+  // the page's title, hero and SEO come out translated with no further lookup.
   return LOCALES.flatMap((locale) =>
-    SERVICES.map((s) => ({
+    getServices(locale).map((s) => ({
       params: {
         lang: locale === DEFAULT_LOCALE ? undefined : locale,
         service: s.href.replace(/^\/|\/$/g, ''),
@@ -25,10 +27,33 @@ export function getStaticPaths() {
   );
 }
 
-const { service, locale } = Astro.props as { service: (typeof SERVICES)[number]; locale: Locale };
-const content = SERVICE_CONTENT[service.href];
+const { service, locale } = Astro.props as {
+  service: ReturnType<typeof getServices>[number];
+  locale: Locale;
+};
+const t = useTranslations(locale);
+// The page body for this locale, falling back to English until a translation exists.
+const content = (SERVICE_CONTENT[locale] ?? SERVICE_CONTENT.en)[service.href];
 const image = SERVICE_IMAGE[service.href];
 const intro = content?.intro ?? [service.blurb];
+
+// Due-diligence keeps its bespoke layout, but reads its (translated) copy from `content`
+// rather than hardcoding English - so it renders in every locale. Its sections are a
+// fixed sequence, addressed here by order; the small accessors narrow the block union.
+const ddSec = content?.sections ?? [];
+const pText = (b?: ServiceBlock) => (b?.type === 'p' ? b.text : '');
+const listItems = (b?: ServiceBlock) => (b?.type === 'list' ? b.items : []);
+const defItems = (b?: ServiceBlock) => (b?.type === 'defs' ? b.items : []);
+// The two perspective tags are page-only labels, so they live here rather than in the
+// shared dictionary that every other page loads.
+const DD_TAGS: Record<string, [string, string]> = {
+  en: ['For sellers', 'For buyers'],
+  nl: ['Voor verkopers', 'Voor kopers'],
+  fr: ['Pour les vendeurs', 'Pour les acheteurs'],
+  de: ['Für Verkäufer', 'Für Käufer'],
+  it: ['Per i venditori', 'Per gli acquirenti'],
+};
+const [ddSeller, ddBuyer] = DD_TAGS[locale] ?? DD_TAGS.en;
 
 // A palette of visually distinct icons so each card in a "cards" section gets a
 // different glyph (cycled by index).
@@ -50,7 +75,7 @@ const CARD_ICONS = [
 // Keyed on a STABLE id, not on the displayed term.
 //
 // This map used to be keyed on the English term itself ('Cluster Analysis': ...).
-// That works right up until someone translates the term — at which point the lookup
+// That works right up until someone translates the term - at which point the lookup
 // silently misses, every bento card loses its artwork, and nothing errors. It is the
 // same class of bug as keying a category on its display name, and it was sitting in
 // the one file a translator would touch first. Each `defs` item now carries an `id`
@@ -81,31 +106,15 @@ const BENTO_IMG: Record<string, string> = {
   />
 
   {
-    service.href === '/due-diligence-investigations/' ? (
+    service.href === '/due-diligence-investigations/' && content ? (
       <section class="svc-body dd">
         <Aurora />
         <div class="wrap dd-inner">
           <div class="dd-sec">
-            <h2 class="dd-h">
-              What are these <span class="accent">due diligence investigations?</span>
-            </h2>
-            <p class="dd-lead">
-              These are investigations carried out to examine every potential financial and
-              legal risk about a company’s assets. This is done to ensure that any form of
-              investment is beneficial to the investors. A proper due diligence investigation
-              procedure can protect you from venturing into the wrong business venture - which
-              is why you need to hire the best due diligence investigators for your procedure.
-              Areas we cover include:
-            </p>
+            <h2 class="dd-h">{ddSec[0]?.heading}</h2>
+            <p class="dd-lead">{pText(ddSec[0]?.blocks[0])}</p>
             <div class="dd-areas">
-              {[
-                'Information Technology capabilities',
-                'Business sustainability',
-                'Environmental considerations',
-                'Financial information',
-                'Legal reviews',
-                'Company’s existing customers and partnership relations',
-              ].map((a) => (
+              {listItems(ddSec[0]?.blocks[1]).map((a) => (
                 <span class="dd-area">
                   <span class="dd-area-ic">
                     <Icon name="check" class="w-4 h-4" />
@@ -117,121 +126,64 @@ const BENTO_IMG: Record<string, string> = {
           </div>
 
           <div class="dd-sec">
-            <h2 class="dd-h">
-              How is this even possible? <span class="accent">What techniques are applied?</span>
-            </h2>
-            <p class="dd-lead">
-              In order to execute these tasks, Cyberclaims specialize in tracing the following
-              types of information that would be of great help to the investigating unit:
-            </p>
+            <h2 class="dd-h">{ddSec[1]?.heading}</h2>
+            <p class="dd-lead">{pText(ddSec[1]?.blocks[0])}</p>
             <div class="svc-bento img count-3">
-              <article class="bento-ic">
-                <span class="bento-ic-glow" aria-hidden="true"></span>
-                <img class="bento-ic-img" src={asset('/bento/cluster-analysis.webp')} alt="" aria-hidden="true" loading="lazy" />
-                <div class="bento-ic-body">
-                  <h3 class="bento-ic-term">Cluster Analysis</h3>
-                  <p class="bento-ic-desc">
-                    Cluster analysis is a method that aims to deanonymize blockchain data, linking
-                    together different wallets belonging to the same user. This also enables one to
-                    determine whether any of the linked addresses have a UTXO.
-                  </p>
-                </div>
-              </article>
-              <article class="bento-ic">
-                <span class="bento-ic-glow" aria-hidden="true"></span>
-                <img class="bento-ic-img" src={asset('/bento/attribution-data.webp')} alt="" aria-hidden="true" loading="lazy" />
-                <div class="bento-ic-body">
-                  <h3 class="bento-ic-term">Attribution Data</h3>
-                  <p class="bento-ic-desc">
-                    This will aid the investigation processes by analyzing ownership attribution
-                    information for numerous accounts, also with the aim of deanonymizing blockchain
-                    addresses.
-                  </p>
-                </div>
-              </article>
-              <article class="bento-ic">
-                <span class="bento-ic-glow" aria-hidden="true"></span>
-                <img class="bento-ic-img" src={asset('/bento/subpoena.webp')} alt="" aria-hidden="true" loading="lazy" />
-                <div class="bento-ic-body">
-                  <h3 class="bento-ic-term">Subpoena Targets</h3>
-                  <p class="bento-ic-desc">
-                    Through this, all cryptocurrency companies that comply with Anti-Money Laundering
-                    (AML) and Know Your Customer (KYC) regulations can get identifying information for
-                    their customers who own wallet addresses.
-                  </p>
-                </div>
-              </article>
+              {defItems(ddSec[1]?.blocks[1]).map((d) => (
+                <article class="bento-ic">
+                  <span class="bento-ic-glow" aria-hidden="true" />
+                  {d.id && BENTO_IMG[d.id] && (
+                    <img
+                      class="bento-ic-img"
+                      src={asset(BENTO_IMG[d.id])}
+                      alt=""
+                      aria-hidden="true"
+                      loading="lazy"
+                    />
+                  )}
+                  <div class="bento-ic-body">
+                    <h3 class="bento-ic-term">{d.term}</h3>
+                    <p class="bento-ic-desc">{d.text}</p>
+                  </div>
+                </article>
+              ))}
             </div>
           </div>
 
           <div class="dd-sec">
-            <h2 class="dd-h">
-              6 vital pieces of information from <span class="accent">due diligence</span>
-            </h2>
+            <h2 class="dd-h">{ddSec[2]?.heading}</h2>
             <div class="dd-grid6">
-              {[
-                { n: '01', t: 'Company’s Information', d: 'Important company information that helps you make an informed decision about purchasing - company owners, shareholders, employee benefits, bylaws and more.' },
-                { n: '02', t: 'Product and Services', d: 'Information about the company’s current and future products and services and how they compare to the company’s competitors.' },
-                { n: '03', t: 'Customers’ Information', d: 'Very important, as it helps you know the capability of the company’s customer base.' },
-                { n: '04', t: 'Physical, Technology & IP Assets', d: 'You get to know if the company owns any of these assets and how they would be utilized to your advantage.' },
-                { n: '05', t: 'Legal Issues', d: 'Laws and regulations that apply to the company and its industry, insurance policies, litigation history, license of operation, and more.' },
-                { n: '06', t: 'Finances', d: 'Financial standings of the company such as gross profit margin, debt, future capital expenditure, and so on.' },
-              ].map((it) => (
+              {defItems(ddSec[2]?.blocks[0]).map((it, i) => (
                 <div class="dd-num-card">
                   <div class="dd-num-head">
-                    <span class="dd-num">{it.n}</span>
-                    <h3 class="dd-card-h">{it.t}</h3>
+                    <span class="dd-num">{String(i + 1).padStart(2, '0')}</span>
+                    <h3 class="dd-card-h">{it.term}</h3>
                   </div>
-                  <p class="dd-card-p">{it.d}</p>
+                  <p class="dd-card-p">{it.text}</p>
                 </div>
               ))}
             </div>
           </div>
 
           <div class="dd-sec">
-            <h2 class="dd-h">
-              Why is due diligence <span class="accent">necessary for entrepreneurs?</span>
-            </h2>
+            <h2 class="dd-h">{ddSec[3]?.heading}</h2>
             <div class="dd-split">
               <div class="dd-persp">
-                <span class="dd-persp-tag">For sellers</span>
-                <p class="dd-card-p">
-                  From a seller’s perspective, due diligence investigations help the seller know
-                  more about their company’s financial information, so they can decipher the actual
-                  market value of the company that is about to be sold and make maximum profit from
-                  the sale.
-                </p>
+                <span class="dd-persp-tag">{ddSeller}</span>
+                <p class="dd-card-p">{pText(ddSec[3]?.blocks[0])}</p>
               </div>
               <div class="dd-persp">
-                <span class="dd-persp-tag">For buyers</span>
-                <p class="dd-card-p">
-                  From the buyer’s perspective, due diligence investigations help them understand
-                  what they stand to gain or lose after a potential purchase. It gives them full
-                  confidence that they are moving in the right direction and have all the
-                  information needed to make the best purchasing decisions.
-                </p>
+                <span class="dd-persp-tag">{ddBuyer}</span>
+                <p class="dd-card-p">{pText(ddSec[3]?.blocks[1])}</p>
               </div>
             </div>
           </div>
 
           <div class="dd-sec">
-            <h2 class="dd-h">Why we are the <span class="accent">best fit</span></h2>
-            <p class="dd-lead">
-              When conducting due diligence investigations on a target business, our primary aim
-              has always been to assess its affairs before making any final decision. At
-              Cyberclaims, we go the extra mile to ensure that you make the best decisions when you
-              consider acquiring or partnering with an already established company. How we operate
-              to achieve the desired result involves:
-            </p>
+            <h2 class="dd-h">{ddSec[4]?.heading}</h2>
+            <p class="dd-lead">{pText(ddSec[4]?.blocks[0])}</p>
             <ol class="dd-steps">
-              {[
-                'Gathering and organizing an easily accessible data structure.',
-                'Reviewing the target company’s business practices and structures.',
-                'Sizing up the target company’s major competitors.',
-                'Analyzing the management and shareowners of the target company.',
-                'Informing our customers of what they should expect from such an acquisition.',
-                'Examining long and short-term risks.',
-              ].map((s, i) => (
+              {listItems(ddSec[4]?.blocks[1]).map((s, i) => (
                 <li class="dd-step">
                   <span class="dd-step-num">{i + 1}</span>
                   <p>{s}</p>
@@ -329,7 +281,7 @@ const BENTO_IMG: Record<string, string> = {
                           />
                         </div>
                       ) : (
-                        // t.d is non-null in this branch by construction — the tile is
+                        // t.d is non-null in this branch by construction - the tile is
                         // either the centre logo (t.logo set, t.d null) or a definition
                         // (t.d set, t.logo empty). TypeScript can't see that from the
                         // ternary, hence the assertions.
@@ -368,7 +320,7 @@ const BENTO_IMG: Record<string, string> = {
     ) : null
   }
 
-  <ServicesRail lead="Explore other" accent="services" exclude={service.href} />
+  <ServicesRail lead={t('servicesRail.exploreOther')} accent={t('servicesRail.services')} exclude={service.href} />
 
   <CtaStrip />
 </Layout>
@@ -874,7 +826,7 @@ const BENTO_IMG: Record<string, string> = {
      * It never did: the type documents "columns for a 'cards' masonry on desktop
      * (default 3)", the data said 2, and the stylesheet hardcoded two columns for any
      * three-card block regardless. So the third card always dropped to a row of its
-     * own — an afterthought below its two peers — and no amount of editing the data
+     * own - an afterthought below its two peers - and no amount of editing the data
      * could change it. */
     .svc-cards.bento.n3 {
       grid-template-columns: var(--svc-card-grid, repeat(var(--svc-card-cols, 3), 1fr));

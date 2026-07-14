@@ -1,7 +1,7 @@
 import helmet from 'helmet';
 import { isProd } from '../config/env.js';
 
-// Security headers for the HTML the site serves. (The API sets its own — see app.js.)
+// Security headers for the HTML the site serves. (The API sets its own - see app.js.)
 //
 // An honest note on script-src 'unsafe-inline': Astro inlines the hydration and
 // server-island scripts, and the 3D hero and scroll-reveal live in inline <script>
@@ -10,11 +10,11 @@ import { isProd } from '../config/env.js';
 // inline script.
 //
 // It is still worth having, because the other directives are not weakened by that:
-//   object-src 'none'     — no Flash/applet embeds
-//   base-uri 'self'       — an injected <base> cannot re-point every relative URL
-//   form-action 'self'    — an injected form cannot post the lead data elsewhere
-//   frame-ancestors 'none'— nobody can iframe the site to clickjack the lead forms
-//   script-src <allowlist>— injected script cannot load a payload from an attacker's host
+//   object-src 'none'     - no Flash/applet embeds
+//   base-uri 'self'       - an injected <base> cannot re-point every relative URL
+//   form-action 'self'    - an injected form cannot post the lead data elsewhere
+//   frame-ancestors 'none'- nobody can iframe the site to clickjack the lead forms
+//   script-src <allowlist>- injected script cannot load a payload from an attacker's host
 //
 // Nonces are the follow-up, not a reason to ship nothing.
 export const securityHeaders = helmet({
@@ -24,7 +24,7 @@ export const securityHeaders = helmet({
       'default-src': ["'self'"],
       // 'wasm-unsafe-eval' is for the Draco decoder behind the hero's 3D model: without
       // it the browser refuses to compile the WebAssembly and the model silently never
-      // loads — the canvas is there, empty. It permits WebAssembly compilation ONLY;
+      // loads - the canvas is there, empty. It permits WebAssembly compilation ONLY;
       // unlike 'unsafe-eval' it does not re-enable eval() or new Function().
       'script-src': [
         "'self'",
@@ -48,7 +48,7 @@ export const securityHeaders = helmet({
       ...(isProd ? { 'upgrade-insecure-requests': [] } : {}),
     },
   },
-  // Two years, preloadable. Only meaningful over HTTPS, so production only — sending
+  // Two years, preloadable. Only meaningful over HTTPS, so production only - sending
   // it from a dev server on http would be noise.
   hsts: isProd ? { maxAge: 63_072_000, includeSubDomains: true, preload: true } : false,
   // The 3D hero loads a .glb and the Draco wasm decoder; the strict COEP/CORP defaults

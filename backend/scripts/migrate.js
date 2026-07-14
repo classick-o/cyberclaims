@@ -3,7 +3,7 @@
 //
 // No transaction wrapper: MySQL implicitly commits on DDL, so BEGIN/ROLLBACK around
 // a CREATE TABLE is theatre. A migration is recorded only after it succeeds, so a
-// failure leaves it pending — fix the SQL (or the half-applied state) and re-run.
+// failure leaves it pending - fix the SQL (or the half-applied state) and re-run.
 //
 //   node backend/scripts/migrate.js
 

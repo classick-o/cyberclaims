@@ -3,11 +3,13 @@
 import Icon from './Icon.astro';
 import { link, serviceUrl } from '../lib/paths';
 import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
 
 // Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
 // 14 components, and a prop that one of them forgets to pass renders another
 // language's URLs on the page without erroring.
 const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
 ---
 
 <section class="tracing">
@@ -15,9 +17,9 @@ const locale = localeFromUrl(Astro.url);
     <div class="tracing-visual">
       <div class="glass tw-card">
         <div class="tw-row">
-          <span class="tw-chip"><Icon name="tracing" class="w-4 h-4" /> On-chain</span>
-          <span class="tw-chip"><Icon name="globe" class="w-4 h-4" /> VASP risk</span>
-          <span class="tw-chip"><Icon name="lock" class="w-4 h-4" /> Cashout</span>
+          <span class="tw-chip"><Icon name="tracing" class="w-4 h-4" /> {t('home.tracingChip1')}</span>
+          <span class="tw-chip"><Icon name="globe" class="w-4 h-4" /> {t('home.tracingChip2')}</span>
+          <span class="tw-chip"><Icon name="lock" class="w-4 h-4" /> {t('home.tracingChip3')}</span>
         </div>
         <div class="tw-bars">
           <div class="tw-bar" style="--h:40%"><span></span><label>Mixer</label></div>
@@ -26,24 +28,21 @@ const locale = localeFromUrl(Astro.url);
           <div class="tw-bar" style="--h:90%"><span></span><label>Exchange B</label></div>
           <div class="tw-bar" style="--h:34%"><span></span><label>Wallet</label></div>
         </div>
-        <div class="tw-foot">Funds mapped across 5 hops · 2 cashout points flagged</div>
+        <div class="tw-foot">{t('home.tracingFoot')}</div>
       </div>
     </div>
 
     <div class="tracing-copy" data-reveal>
-      <h2 class="h-section">Crypto currency <span class="accent">tracing</span></h2>
-      <p class="tracing-body">
-        Leveraging the world’s leading cryptocurrency intelligence and blockchain analytics,
-        we provide in-depth insights into cryptocurrency tracing, the risks of money
-        laundering associated with virtual asset service providers, and more. Our advanced
-        software enables us to identify risks related to crypto wallets, track cashout points,
-        and precisely determine where funds were sent and cashed out.
-      </p>
+      <h2
+        class="h-section"
+        set:html={t('home.tracingTitle', { accent: `<span class="accent">${t('home.tracingTitleA')}</span>` })}
+      />
+      <p class="tracing-body">{t('home.tracingBody')}</p>
       {/* serviceUrl(), not the bare href. The service `href` in site.ts is the internal
-          KEY ('/cryptocurrency-tracing/') used to look up content and images — the page
+          KEY ('/cryptocurrency-tracing/') used to look up content and images - the page
           itself lives at /services/cryptocurrency-tracing/. Linking straight to the key
           sent this button to a URL that has never existed. */}
-      <a href={link(serviceUrl('/cryptocurrency-tracing/'), locale)} class="btn">View More</a>
+      <a href={link(serviceUrl('/cryptocurrency-tracing/'), locale)} class="btn">{t('home.tracingViewMore')}</a>
     </div>
   </div>
 </section>

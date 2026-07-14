@@ -41,7 +41,7 @@ const hydrate = (row) =>
   };
 
 export class Post {
-  // ─── Public (site) ─────────────────────────────────────────────────────────
+  // Public (site)
   //
   // Every public query joins post_translations on the locale, so a post with no
   // translation for that language simply does not appear. That is deliberate:
@@ -50,7 +50,7 @@ export class Post {
 
   /**
    * Without this annotation TypeScript infers `categorySlug: null` from the default,
-   * and the SSR page — which passes the ?category= query string — fails to typecheck.
+   * and the SSR page - which passes the ?category= query string - fails to typecheck.
    *
    * @param {string} locale
    * @param {{ categorySlug?: string | null, limit?: number, offset?: number }} [options]
@@ -65,7 +65,7 @@ export class Post {
    * in, so page 1 shows 14 cards and page 3 shows 15, and the offsets stop lining up.
    *
    * The `p.id DESC` tiebreaker is what makes LIMIT/OFFSET paging correct, and it is not
-   * cosmetic. `published_at` is a DATETIME — second precision — so two articles published
+   * cosmetic. `published_at` is a DATETIME - second precision - so two articles published
    * in the same second, or backdated to the same day, tie. SQL leaves the order of tied
    * rows undefined, and MySQL is free to resolve the tie differently between the query
    * for OFFSET 0 and the query for OFFSET 15. It does: page 2 then repeats rows page 1
@@ -108,7 +108,7 @@ export class Post {
   }
 
   /**
-   * `preview` lets the admin see a draft on the real site, with the real CSS —
+   * `preview` lets the admin see a draft on the real site, with the real CSS -
    * the thing a static build could never give us without rebuilding on every keystroke.
    */
   static async findBySlug(locale, slug, { preview = false } = {}) {
@@ -135,7 +135,7 @@ export class Post {
     return rows.map(hydrate);
   }
 
-  /** Every published (post, locale) pair — the sitemap needs all of them. */
+  /** Every published (post, locale) pair - the sitemap needs all of them. */
   static async allPublishedSlugs() {
     const [rows] = await pool.query(
       `SELECT pt.locale, pt.slug, p.updated_at
@@ -146,12 +146,29 @@ export class Post {
     return rows;
   }
 
-  // ─── Admin ─────────────────────────────────────────────────────────────────
+  /**
+   * Every locale this post is translated into, mapped to its slug. The language switcher
+   * and hreflang need it: the slug is translated too, so the same article lives at a
+   * different path in each language (/how-to-spot.../ vs /nl/hoe-herken.../), and a naive
+   * prefix swap would 404.
+   *
+   * @param {number} postId
+   * @returns {Promise<Record<string, string>>}
+   */
+  static async localeSlugs(postId) {
+    const [rows] = await pool.execute(
+      'SELECT locale, slug FROM post_translations WHERE post_id = ?',
+      [postId]
+    );
+    return Object.fromEntries(rows.map((r) => [r.locale, r.slug]));
+  }
+
+  // Admin
 
   /**
    * @returns {Promise<{ rows: object[], total: number }>} one page of posts plus the
    * full count matching the filter, so the admin can render page controls. `total` is
-   * counted with the same WHERE but no LIMIT — the count of matching POSTS, which is the
+   * counted with the same WHERE but no LIMIT - the count of matching POSTS, which is the
    * number of GROUP BY groups, so no join or DISTINCT is needed on the posts table.
    */
   static async listAdmin({ status = null, q = null, limit = 25, offset = 0 } = {}) {
@@ -201,7 +218,7 @@ export class Post {
     };
   }
 
-  /** The full record, with every translation — what the editor loads. */
+  /** The full record, with every translation - what the editor loads. */
   static async findByIdAdmin(id) {
     const [posts] = await pool.execute('SELECT * FROM posts WHERE id = ? LIMIT 1', [id]);
     if (!posts[0]) return null;
@@ -220,7 +237,7 @@ export class Post {
   }
 
   static async save({ id = null, category_id, author_id, cover_media_id, featured, status, published_at, translations }) {
-    // Slug the whole set first, and refuse a reserved one BEFORE a transaction is open —
+    // Slug the whole set first, and refuse a reserved one BEFORE a transaction is open -
     // there is nothing to roll back, and the editor gets the error on the field it
     // belongs to rather than a 500 from the middle of a write.
     const slugs = Object.fromEntries(
@@ -245,14 +262,14 @@ export class Post {
     try {
       await conn.beginTransaction();
 
-      // published_at is stamped by MYSQL — never by `new Date()` in JavaScript.
+      // published_at is stamped by MYSQL - never by `new Date()` in JavaScript.
       //
       // mysql2 sends a JS Date with its millisecond part, and MySQL ROUNDS that into a
-      // DATETIME(0): 13:09:40.812 is stored as 13:09:41 — one second in the FUTURE.
+      // DATETIME(0): 13:09:40.812 is stored as 13:09:41 - one second in the FUTURE.
       // The article then fails the `published_at <= NOW()` filter for that second, so
       // it 404s... and the 404 is what gets cached, for five minutes. An editor clicks
       // Publish, opens the article, sees "Page not found", and keeps seeing it. Any
-      // publish landing on .500ms or later — about half of them.
+      // publish landing on .500ms or later - about half of them.
       //
       // NOW() also removes the whole class of JS-vs-MySQL clock-skew bugs, since only
       // one clock is ever consulted.
@@ -283,7 +300,7 @@ export class Post {
         postId = result.insertId;
       }
 
-      // Only one post may be featured — the listing has exactly one hero card.
+      // Only one post may be featured - the listing has exactly one hero card.
       if (featured) {
         await conn.execute('UPDATE posts SET featured = 0 WHERE id <> ?', [postId]);
       }
@@ -291,7 +308,7 @@ export class Post {
       for (const [locale, t] of Object.entries(translations)) {
         const body = sanitizeBody(t.body_html);
         const slug = slugs[locale];
-        // An excerpt nobody wrote is better than an empty card — as long as it reads
+        // An excerpt nobody wrote is better than an empty card - as long as it reads
         // like one. autoExcerpt skips the Q&A block and cuts on a word boundary.
         const excerpt = t.excerpt?.trim() || autoExcerpt(body);
 
@@ -306,7 +323,7 @@ export class Post {
         // post_translations carries two unique keys: uq_post_locale (post_id, locale)
         // and uq_locale_slug (locale, slug). ON DUPLICATE KEY fires on EITHER of them,
         // so a new post whose title slugs to an existing article's slug would not
-        // error — MySQL would quietly UPDATE that OTHER post's row instead. The
+        // error - MySQL would quietly UPDATE that OTHER post's row instead. The
         // published article silently loses its body, and the new post is left with no
         // translation at all. (Watched it happen; see the fix's test.)
         //
@@ -347,7 +364,7 @@ export class Post {
 
   /** Publish / unpublish / archive from the list view, without loading the whole post. */
   static async setStatus(id, status) {
-    // NOW(), not a JS Date — see the comment in save(). A first publish stamps the
+    // NOW(), not a JS Date - see the comment in save(). A first publish stamps the
     // date; re-publishing something that was already dated keeps its original date.
     await pool.execute(
       `UPDATE posts

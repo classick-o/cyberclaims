@@ -8,33 +8,30 @@ import Turnstile from '../../components/Turnstile.astro';
 import { CONTACT } from '../../data/site';
 import { asset } from '../../lib/paths';
 import { localePaths, type Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n';
 
 // One file, one page per locale. The default locale maps to lang: undefined, and a
-// rest parameter matches zero segments — so English stays at /about-us/, not /en/about-us/.
+// rest parameter matches zero segments - so English stays at /about-us/, not /en/about-us/.
 export const getStaticPaths = localePaths;
 const { locale } = Astro.props as { locale: Locale };
+const t = useTranslations(locale);
 
 const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
 ---
 
-<Layout
-  title="Contact Us - Cyberclaims"
-  description="Have you been a victim of crypto scams? Contact Cyberclaims - we can help you trace & freeze your assets."
->
+<Layout title={t('contact.metaTitle')} description={t('contact.metaDesc')}>
   <PageHero
     eyebrow="Get in touch"
-    title="Contact Us"
-    intro={[
-      'Have you been a victim of crypto scams? We can help you trace & freeze your assets. Act now.',
-    ]}
+    title={t('nav.contact')}
+    intro={[t('contact.heroIntro')]}
     image="/contact-hero.webp"
-    imageAlt="Floating tiles showing an envelope, chat bubble, at-sign and map pin"
+    imageAlt={t('contact.heroImageAlt')}
     imageWidth={1100}
     imageHeight={1070}
     imageMaxWidth="19rem"
     imageMaxWidthMobile="16rem"
     ctaHref="/start-process/"
-    ctaLabel="Start Process"
+    ctaLabel={t('cta.startProcess')}
   />
 
   <!-- Contact details (left) + office map (right) -->
@@ -45,7 +42,7 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
         <div class="ci-block">
           <span class="ci-icon"><Icon name="phone" class="w-5 h-5" /></span>
           <div>
-            <h3 class="ci-h">Call us</h3>
+            <h3 class="ci-h">{t('contact.callUs')}</h3>
             <ul class="ci-phones">
               {
                 CONTACT.phones.map((p) => (
@@ -69,7 +66,7 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
         <div class="ci-block">
           <span class="ci-icon"><Icon name="mail" class="w-5 h-5" /></span>
           <div>
-            <h3 class="ci-h">Email</h3>
+            <h3 class="ci-h">{t('form.email')}</h3>
             <a class="ci-link" href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
           </div>
         </div>
@@ -77,8 +74,8 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
         <div class="ci-block">
           <span class="ci-icon"><Icon name="pin" class="w-5 h-5" /></span>
           <div>
-            <h3 class="ci-h">Office</h3>
-            <p class="ci-addr">{CONTACT.address}</p>
+            <h3 class="ci-h">{t('contact.office')}</h3>
+            <p class="ci-addr">{t('contact.address')}</p>
           </div>
         </div>
       </div>
@@ -101,31 +98,31 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
       <div class="contact-form-wrap" data-reveal>
         <div class="glass contact-form">
           <div id="contactFormHead">
-            <h2 class="cf-title">Send us a message</h2>
-            <p class="cf-note">Free case review · 48-hour response</p>
+            <h2 class="cf-title">{t('contact.formTitle')}</h2>
+            <p class="cf-note">{t('cta.freeReview')}</p>
           </div>
           <form class="lead-form" id="contactForm" method="post" action="/api/lead" novalidate>
             <div class="field">
               <input type="text" name="full_name" required placeholder=" " />
-              <label>Full Name</label>
+              <label>{t('form.fullName')}</label>
             </div>
             <div class="field-row">
               <div class="field">
                 <input type="email" name="email" required placeholder=" " />
-                <label>Email</label>
+                <label>{t('form.email')}</label>
               </div>
               <div class="field">
                 <input type="tel" name="phone" required placeholder=" " />
-                <label>Phone Number</label>
+                <label>{t('form.phone')}</label>
               </div>
             </div>
             <div class="field">
               <input type="text" name="country" required placeholder=" " />
-              <label>Country of Residence</label>
+              <label>{t('form.country')}</label>
             </div>
             <div class="field">
               <textarea name="message" rows="4" required placeholder=" "></textarea>
-              <label>Message</label>
+              <label>{t('form.message')}</label>
             </div>
             <input
               class="hp"
@@ -137,19 +134,14 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
             />
             <Turnstile />
             <p class="form-status" data-form-status role="alert" hidden></p>
-            <button type="submit" class="btn cf-submit">Start Process</button>
-            <p class="cf-legal">
-              Protected by CAPTCHA. Your details are confidential and reviewed by certified experts.
-            </p>
+            <button type="submit" class="btn cf-submit">{t('cta.startProcess')}</button>
+            <p class="cf-legal">{t('form.legal')}</p>
           </form>
 
           <div class="cf-success" id="contactSuccess" hidden>
             <span class="cf-success-icon"><Icon name="check" class="w-full h-full" /></span>
-            <h2 class="cf-title">We have your details</h2>
-            <p class="cf-success-p">
-              A certified investigator will review your case and respond within 48 hours.
-              Everything you sent us is confidential.
-            </p>
+            <h2 class="cf-title">{t('form.successTitle')}</h2>
+            <p class="cf-success-p">{t('form.successBody')}</p>
           </div>
         </div>
       </div>
@@ -188,7 +180,7 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
     background: var(--color-navy);
     padding: 0 0 4rem;
   }
-  /* Full width — .wrap's 80rem container is the only limit. */
+  /* Full width - .wrap's 80rem container is the only limit. */
   .contact-form-wrap {
     max-width: none;
   }

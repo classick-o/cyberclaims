@@ -5,11 +5,13 @@
 import Icon from './Icon.astro';
 import { asset, link } from '../lib/paths';
 import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
 
 // Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
 // 14 components, and a prop that one of them forgets to pass renders another
 // language's URLs on the page without erroring.
 const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
 
 interface Props {
   eyebrow?: string;
@@ -18,13 +20,13 @@ interface Props {
   image?: string;
   imageAlt?: string;
   /**
-   * The artwork's INTRINSIC size — its real pixel dimensions, not the size it renders at.
+   * The artwork's INTRINSIC size - its real pixel dimensions, not the size it renders at.
    *
    * Without them the browser has no idea how tall the image will be until the bytes
    * arrive, so it reserves no room and the headline underneath jumps down the moment it
    * lands. This is the hero: it is the biggest thing on the page and the thing the reader
    * is already looking at. CSS still governs the rendered size (`width: 100%` and a
-   * max-width) — these only supply the ratio.
+   * max-width) - these only supply the ratio.
    *
    * Optional, so a page that has not been given them is unchanged rather than wrong.
    */
@@ -49,7 +51,7 @@ const {
   imageHeight,
   placeholderIcon = 'press',
   ctaHref = '/start-process/',
-  ctaLabel = 'Start Process',
+  ctaLabel,
   fixedHeight = false,
   imageMaxWidth = '34rem',
   imageMaxWidthMobile,
@@ -91,10 +93,10 @@ const imgVars = [
       {intro.map((p) => <p class="ph-intro">{p}</p>)}
       <div class="ph-cta">
         <a href={link(ctaHref, locale)} class="btn">
-          {ctaLabel} <Icon name="arrow" class="w-4 h-4" />
+          {ctaLabel ?? t('nav.startProcess')} <Icon name="arrow" class="w-4 h-4" />
         </a>
       </div>
-      {/* Anything a page needs under its own headline — /news/ puts its category filters
+      {/* Anything a page needs under its own headline - /news/ puts its category filters
           here. Empty on every other page, so nothing else changes. */}
       <slot />
     </div>

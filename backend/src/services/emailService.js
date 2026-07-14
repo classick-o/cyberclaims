@@ -8,7 +8,7 @@
 //  2. The From address is hardcoded to SMTP_USER, so mail always appears to come
 //     from the mailbox that authenticated. Here it's MAIL_FROM, which lets us
 //     authenticate as the TBSBV Workspace account while sending as
-//     contact@cyberclaims.net — a confirmation from an unfamiliar domain is
+//     contact@cyberclaims.net - a confirmation from an unfamiliar domain is
 //     friction we can't afford when writing to someone who was just scammed.
 
 import nodemailer from 'nodemailer';
@@ -25,7 +25,7 @@ const transporter = emailEnabled
 
 if (!transporter) {
   console.warn(
-    'SMTP not configured — emails are disabled. Leads will still be saved to the database.'
+    'SMTP not configured - emails are disabled. Leads will still be saved to the database.'
   );
 }
 
@@ -50,7 +50,7 @@ function row(label, value) {
   </tr>`;
 }
 
-/** Internal alert. Failure here must never fail the request — the lead is already saved. */
+/** Internal alert. Failure here must never fail the request - the lead is already saved. */
 export async function sendLeadNotification(lead, leadId) {
   if (!transporter) return;
 
@@ -58,7 +58,7 @@ export async function sendLeadNotification(lead, leadId) {
     from: from(),
     to: env.NOTIFICATION_EMAIL,
     replyTo: lead.email,
-    subject: `New lead #${leadId} — ${lead.full_name} (${SOURCE_LABEL[lead.source] ?? lead.source})`,
+    subject: `New lead #${leadId} - ${lead.full_name} (${SOURCE_LABEL[lead.source] ?? lead.source})`,
     html: `
       <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;">
         <h2 style="color:#6b3fa0;margin:0 0 4px;">New lead #${leadId}</h2>
@@ -93,7 +93,7 @@ export async function sendLeadConfirmation({ full_name, email }) {
   await transporter.sendMail({
     from: from(),
     to: email,
-    subject: 'We received your request — Cyberclaims',
+    subject: 'We received your request - Cyberclaims',
     html: `
       <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#1a1a2e;">
         <h2 style="color:#6b3fa0;margin:0 0 16px;">Thank you, ${escapeHtml(full_name)}.</h2>
