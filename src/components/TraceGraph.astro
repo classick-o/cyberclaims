@@ -1,0 +1,488 @@
+---
+// Animated transaction-flow graph for the homepage "Crypto Currency Tracing" section.
+//
+// This replaces a bar chart that compared five categories by height - a shape that says
+// nothing about what tracing actually is. Real tracing output is a node-and-edge graph:
+// wallets as nodes, transactions as directional edges. This is a simplified, illustrative
+// version of that.
+//
+// The 3D node objects are transparent WebPs (public/trace/). Everything else - the orbit
+// rings, the wires, the arrowheads, the travelling pulses - is geometry computed here and
+// animated in CSS, so it stays crisp, translatable and ~0 KB of JS.
+//
+// Labels are HTML, not <text>: everything inside an SVG scales with its viewBox, so in the
+// full-width layout the captions would have rendered at ~11px on a wide desktop and ~9px on
+// a tablet. As positioned HTML they hold one size at every breakpoint.
+import { asset } from '../lib/paths';
+import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
+
+const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
+
+type Tier = 1 | 2 | 3;
+interface NodeSpec {
+  id: string;
+  x: number;
+  y: number;
+  r: number; // orbit-ring radius
+  tier: Tier; // brightness: 1 = origin (brightest), 3 = cashout (flagged)
+  depth: number; // hop distance from the victim - drives the animation cascade
+  img: string;
+  label: string;
+}
+interface EdgeSpec {
+  from: string;
+  to: string;
+  bow: number; // perpendicular offset of the curve's control point; sign picks the side
+  label: string;
+}
+
+// Two hand-placed layouts rather than one auto-laid-out graph: at this size a force layout
+// looks worse than a composition, and the narrow version is not the wide one with nodes
+// removed - dropping a middle node would break the chain of edges, so it is its own graph.
+const WIDE = { w: 1120, h: 400 };
+const TALL = { w: 360, h: 640 };
+
+const wideNodes: NodeSpec[] = [
+  { id: 'victim', x: 78, y: 200, r: 42, tier: 1, depth: 0, img: 'victim', label: t('home.trace.victim') },
+  { id: 'mixer', x: 292, y: 80, r: 35, tier: 2, depth: 1, img: 'mixer', label: t('home.trace.mixer') },
+  { id: 'contract', x: 292, y: 320, r: 35, tier: 2, depth: 1, img: 'token', label: t('home.trace.contract') },
+  { id: 'bridge', x: 556, y: 200, r: 38, tier: 2, depth: 2, img: 'bridge', label: t('home.trace.bridge') },
+  { id: 'exchA', x: 830, y: 82, r: 34, tier: 2, depth: 3, img: 'exchange', label: t('home.trace.exchangeA') },
+  { id: 'exchB', x: 830, y: 318, r: 34, tier: 2, depth: 3, img: 'exchange', label: t('home.trace.exchangeB') },
+  { id: 'cashout', x: 1042, y: 200, r: 38, tier: 3, depth: 4, img: 'cashout', label: t('home.trace.cashout') },
+];
+
+const wideEdges: EdgeSpec[] = [
+  { from: 'victim', to: 'mixer', bow: -26, label: '1.25 ETH' },
+  { from: 'victim', to: 'contract', bow: 26, label: '15,350 USDT' },
+  { from: 'mixer', to: 'bridge', bow: -20, label: '0.75 ETH' },
+  { from: 'contract', to: 'bridge', bow: 20, label: t('home.trace.hop', { n: 3 }) },
+  { from: 'bridge', to: 'exchA', bow: -22, label: '10,100 USDT' },
+  { from: 'bridge', to: 'exchB', bow: 22, label: '2.1 ETH' },
+  { from: 'exchA', to: 'cashout', bow: -18, label: t('home.trace.hop', { n: 6 }) },
+  { from: 'exchB', to: 'cashout', bow: 18, label: '1.2 ETH' },
+];
+
+const tallNodes: NodeSpec[] = [
+  { id: 'victim', x: 95, y: 74, r: 44, tier: 1, depth: 0, img: 'victim', label: t('home.trace.victim') },
+  { id: 'mixer', x: 258, y: 250, r: 38, tier: 2, depth: 1, img: 'mixer', label: t('home.trace.mixer') },
+  { id: 'bridge', x: 100, y: 420, r: 38, tier: 2, depth: 2, img: 'bridge', label: t('home.trace.bridge') },
+  { id: 'cashout', x: 255, y: 570, r: 40, tier: 3, depth: 3, img: 'cashout', label: t('home.trace.cashout') },
+];
+
+const tallEdges: EdgeSpec[] = [
+  { from: 'victim', to: 'mixer', bow: -18, label: '1.25 ETH' },
+  { from: 'mixer', to: 'bridge', bow: -18, label: t('home.trace.hop', { n: 3 }) },
+  { from: 'bridge', to: 'cashout', bow: -18, label: '2.1 ETH' },
+];
+
+// --- geometry ---------------------------------------------------------------
+
+const GAP = 9; // clear air between a ring and the wire that leaves it
+const HEAD = 8; // arrowhead length
+
+function buildEdge(nodes: NodeSpec[], e: EdgeSpec) {
+  const a = nodes.find((n) => n.id === e.from)!;
+  const b = nodes.find((n) => n.id === e.to)!;
+
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  // Perpendicular to a->b. The control point is pushed along it, so `bow` bends the wire off
+  // the straight line; a quadratic through C sits at half of C's offset at its midpoint.
+  const px = -dy / len;
+  const py = dx / len;
+  const cx = (a.x + b.x) / 2 + px * e.bow * 2;
+  const cy = (a.y + b.y) / 2 + py * e.bow * 2;
+
+  // Trim both ends back to the ring's edge (plus GAP) so the wire never touches a node.
+  const unit = (fx: number, fy: number, tx: number, ty: number) => {
+    const l = Math.hypot(tx - fx, ty - fy) || 1;
+    return [(tx - fx) / l, (ty - fy) / l] as const;
+  };
+  const [sax, say] = unit(a.x, a.y, cx, cy);
+  const [sbx, sby] = unit(b.x, b.y, cx, cy);
+  const sx = a.x + sax * (a.r + GAP);
+  const sy = a.y + say * (a.r + GAP);
+  const ex = b.x + sbx * (b.r + GAP + HEAD);
+  const ey = b.y + sby * (b.r + GAP + HEAD);
+
+  // Arrowhead points along the curve's tangent where it lands, i.e. away from the control point.
+  const [tx, ty] = unit(cx, cy, ex, ey);
+  const nx = -ty;
+  const ny = tx;
+  const arrow = [
+    `M${(ex + tx * HEAD).toFixed(1)} ${(ey + ty * HEAD).toFixed(1)}`,
+    `L${(ex + nx * 4.2).toFixed(1)} ${(ey + ny * 4.2).toFixed(1)}`,
+    `L${(ex - nx * 4.2).toFixed(1)} ${(ey - ny * 4.2).toFixed(1)}`,
+    'Z',
+  ].join(' ');
+
+  // Label rides the curve's midpoint, nudged further out along the same perpendicular so it
+  // sits beside the wire rather than on top of it.
+  const mx = 0.25 * sx + 0.5 * cx + 0.25 * ex;
+  const my = 0.25 * sy + 0.5 * cy + 0.25 * ey;
+  const side = e.bow >= 0 ? 1 : -1;
+
+  return {
+    d: `M${sx.toFixed(1)} ${sy.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`,
+    arrow,
+    label: e.label,
+    lx: mx + px * side * 15,
+    ly: my + py * side * 15,
+    depth: a.depth,
+  };
+}
+
+// The cascade: a node lights up, then its outgoing wires draw, then the next node. Every delay
+// derives from hop depth, so re-ordering the arrays above cannot desynchronise it.
+const NODE_STEP = 0.5;
+const EDGE_LEAD = 0.34;
+const nodeDelay = (n: NodeSpec) => n.depth * NODE_STEP;
+const edgeDelay = (depth: number) => depth * NODE_STEP + EDGE_LEAD;
+const pct = (v: number, total: number) => `${((v / total) * 100).toFixed(3)}%`;
+
+const graphs = [
+  { key: 'wide', box: WIDE, nodes: wideNodes, edges: wideEdges },
+  { key: 'tall', box: TALL, nodes: tallNodes, edges: tallEdges },
+].map((g) => {
+  const edges = g.edges.map((e) => buildEdge(g.nodes, e));
+  // Pulses only start once the whole graph is drawn, otherwise a pulse races down a wire that
+  // is still being drawn behind it.
+  const settled = Math.max(...g.nodes.map(nodeDelay), ...edges.map((e) => edgeDelay(e.depth))) + 0.9;
+  return { ...g, edges, settled };
+});
+---
+
+<figure class="tg" role="img" aria-label={t('home.trace.alt')}>
+  {
+    graphs.map((g) => (
+      /* The stage carries the viewBox's exact aspect ratio, so `meet` fits the SVG edge to
+         edge with no letterboxing - which is what lets the HTML labels be positioned in plain
+         percentages of the same coordinate space. */
+      <div class={`tg-stage tg-${g.key}`} style={`--ar:${g.box.w} / ${g.box.h}; --max:${g.box.w}px`}>
+        <svg class="tg-svg" viewBox={`0 0 ${g.box.w} ${g.box.h}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <defs>
+            <radialGradient id={`tg-halo-${g.key}`}>
+              <stop offset="0%" stop-color="#8b5bbd" stop-opacity="0.30" />
+              <stop offset="55%" stop-color="#8b5bbd" stop-opacity="0.10" />
+              <stop offset="100%" stop-color="#8b5bbd" stop-opacity="0" />
+            </radialGradient>
+          </defs>
+
+          <g class="tg-edges">
+            {g.edges.map((e, i) => (
+              <g class="tg-edge" style={`--d:${edgeDelay(e.depth)}s; --pd:${g.settled + i * 0.22}s`}>
+                <path class="tg-wire" d={e.d} pathLength="1" />
+                <path class="tg-pulse" d={e.d} pathLength="1" />
+                <path class="tg-arrow" d={e.arrow} />
+              </g>
+            ))}
+          </g>
+
+          <g class="tg-nodes">
+            {g.nodes.map((n, i) => (
+              <g class="tg-node" style={`--d:${nodeDelay(n)}s; --fd:${(i * 0.7).toFixed(2)}s`} data-tier={n.tier}>
+                <g class="tg-float">
+                  <circle class="tg-halo" cx={n.x} cy={n.y} r={n.r * 1.75} fill={`url(#tg-halo-${g.key})`} />
+                  {/* The cashout node is the answer the whole graph drives at - and the caption
+                      underneath already promises "cashout points flagged". A ring that keeps
+                      pinging says that; a dim endpoint said the opposite. */}
+                  {n.tier === 3 && <circle class="tg-flag" cx={n.x} cy={n.y} r={n.r} />}
+                  <circle class="tg-ring" cx={n.x} cy={n.y} r={n.r} pathLength="1" />
+                  <image
+                    class="tg-obj"
+                    href={asset(`/trace/node-${n.img}.webp`)}
+                    x={n.x - n.r * 0.82}
+                    y={n.y - n.r * 0.82}
+                    width={n.r * 1.64}
+                    height={n.r * 1.64}
+                    preserveAspectRatio="xMidYMid meet"
+                  />
+                </g>
+              </g>
+            ))}
+          </g>
+        </svg>
+
+        {g.edges.map((e, i) => (
+          <span
+            class="tg-elabel"
+            style={`--d:${edgeDelay(e.depth)}s; left:${pct(e.lx, g.box.w)}; top:${pct(e.ly, g.box.h)}`}
+          >
+            {e.label}
+          </span>
+        ))}
+        {g.nodes.map((n) => (
+          <span
+            class="tg-nlabel"
+            style={`--d:${nodeDelay(n)}s; left:${pct(n.x, g.box.w)}; top:${pct(n.y + n.r + 12, g.box.h)}`}
+          >
+            {n.label}
+          </span>
+        ))}
+      </div>
+    ))
+  }
+</figure>
+
+<style>
+  .tg {
+    margin: 0;
+    width: 100%;
+  }
+  .tg-stage {
+    position: relative;
+    width: 100%;
+    max-width: var(--max);
+    aspect-ratio: var(--ar);
+    margin-inline: auto;
+  }
+  .tg-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .tg-tall {
+    display: none;
+    /* Slightly wider than its 360-unit viewBox so it does not look starved on a tablet, but
+       still capped - left uncapped it would blow the nodes up to twice their size. */
+    max-width: 26rem;
+  }
+  /* The wide graph needs roughly 900px before its seven nodes stop crowding; below that the
+     four-node vertical chain takes over. */
+  @media (max-width: 899px) {
+    .tg-wide {
+      display: none;
+    }
+    .tg-tall {
+      display: block;
+    }
+  }
+
+  /* ---- static appearance (also the no-JS and reduced-motion end state) ---- */
+  .tg-wire {
+    fill: none;
+    stroke: rgba(139, 91, 189, 0.5);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+  .tg-arrow {
+    fill: rgba(168, 128, 209, 0.75);
+  }
+  .tg-pulse {
+    fill: none;
+    stroke: #c7abe1;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    /* A short lit segment of the wire, not a separate dot: with pathLength=1 the dash is 8% of
+       the run, so sliding the offset walks it from the source to the target. */
+    stroke-dasharray: 0.08 0.92;
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  .tg-ring {
+    fill: none;
+    stroke-width: 1.5;
+    /* Deliberately wider than the 3D object inside it. The four objects that came back without
+       a modelled ring and the two that came back with one then read as one family: this ring is
+       the node, the object is its payload. */
+    stroke: rgba(139, 91, 189, 0.55);
+  }
+  .tg-node[data-tier='1'] .tg-ring {
+    stroke: rgba(168, 128, 209, 0.85);
+    stroke-width: 1.9;
+  }
+  .tg-node[data-tier='3'] .tg-ring {
+    stroke: rgba(199, 171, 225, 0.9);
+    stroke-width: 1.9;
+  }
+  .tg-flag {
+    fill: none;
+    stroke: rgba(199, 171, 225, 0.55);
+    stroke-width: 1.4;
+    transform-box: fill-box;
+    transform-origin: center;
+    opacity: 0;
+  }
+
+  .tg-elabel,
+  .tg-nlabel {
+    position: absolute;
+    white-space: nowrap;
+    pointer-events: none;
+    font-family: var(--font-sans);
+  }
+  .tg-elabel {
+    transform: translate(-50%, -50%);
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .tg-nlabel {
+    transform: translateX(-50%);
+    font-size: 0.76rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.74);
+  }
+
+  /* ---- animated state, switched on by JS ----
+     Gated behind .tg-anim so that if the script never runs the graph still renders complete
+     rather than sitting at opacity 0 forever. */
+  .tg-anim .tg-ring {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: tg-draw 0.75s var(--ease-out-brand) var(--d) both;
+  }
+  .tg-anim .tg-halo,
+  .tg-anim .tg-obj {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: tg-pop 0.7s var(--ease-out-brand) calc(var(--d) + 0.12s) both;
+  }
+  .tg-anim .tg-float {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: tg-float 5.5s ease-in-out var(--fd) infinite;
+  }
+  .tg-anim .tg-wire {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: tg-draw 0.6s ease-out var(--d) both;
+  }
+  .tg-anim .tg-arrow {
+    opacity: 0;
+    animation: tg-fade 0.35s ease-out calc(var(--d) + 0.52s) both;
+  }
+  .tg-anim .tg-nlabel {
+    opacity: 0;
+    animation: tg-fade 0.5s ease-out calc(var(--d) + 0.42s) both;
+  }
+  .tg-anim .tg-elabel {
+    opacity: 0;
+    animation: tg-fade 0.45s ease-out calc(var(--d) + 0.62s) both;
+  }
+  .tg-anim .tg-pulse {
+    animation: tg-travel 2.6s linear var(--pd) infinite;
+  }
+  .tg-anim .tg-flag {
+    animation: tg-ping 2.8s ease-out calc(var(--d) + 1s) infinite;
+  }
+
+  /* MUST come after every `animation:` above. The shorthand resets animation-play-state to
+     `running`, so pausing before those rules silently did nothing and the whole cascade ran at
+     page load - it was over before the section ever scrolled into view. */
+  .tg-anim :is(.tg-ring, .tg-halo, .tg-obj, .tg-float, .tg-wire, .tg-arrow, .tg-pulse, .tg-flag, .tg-nlabel, .tg-elabel) {
+    animation-play-state: paused;
+  }
+  .tg-anim.is-live
+    :is(.tg-ring, .tg-halo, .tg-obj, .tg-float, .tg-wire, .tg-arrow, .tg-pulse, .tg-flag, .tg-nlabel, .tg-elabel) {
+    animation-play-state: running;
+  }
+
+  @keyframes tg-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes tg-fade {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes tg-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.72);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes tg-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-3.5px);
+    }
+  }
+  @keyframes tg-ping {
+    0% {
+      opacity: 0.55;
+      transform: scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(1.55);
+    }
+  }
+  /* The pulse is invisible for the tail of each cycle, so the wires rest between runs instead of
+     looking like a permanently busy loading bar. */
+  @keyframes tg-travel {
+    0% {
+      stroke-dashoffset: 1;
+      opacity: 0;
+    }
+    8% {
+      opacity: 0.95;
+    }
+    62% {
+      stroke-dashoffset: 0.08;
+      opacity: 0.95;
+    }
+    70%,
+    100% {
+      stroke-dashoffset: 0.08;
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tg-anim :is(.tg-ring, .tg-wire) {
+      stroke-dasharray: none;
+      stroke-dashoffset: 0;
+      animation: none;
+    }
+    .tg-anim :is(.tg-halo, .tg-obj, .tg-float, .tg-arrow, .tg-nlabel, .tg-elabel) {
+      opacity: 1;
+      animation: none;
+    }
+    .tg-anim :is(.tg-float, .tg-obj, .tg-halo) {
+      transform: none;
+    }
+    .tg-anim :is(.tg-pulse, .tg-flag) {
+      animation: none;
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  // Two-stage on purpose. `tg-anim` is what arms the CSS above - adding it from JS means a
+  // browser that never runs this script shows the finished graph instead of a blank box.
+  // `is-live` then starts the clock when it scrolls into view, so the cascade is not already
+  // over by the time anyone looks at it.
+  const graph = document.querySelector<HTMLElement>('.tg');
+  if (graph) {
+    graph.classList.add('tg-anim');
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add('is-live');
+          io.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(graph);
+  }
+</script>

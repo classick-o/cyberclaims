@@ -13,128 +13,40 @@ export const CONTACT = {
   ],
 };
 
+// Structure only - locale-independent. The copy (title, blurb, short) moved into the
+// i18n dictionaries, keyed by URL slug (`svc.<slug>.title` …); components read it through
+// getServices(locale) in src/i18n, which merges this structure with the translated copy.
 export type Service = {
-  title: string;
   href: string;
-  blurb: string; // full description (used on service cards)
-  short: string; // one-line description (used in the mega-menu)
   icon: string; // key into IconMap
   accent: string; // per-page accent (derivative of purple - no new primaries)
 };
 
-// All 10 services + URL Checker. URLs mirror the existing site structure.
+// All 10 services. URLs mirror the existing site structure.
 export const SERVICES: Service[] = [
-  {
-    title: 'Cryptocurrency Recovery',
-    href: '/cryptocurrency-recovery/',
-    blurb:
-      'Using crypto currencies for transactions doesn’t guarantee complete immunity from online scammers and fraud.',
-    short: 'Recover assets lost to scams, theft and fraud.',
-    icon: 'recovery',
-    accent: '#8b5bbd',
-  },
-  {
-    title: 'Crypto Currency Tracing',
-    href: '/cryptocurrency-tracing/',
-    blurb:
-      'Assistance to victims of scams to trace cryptocurrencies sent to fraudulent entities, to identify cashout points.',
-    short: 'Trace stolen crypto to its cashout points.',
-    icon: 'tracing',
-    accent: '#a880d1',
-  },
-  {
-    title: 'Website Forensics',
-    href: '/website-forensics/',
-    blurb:
-      'Uncover scam networks, digital forensics related to fraud or brand infringements.',
-    short: 'Uncover scam networks and fraud evidence.',
-    icon: 'forensics',
-    accent: '#7a4fb0',
-  },
-  {
-    title: 'Brand Protection',
-    href: '/brand-protection/',
-    blurb:
-      'We all know that cyber attacks can be frustrating, leaving your intellectual property and trade secrets exposed.',
-    short: 'Shield your IP and brand from attacks.',
-    icon: 'shield',
-    accent: '#9c71f3',
-  },
-  {
-    title: 'Website Takedown',
-    href: '/website-takedown/',
-    blurb:
-      'With increased advancement in the digital space, there’s no doubt about the insurmountable benefits and risks.',
-    short: 'Take down fraudulent, infringing sites.',
-    icon: 'takedown',
-    accent: '#6b3fa0',
-  },
-  {
-    title: 'Dispute Resolution Support',
-    href: '/dispute-resolution-support/',
-    blurb:
-      'Dispute resolution support includes all the processes geared towards addressing disputes.',
-    short: 'Support through the full dispute process.',
-    icon: 'dispute',
-    accent: '#8b5bbd',
-  },
-  {
-    title: 'Consultancy & Documentation Support',
-    href: '/consultancy-documentation-support/',
-    blurb:
-      'Employing the services of a consultant firm without proper documentation support is a costly mistake.',
-    short: 'Expert consultancy, done by the book.',
-    icon: 'consultancy',
-    accent: '#a880d1',
-  },
-  {
-    title: 'Due Diligence Investigations',
-    href: '/due-diligence-investigations/',
-    blurb:
-      'Many people prefer to acquire or partner with an already established business - verify before you commit.',
-    short: 'Verify partners before you commit.',
-    icon: 'diligence',
-    accent: '#7a4fb0',
-  },
-  {
-    title: 'Social Media Investigation',
-    href: '/social-media-investigation/',
-    blurb:
-      'Track, analyse and document social-media activity tied to fraud, impersonation and brand abuse.',
-    short: 'Track fraud and impersonation on social.',
-    icon: 'social',
-    accent: '#9c71f3',
-  },
-  {
-    title: 'Business Services',
-    href: '/business-services/',
-    blurb:
-      'The business industry remains one of the most competitive industries in our modern world.',
-    short: 'Tailored services for competitive businesses.',
-    icon: 'business',
-    accent: '#6b3fa0',
-  },
+  { href: '/cryptocurrency-recovery/', icon: 'recovery', accent: '#8b5bbd' },
+  { href: '/cryptocurrency-tracing/', icon: 'tracing', accent: '#a880d1' },
+  { href: '/website-forensics/', icon: 'forensics', accent: '#7a4fb0' },
+  { href: '/brand-protection/', icon: 'shield', accent: '#9c71f3' },
+  { href: '/website-takedown/', icon: 'takedown', accent: '#6b3fa0' },
+  { href: '/dispute-resolution-support/', icon: 'dispute', accent: '#8b5bbd' },
+  { href: '/consultancy-documentation-support/', icon: 'consultancy', accent: '#a880d1' },
+  { href: '/due-diligence-investigations/', icon: 'diligence', accent: '#7a4fb0' },
+  { href: '/social-media-investigation/', icon: 'social', accent: '#9c71f3' },
+  { href: '/business-services/', icon: 'business', accent: '#6b3fa0' },
 ];
 
-export const URL_CHECKER = { title: 'URL Checker', href: '/url-checker/', icon: 'url' };
-
-// Homepage stats - brief §4 wants animated counters (cases resolved, funds traced, countries).
-// NOTE: values below are PLACEHOLDERS pending real figures from TBS/Julia.
-// The live site currently shows "0" which harms credibility - do not ship these unverified.
-export const STATS = [
-  { value: 2400, suffix: '+', label: 'Cases Reviewed' },
-  { value: 90000, prefix: '€', label: 'Recovered (single case)' },
-  { value: 120, suffix: '+', label: 'Countries Served' },
-  { value: 350, suffix: '+', label: 'Press Features' },
-];
+// The name comes from the dictionary (`nav.urlChecker`); href/icon are structural.
+export const URL_CHECKER = { href: '/url-checker/', icon: 'link' };
 
 // Sustainability metrics - preserved from the live site ("We prioritise Sustainability").
 // NOTE: live site shows 0 / 0 / 0 - placeholders below await real figures from TBS.
+// `labelKey` points at the translated label in the dictionaries.
 export const SUSTAINABILITY = [
-  { value: 1511, suffix: '', label: 'Trees Planted', icon: 'leaf' },
-  { value: 57.45, suffix: ' kg', label: 'CO₂ Compensated', icon: 'cloud' },
-  { value: 1365, suffix: '', label: 'Happy Customers', icon: 'smile' },
-];
+  { value: 1511, suffix: '', labelKey: 'sus.treesPlanted', icon: 'leaf' },
+  { value: 57.45, suffix: ' kg', labelKey: 'sus.co2', icon: 'cloud' },
+  { value: 1365, suffix: '', labelKey: 'sus.happyCustomers', icon: 'smile' },
+] as const;
 
 // Partner / "Industry Allies" logos (sourced from the live site).
 export const PARTNERS = [
@@ -198,38 +110,6 @@ export const TESTIMONIALS: Testimonial[] = [
     quote:
       'They have become our partners in our fight against cybercrime. Helping in the protection of our brand from cyber-attacks and counterfeiting was impressive. We experienced a significant boost in the protection of our intellectual property.',
     name: 'Alex Dunn',
-  },
-];
-
-export type BlogCard = {
-  date: string;
-  author: string;
-  title: string;
-  href: string;
-  category: string;
-};
-
-export const LATEST_BLOGS: BlogCard[] = [
-  {
-    date: 'July 2, 2026',
-    author: 'ContentTeam',
-    title: 'Is Coinbase Wallet Safe? A 2026 Security Review',
-    href: '/news/is-coinbase-wallet-safe-a-2026-security-review/',
-    category: 'Regulation',
-  },
-  {
-    date: 'March 23, 2026',
-    author: 'ContentTeam',
-    title: 'Is Profit Storm Legit or a Scam? What Users Should Know',
-    href: '/news/is-profit-storm-legit-or-a-scam/',
-    category: 'Crypto Scams',
-  },
-  {
-    date: 'March 23, 2026',
-    author: 'ContentTeam',
-    title: 'X Bitcoin Capex Club Review: What Users Are Asking and What to Watch Out For',
-    href: '/news/x-bitcoin-capex-club-review/',
-    category: 'Crypto Scams',
   },
 ];
 

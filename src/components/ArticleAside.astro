@@ -1,0 +1,233 @@
+---
+// The rail beside an article: what we do, and how to pass this on.
+//
+// It is sticky, so it stays with the reader the whole way down a long piece - which is
+// the point. Someone reading "Five red flags of a fake crypto exchange" has, by the time
+// they reach the bottom, usually worked out that they are describing themselves. The
+// services list is there so the next click is one click away, at the moment they want it.
+import Icon from './Icon.astro';
+import { URL_CHECKER } from '../data/site';
+import { link, serviceUrl } from '../lib/paths';
+import { useTranslations, getServices } from '../i18n';
+import type { Locale } from '../i18n/config';
+
+interface Props {
+  /** Absolute URL of the article - the share targets need the real thing, not a path. */
+  url: string;
+  title: string;
+  locale: Locale;
+}
+
+const { url, title, locale } = Astro.props;
+const t = useTranslations(locale);
+const SERVICES = getServices(locale);
+
+const u = encodeURIComponent(url);
+const text = encodeURIComponent(title);
+
+// Brand marks are solid glyphs; Icon.astro draws stroked line icons on `fill: none`, so
+// these would come out as invisible outlines there. They live here instead, where they
+// are used, rather than bending that component out of shape for three exceptions.
+const SHARE = [
+  {
+    name: 'Facebook',
+    href: `https://www.facebook.com/sharer/sharer.php?u=${u}`,
+    path: 'M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 2.89h-2.33v6.99A10 10 0 0 0 22 12Z',
+  },
+  {
+    name: 'X',
+    href: `https://twitter.com/intent/tweet?url=${u}&text=${text}`,
+    path: 'M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.65l-5.21-6.82-5.96 6.82H1.68l7.73-8.84L1.25 2.25h6.82l4.71 6.23 5.46-6.23Zm-1.16 17.52h1.83L7.08 4.13H5.11l11.97 15.64Z',
+  },
+  {
+    name: 'LinkedIn',
+    href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}`,
+    path: 'M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05a3.74 3.74 0 0 1 3.37-1.85c3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0Z',
+  },
+];
+---
+
+<aside class="art-aside">
+  <div class="aside-sticky">
+    <nav class="aside-card" aria-labelledby="aside-services">
+      <h2 class="aside-h" id="aside-services">{t('aside.services')}</h2>
+
+      {/* Each service's own icon, from site.ts - the same glyph its page uses, so a reader
+          who has seen the page recognises the row instead of reading ten near-identical
+          lines of text.
+          Its `accent` is deliberately NOT used. On a service page one accent owns the
+          whole screen and means something; ten of them stacked in a 4rem-wide column
+          only read as five shades of purple that failed to agree. One colour. */}
+      <ul class="aside-list">
+        {
+          SERVICES.map((s) => (
+            <li>
+              <a href={link(serviceUrl(s.href), locale)}>
+                <span class="aside-ico">
+                  <Icon name={s.icon} class="w-full h-full" />
+                </span>
+                <span>{s.title}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      {/* Not one of the ten - it is a tool, not a service. A button, because it is the
+          one thing here you DO rather than read about. */}
+      <a href={link(URL_CHECKER.href, locale)} class="btn aside-btn">
+        <Icon name={URL_CHECKER.icon} class="w-4 h-4" />
+        {t('nav.urlChecker')}
+      </a>
+    </nav>
+
+    <div class="aside-card">
+      <h2 class="aside-h">{t('share.title')}</h2>
+      {/* rel="noopener" so the window we open gets no handle on ours through
+          window.opener, and "noreferrer" so we do not hand a social network our reader's
+          last URL for free. */}
+      <div class="aside-share">
+        {
+          SHARE.map((s) => (
+            <a
+              class="share-btn"
+              href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t('share.on', { platform: s.name })}
+              title={t('share.on', { platform: s.name })}
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d={s.path} />
+              </svg>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</aside>
+
+<style>
+  .art-aside {
+    min-width: 0;
+  }
+  /* Sticky on the INNER element, not on .art-aside itself. A grid item stretches to the
+     height of its row by default, so `position: sticky` on it has nothing to travel
+     within - it is already as tall as the article beside it, and never moves. The child
+     is what sticks. */
+  .aside-sticky {
+    position: sticky;
+    /* clears the fixed header (4.75rem) with room to breathe */
+    top: 6.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .aside-card {
+    padding: 1.35rem 1.4rem;
+    border-radius: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: var(--color-navy-elevated);
+  }
+  .aside-h {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-purple-300);
+    margin: 0 0 0.9rem;
+  }
+
+  .aside-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    margin: 0;
+    padding: 0;
+  }
+  .aside-list a {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.5rem 0.6rem;
+    margin-inline: -0.6rem;
+    border-radius: 0.5rem;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.88rem;
+    line-height: 1.4;
+    text-decoration: none;
+    transition: color 0.2s, background 0.2s;
+  }
+  .aside-list a:hover {
+    color: #fff;
+    background: rgba(139, 91, 189, 0.14);
+  }
+  /* The tile stays put while the label wraps to a second line - a `Consultancy &
+     Documentation Support` that pushed its own icon off-centre would break the column. */
+  .aside-ico {
+    flex-shrink: 0;
+    align-self: flex-start;
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0.35rem;
+    border-radius: 0.45rem;
+    color: var(--color-purple-300);
+    background: rgba(139, 91, 189, 0.16);
+    transition: color 0.2s, background 0.2s;
+  }
+  .aside-list a:hover .aside-ico {
+    color: #fff;
+    background: var(--color-purple-500);
+  }
+
+  .aside-btn {
+    width: 100%;
+    margin-top: 1.1rem;
+    /* .btn's own 1.9rem side padding is sized for a hero, not for an 18rem rail */
+    padding-inline: 1rem;
+    font-size: 0.88rem;
+    /* .btn carries a hero's glow - 24px of purple haze, which at this size lights up the
+       whole card behind it. A hint of lift is all a sidebar button needs. */
+    box-shadow: 0 4px 12px -8px rgba(107, 63, 160, 0.6);
+  }
+  .aside-btn:hover {
+    box-shadow: 0 6px 16px -8px rgba(139, 91, 189, 0.7);
+  }
+
+  .aside-share {
+    display: flex;
+    gap: 0.6rem;
+  }
+  .share-btn {
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.7);
+    transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s var(--ease-out-brand);
+  }
+  .share-btn:hover {
+    color: #fff;
+    background: var(--color-purple-500);
+    border-color: var(--color-purple-400);
+    transform: translateY(-2px);
+  }
+  .share-btn svg {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .share-btn:hover {
+      transform: none;
+    }
+  }
+</style>

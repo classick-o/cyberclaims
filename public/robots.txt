@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# The CMS. Also sent as an X-Robots-Tag header, because robots.txt is a request, not
+# a control — and a CMS login page in search results is an invitation.
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://www.cyberclaims.net/sitemap.xml

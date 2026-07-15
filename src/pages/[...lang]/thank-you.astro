@@ -1,0 +1,119 @@
+---
+// Landing page for the no-JavaScript submit path: the forms keep their native
+// `action="/api/lead"`, and the API redirects here (303) when the request wasn't the
+// fetch() call. With JS, the forms show their success state inline and never
+// navigate here.
+import Layout from '../../layouts/Layout.astro';
+import Icon from '../../components/Icon.astro';
+import { CONTACT } from '../../data/site';
+import { link } from '../../lib/paths';
+import { localePaths, type Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n';
+
+// One file, one page per locale. The default locale maps to lang: undefined, and a
+// rest parameter matches zero segments - so English stays at /about-us/, not /en/about-us/.
+export const getStaticPaths = localePaths;
+const { locale } = Astro.props as { locale: Locale };
+const t = useTranslations(locale);
+---
+
+<Layout title={t('thankYou.metaTitle')} description={t('thankYou.metaDesc')}>
+  <section class="ty">
+    <div class="glow-blob" style="background:#6b3fa0;width:34rem;height:34rem;top:-10rem;left:-8rem;"></div>
+    <div class="wrap ty-inner">
+      <div class="glass ty-card">
+        <span class="ty-icon"><Icon name="check" class="w-full h-full" /></span>
+        <h1 class="h-section ty-h">{t('form.successTitle')}</h1>
+        <p class="ty-p" set:html={t('thankYou.body')} />
+
+        <div class="ty-warn" set:html={t('thankYou.warn')} />
+
+        <p
+          class="ty-p ty-urgent"
+          set:html={t('thankYou.urgent', { email: `<a href="mailto:${CONTACT.email}">${CONTACT.email}</a>` })}
+        />
+
+        <a href={link('/', locale)} class="btn ty-btn">{t('cta.backHome')}</a>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .ty {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    min-height: 70svh;
+    padding: 8rem 0 5rem;
+    background: var(--gradient-depth);
+  }
+  .ty-inner {
+    position: relative;
+    z-index: 1;
+  }
+  .ty-card {
+    max-width: 40rem;
+    margin-inline: auto;
+    padding: 3rem 2.25rem;
+    text-align: center;
+  }
+  .ty-icon {
+    display: grid;
+    place-items: center;
+    width: 3.75rem;
+    height: 3.75rem;
+    margin: 0 auto 1.5rem;
+    padding: 0.9rem;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--color-purple-500);
+    box-shadow: var(--glow-purple);
+  }
+  .ty-h {
+    margin-bottom: 1rem;
+  }
+  .ty-p {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.7;
+    max-width: 38ch;
+    margin-inline: auto;
+  }
+  .ty-p strong {
+    color: #fff;
+  }
+  .ty-warn {
+    margin: 1.75rem auto 0;
+    padding: 0.9rem 1.1rem;
+    max-width: 40ch;
+    border-radius: 0.6rem;
+    border: 1px solid rgba(139, 91, 189, 0.32);
+    background: rgba(139, 91, 189, 0.1);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    text-align: left;
+  }
+  .ty-warn strong {
+    color: var(--color-purple-200);
+  }
+  .ty-urgent {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+  }
+  .ty-urgent a {
+    color: var(--color-purple-300);
+  }
+  .ty-urgent a:hover {
+    color: #fff;
+  }
+  .ty-btn {
+    margin-top: 2rem;
+  }
+  @media (max-width: 640px) {
+    .ty-card {
+      padding: 2.25rem 1.35rem;
+    }
+  }
+</style>

@@ -2,6 +2,10 @@
 // Testimonials - two auto-scrolling marquee rows (pause on hover). Frosted cards.
 import ArcGlow from './ArcGlow.astro';
 import { TESTIMONIALS } from '../data/site';
+import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
+
+const t = useTranslations(localeFromUrl(Astro.url));
 
 const initials = (n: string) =>
   n.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -17,7 +21,10 @@ const rowB = TESTIMONIALS.filter((_, i) => i % 2 === 1);
   <ArcGlow />
 
   <div class="wrap testi-head" data-reveal>
-    <h2 class="h-section">Trusted by people we’ve <span class="accent">helped recover</span></h2>
+    <h2
+      class="h-section"
+      set:html={t('home.testiTitle', { accent: `<span class="accent">${t('home.testiTitleA')}</span>` })}
+    />
   </div>
 
   <div class="marquee-mask">
@@ -120,8 +127,8 @@ const rowB = TESTIMONIALS.filter((_, i) => i % 2 === 1);
        neither breaks backdrop-filter anymore. */
     background: rgba(30, 30, 52, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(14px) saturate(140%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
   .testi-card blockquote {

@@ -1,0 +1,54 @@
+---
+// An article cover, in a fixed box, without cropping it.
+//
+// object-fit: cover was eating these images. The covers are mostly 3D product renders
+// - an object floating in space with air around it - and cropping one to fill a 16:9
+// box slices the object in half and shoves it off-centre. object-fit: contain fixes
+// the cropping and replaces it with letterbox bars, which look like a mistake.
+//
+// So: two layers. The real image is CONTAINED, so it is always whole. Behind it, the
+// same image is COVERED, blurred hard and dimmed, filling whatever the contained image
+// leaves. Nothing is cropped, nothing is letterboxed, and an odd aspect ratio reads as
+// a deliberate treatment rather than a bug.
+//
+// The backdrop uses the smallest variant - it is blurred past recognition anyway, and
+// the browser reuses the same request either way.
+import Icon from './Icon.astro';
+import { srcset, smallest } from '../lib/media';
+
+interface Props {
+  path?: string | null;
+  variants?: Record<string, string> | null;
+  alt?: string | null;
+  sizes?: string;
+  loading?: 'lazy' | 'eager';
+}
+
+const { path, variants, alt, sizes, loading = 'lazy' } = Astro.props;
+---
+
+{
+  path ? (
+    <>
+      <img
+        class="cover-wash"
+        src={smallest(variants, path)}
+        alt=""
+        aria-hidden="true"
+        loading={loading}
+      />
+      <img
+        class="cover-art"
+        src={path}
+        srcset={srcset(variants)}
+        sizes={sizes}
+        alt={alt ?? ''}
+        loading={loading}
+      />
+    </>
+  ) : (
+    <span class="cover-none" aria-hidden="true">
+      <Icon name="press" class="w-7 h-7" />
+    </span>
+  )
+}

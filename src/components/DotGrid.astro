@@ -1,0 +1,81 @@
+---
+// Decorative dot grid with a spotlight that sweeps across it, lighting up the dots it passes.
+//
+// Extracted from RecoveryCta, which owned it alone until the tracing card wanted the same
+// treatment behind its graph. Purely decorative: aria-hidden, pointer-events off, and it must
+// sit behind its card's content (give the content a higher z-index).
+interface Props {
+  /** Grid width, anchored to the right edge of the parent. */
+  width?: string;
+  /** 'left' dissolves the grid toward the left so it reads as a corner treatment rather than
+      wallpaper. 'none' covers the parent edge to edge. */
+  fade?: 'left' | 'none';
+  /** Base dot opacity. Lower it when the grid sits under busy content. */
+  opacity?: number;
+}
+const { width = '100%', fade = 'none', opacity = 0.16 } = Astro.props;
+---
+
+<div class="dots" style={`--dots-w:${width}; --dots-o:${opacity}`} data-fade={fade} aria-hidden="true">
+  <span class="dots-base"></span>
+  <span class="dots-glow"></span>
+</div>
+
+<style>
+  .dots {
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: var(--dots-w);
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .dots[data-fade='left'] {
+    -webkit-mask-image: linear-gradient(to left, #000 42%, transparent);
+    mask-image: linear-gradient(to left, #000 42%, transparent);
+  }
+  .dots-base,
+  .dots-glow {
+    position: absolute;
+    inset: -2px;
+    background-image: radial-gradient(circle, currentColor 1.4px, transparent 1.6px);
+    background-size: 26px 26px;
+  }
+  /* faint always-on dots */
+  .dots-base {
+    color: rgba(168, 128, 209, var(--dots-o));
+  }
+  /* bright dots, revealed only under the moving spotlight */
+  .dots-glow {
+    color: rgba(206, 182, 230, 0.85);
+    -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 60%);
+    mask-image: radial-gradient(circle, #000 0%, transparent 60%);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 360px 360px;
+    mask-size: 360px 360px;
+    animation: dot-sweep 9s ease-in-out infinite;
+    will-change: mask-position;
+  }
+  @keyframes dot-sweep {
+    0% {
+      -webkit-mask-position: 110% 120%;
+      mask-position: 110% 120%;
+    }
+    50% {
+      -webkit-mask-position: 15% -10%;
+      mask-position: 15% -10%;
+    }
+    100% {
+      -webkit-mask-position: 110% 120%;
+      mask-position: 110% 120%;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dots-glow {
+      animation: none;
+      -webkit-mask-position: 50% 50%;
+      mask-position: 50% 50%;
+    }
+  }
+</style>

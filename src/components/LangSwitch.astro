@@ -1,0 +1,144 @@
+---
+// Language switcher.
+//
+// A <details> dropdown, so it works with JavaScript off and is keyboard-accessible out
+// of the box. Each option is a real link to the SAME page in another locale - swapLocale
+// strips the current prefix and applies the target one, so switching language keeps the
+// reader on the page they were on rather than dumping them on the homepage.
+//
+// The links carry hreflang + lang, so this doubles as a machine-readable set of
+// alternates right in the markup.
+import { LOCALES, LOCALE_META, localeFromUrl, type Locale } from '../i18n/config';
+import { localeHref, asset } from '../lib/paths';
+
+// localeSlugs is passed only on pages whose URL differs per locale (articles - the slug
+// is translated). Without it, localeHref() falls back to a prefix swap of the current path.
+const { localeSlugs } = Astro.props as { localeSlugs?: Partial<Record<Locale, string>> };
+
+const locale = localeFromUrl(Astro.url);
+const pathname = Astro.url.pathname;
+const current = LOCALE_META[locale];
+---
+
+<details class="lang">
+  <summary aria-label="Change language" title="Change language">
+    <img class="lang-flag" src={asset(`/flags/${current.flag}.svg`)} alt="" width="20" height="13" />
+    <span class="lang-label">{current.label}</span>
+    <svg class="lang-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+  </summary>
+  <ul class="lang-menu">
+    {
+      LOCALES.map((l) => (
+        <li>
+          <a
+            href={localeHref(l, pathname, localeSlugs)}
+            hreflang={LOCALE_META[l].htmlLang}
+            lang={LOCALE_META[l].htmlLang}
+            class={`lang-option${l === locale ? ' is-current' : ''}`}
+            aria-current={l === locale ? 'true' : undefined}
+          >
+            <img class="lang-flag" src={asset(`/flags/${LOCALE_META[l].flag}.svg`)} alt="" width="20" height="13" />
+            <span>{LOCALE_META[l].label}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</details>
+
+<style>
+  .lang {
+    position: relative;
+  }
+  .lang summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 0.55rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.82);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition: color 0.2s, background 0.2s;
+  }
+  .lang summary::-webkit-details-marker {
+    display: none;
+  }
+  .lang summary:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .lang-flag {
+    width: 1.3rem;
+    height: auto;
+    flex: 0 0 auto;
+    border-radius: 3px;
+    /* subtle ring so the white parts of flags (FR, IT) don't melt into the dark bar */
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
+  }
+  .lang-chevron {
+    transition: transform 0.25s var(--ease-out-brand);
+  }
+  .lang[open] .lang-chevron {
+    transform: rotate(180deg);
+  }
+
+  .lang-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.4rem);
+    min-width: 9rem;
+    margin: 0;
+    padding: 0.35rem;
+    list-style: none;
+    background: rgba(18, 18, 32, 0.92);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.6rem;
+    box-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.7);
+    z-index: 70;
+  }
+  .lang-option {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 0.45rem;
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.78);
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+  }
+  .lang-option:hover {
+    color: #fff;
+    background: rgba(139, 91, 189, 0.16);
+  }
+  .lang-option.is-current {
+    color: var(--color-purple-200);
+    font-weight: 600;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lang-chevron {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // Close any open language dropdown on outside-click or Escape. <details> handles the
+  // toggle itself; this is the one bit of behaviour it does not give for free.
+  document.addEventListener('click', (e) => {
+    for (const d of document.querySelectorAll<HTMLDetailsElement>('details.lang[open]')) {
+      if (!d.contains(e.target as Node)) d.open = false;
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    for (const d of document.querySelectorAll<HTMLDetailsElement>('details.lang[open]')) d.open = false;
+  });
+</script>

@@ -1,0 +1,935 @@
+---
+// /news/<slug>/ - the article.
+//
+// This route did not exist. The three cards on /news/ have been linking to it since
+// launch, and every one of them 404'd in production.
+//
+// SSR so that publishing is instant and so an editor can preview a draft on the real
+// site, with the real CSS, rather than in a mock panel inside the admin.
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import CtaStrip from '../../components/CtaStrip.astro';
+import RecoveryCta from '../../components/RecoveryCta.astro';
+import Cover from '../../components/Cover.astro';
+import ArticleAside from '../../components/ArticleAside.astro';
+import Homepage from '../../components/Homepage.astro';
+import { link, absoluteUrl } from '../../lib/paths';
+import { jsonLdScript } from '../../lib/jsonld';
+import { srcset, smallest } from '../../lib/media';
+import { Post, cached, isEditor, extractFaq, type FullPost, type PostCard } from '../../lib/content';
+import { localeFromUrl, isLocale } from '../../i18n/config';
+import { useTranslations, formatDate } from '../../i18n';
+
+const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
+const { slug } = Astro.params;
+
+// A bare locale root - /nl/, /fr/ - is the homepage, not an article whose slug is a
+// language code. It matches this SSR article route (as slug="nl"); the article work
+// below is skipped for it and the template renders <Homepage/> instead. In production
+// the prerendered index answers /nl/ off disk, so this only arises in dev.
+const homeLocale = isLocale(slug) ? slug : null;
+
+// Article data - populated only when this really is an article.
+let post: FullPost | null = null;
+let related: PostCard[] = [];
+let body = '';
+let url = '';
+let jsonLd: Record<string, unknown> = {};
+let preview = false;
+// locale -> this article's slug in that locale, for the language switcher + hreflang.
+let localeSlugs: Record<string, string> = {};
+
+if (!homeLocale) {
+
+// A draft is visible only to someone holding a valid admin session cookie. It's
+// httpOnly and same-origin, so there is no preview token to mint, leak or expire -
+// and to anyone else the draft 404s exactly as it should.
+const editor = isEditor(Astro.cookies);
+const wantsPreview = Astro.url.searchParams.get('preview') === '1';
+preview = wantsPreview && editor;
+
+post = (preview
+  ? await Post.findBySlug(locale, slug, { preview: true })
+  : await cached(`post:${locale}:${slug}`, () => Post.findBySlug(locale, slug))) as FullPost | null;
+
+if (!post) return new Response(null, { status: 404, statusText: 'Not found' });
+
+// `post` is a `let` now (so the template can also render the homepage branch), and TS
+// won't narrow a mutable through the related() closure below. A const does narrow.
+const article = post;
+
+// Where this same article lives in every other language - the switcher and hreflang need
+// it because the slug is translated, so a naive prefix swap would land on a 404.
+localeSlugs = await Post.localeSlugs(article.id);
+
+// The ten most recent articles other than this one, shown as a rail rather than a row
+// of three. A three-card grid is a dead end: it either shows everything you have (and
+// looks thin) or hides everything else (and looks like there is nothing else).
+related = (await cached(`related:${locale}:${article.id}`, () =>
+  Post.findRelated(locale, article.id, null, 10)
+)) as PostCard[];
+
+url = absoluteUrl(`/${post.slug}/`, locale, Astro.site);
+const cover = post.cover_path ? new URL(post.cover_path, Astro.site ?? url).href : undefined;
+
+// The Q&A blocks the editor added, as plain text.
+//
+// Emitting FAQPage structured data is what makes Google render the questions as
+// expandable rows inside the search result itself. On queries like "is <platform> a
+// scam" - which is exactly how the people we want to reach search - that is the
+// difference between one blue link and half the page.
+const faq = extractFaq(post.body_html);
+
+// Structured data. The one thing TBSBV genuinely does well, kept.
+jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    ...(faq.length > 0
+      ? [
+          {
+            '@type': 'FAQPage',
+            '@id': `${url}#faq`,
+            mainEntity: faq.map((item) => ({
+              '@type': 'Question',
+              name: item.question,
+              acceptedAnswer: { '@type': 'Answer', text: item.answer },
+            })),
+          },
+        ]
+      : []),
+    {
+      '@type': 'Article',
+      '@id': url,
+      headline: post.title,
+      description: post.seo_description ?? post.excerpt ?? undefined,
+      image: cover ? [cover] : undefined,
+      datePublished: new Date(post.published_at).toISOString(),
+      dateModified: new Date(post.updated_at).toISOString(),
+      wordCount: undefined,
+      keywords: post.keywords.length ? post.keywords.join(', ') : undefined,
+      articleSection: post.category_name ?? undefined,
+      inLanguage: locale,
+      author: post.author_name
+        ? { '@type': 'Person', name: post.author_name, jobTitle: post.author_role ?? undefined }
+        : { '@type': 'Organization', name: 'Cyberclaims' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Cyberclaims',
+        url: Astro.site?.origin,
+      },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/', locale, Astro.site) },
+        { '@type': 'ListItem', position: 2, name: t('news.title'), item: absoluteUrl('/news/', locale, Astro.site) },
+        { '@type': 'ListItem', position: 3, name: post.title, item: url },
+      ],
+    },
+  ],
+};
+
+// The heading that sits above a Q&A block.
+//
+// Injected here rather than emitted by the editor's node. If the editor wrote it, the
+// copy would be duplicated into every article's stored HTML - editable, deletable,
+// impossible to translate, and impossible to change without touching every row. This
+// way it lives in the dictionary, renders server-side (so it is indexed and works with
+// JavaScript off), and the article's body stays pure content.
+const faqHeading =
+  faq.length > 0
+    ? `<header class="faq-head">` +
+      `<span class="faq-eyebrow">${t('faq.eyebrow')}</span>` +
+      `<h2 class="faq-title">${t('faq.titleLead')} <span class="accent">${t('faq.titleAccent')}</span></h2>` +
+      `<p class="faq-sub">${t('faq.body')}</p>` +
+      `</header>`
+    : '';
+
+body = faqHeading
+  ? post.body_html.replaceAll('<section class="faq">', `<section class="faq">${faqHeading}`)
+  : post.body_html;
+
+if (!preview) {
+  Astro.response.headers.set(
+    'Cache-Control',
+    'public, max-age=0, s-maxage=300, stale-while-revalidate=86400'
+  );
+} else {
+  // A draft must never end up in a shared cache.
+  Astro.response.headers.set('Cache-Control', 'private, no-store');
+}
+}
+---
+
+{homeLocale && <Homepage locale={homeLocale} />}
+{!homeLocale && post && (
+<Layout
+  title={`${post.seo_title ?? post.title} - Cyberclaims`}
+  description={post.seo_description ?? post.excerpt ?? ''}
+  path={`/${post.slug}/`}
+  locale={locale}
+  localeSlugs={localeSlugs}
+  noindex={preview}
+>
+  <script type="application/ld+json" slot="head" set:html={jsonLdScript(jsonLd)} />
+
+  {preview && <div class="draft-bar">{t('news.draftBanner')}</div>}
+
+  <article class="art">
+    <header class:list={['art-head', post.cover_path && 'has-cover']}>
+      {
+        post.cover_path && (
+          <div class="art-hero" aria-hidden="true">
+            {/* Sharp where you first meet it… */}
+            <img
+              class="art-hero-img"
+              src={post.cover_path}
+              srcset={srcset(post.cover_variants)}
+              sizes="100vw"
+              alt=""
+              fetchpriority="high"
+            />
+            {/* …dissolving into the page as you read down. Same picture, blurred, revealed
+                by a gradient mask from the middle. */}
+            <img
+              class="art-hero-blur"
+              src={smallest(post.cover_variants, post.cover_path)}
+              alt=""
+              aria-hidden="true"
+            />
+            {/* Darkens it enough for the headline to sit on, and lands on the page's own
+                colour so there is no seam where the hero ends. */}
+            <span class="art-hero-scrim" />
+          </div>
+        )
+      }
+
+      <div class="wrap art-head-inner">
+        <a href={link('/news/', locale)} class="art-back">&larr; {t('news.backToNews')}</a>
+
+        {
+          post.category_name && (
+            <span class="news-cat" style={post.category_color ? `--cat:${post.category_color}` : undefined}>
+              {post.category_name}
+            </span>
+          )
+        }
+
+        <h1 class="h-display art-title">{post.title}</h1>
+
+        <div class="art-meta">
+          <time datetime={new Date(post.published_at).toISOString()}>
+            {formatDate(post.published_at, locale)}
+          </time>
+          <span class="art-dot" />
+          <span>{t('news.readingTime', { minutes: post.reading_minutes })}</span>
+          {
+            post.author_name && (
+              <>
+                <span class="art-dot" />
+                <span>
+                  {t('news.by')} <strong>{post.author_name}</strong>
+                  {post.author_role && <span class="art-role">, {post.author_role}</span>}
+                </span>
+              </>
+            )
+          }
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap art-grid">
+      {/* Sanitised on write against a strict allowlist (backend/src/services/content.js),
+          never on render - a single forgotten call site would otherwise be an XSS. */}
+      <div class="prose" set:html={body} />
+      <ArticleAside url={url} title={post.title} locale={locale} />
+    </div>
+  </article>
+
+  {
+    related.length > 0 && (
+      <section class="rel">
+        <div class="wrap">
+          <h2 class="h-section rel-h">{t('news.related')}</h2>
+
+          {/* A rail, not a grid - but a rail that lines up with everything else on the
+              page rather than running off the side of it. What tells you it scrolls is
+              the soft fade at whichever end still has cards behind it, put there by the
+              script at the bottom of this file. */}
+          <div class="rel-rail no-scrollbar" id="relRail">
+            <div class="rel-track">
+              {related.map((p) => (
+                <a href={link(`/${p.slug}/`, locale)} class="rel-card">
+                  <span class="cover rel-thumb">
+                    <Cover
+                      path={p.cover_path}
+                      variants={p.cover_variants}
+                      alt={p.cover_alt}
+                      sizes="20rem"
+                    />
+                  </span>
+                  <div class="rel-body">
+                    {p.category_name && <span class="rel-cat">{p.category_name}</span>}
+                    <h3>{p.title}</h3>
+                    <span class="rel-meta">
+                      {formatDate(p.published_at, locale)} · {t('news.readingTime', { minutes: p.reading_minutes })}
+                    </span>
+                  </div>
+                </a>
+              ))}
+
+              <a href={link('/news/', locale)} class="rel-card rel-all">
+                <span class="rel-all-arrow" aria-hidden="true" />
+                <span class="rel-all-label">{t('news.seeAll')}</span>
+                <span class="rel-all-sub">{t('news.backToNews')}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <RecoveryCta />
+  <CtaStrip />
+</Layout>
+)}
+
+<style>
+  .draft-bar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    padding: 0.6rem 1rem;
+    text-align: center;
+    background: var(--color-purple-500);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .art {
+    background: var(--color-navy);
+    padding-bottom: 3rem;
+  }
+  .art-head {
+    position: relative;
+    overflow: hidden;
+    background: var(--gradient-depth);
+    padding: 8rem 0 2.5rem;
+  }
+  /* With a cover, the hero IS the picture: full-bleed, headline sitting on it, and the
+     image dissolving downward into the page rather than stopping at a boxed edge. */
+  .art-head.has-cover {
+    display: flex;
+    align-items: flex-end;
+    min-height: min(34rem, 62svh);
+    padding: 11rem 0 3.5rem;
+  }
+  .art-hero {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .art-hero-img,
+  .art-hero-blur {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .art-hero-blur {
+    filter: blur(36px) saturate(115%);
+    /* scaled so the blur's soft edge never shows against the frame */
+    transform: scale(1.14);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 18%, #000 70%);
+    mask-image: linear-gradient(to bottom, transparent 18%, #000 70%);
+  }
+  .art-hero-scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(16, 16, 32, 0.72) 0%,
+        rgba(16, 16, 32, 0.42) 28%,
+        rgba(16, 16, 32, 0.72) 66%,
+        var(--color-navy) 100%
+      ),
+      /* a little extra shadow under the headline, which sits bottom-left */
+        radial-gradient(90% 70% at 10% 95%, rgba(16, 16, 32, 0.75), transparent 70%);
+  }
+  .art-head-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    max-width: 56rem;
+  }
+  .has-cover .art-title,
+  .has-cover .art-meta {
+    text-shadow: 0 2px 20px rgba(16, 16, 32, 0.8);
+  }
+  .art-back {
+    color: var(--color-purple-300);
+    font-size: 0.85rem;
+    text-decoration: none;
+  }
+  .art-back:hover {
+    color: #fff;
+  }
+  .news-cat {
+    --cat: var(--color-purple-400);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--cat) 22%, transparent);
+    color: color-mix(in srgb, var(--cat) 45%, white);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .art-title {
+    font-size: clamp(1.9rem, 4vw, 3.1rem);
+    line-height: 1.1;
+  }
+  .art-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    font-size: 0.84rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .art-meta strong {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 600;
+  }
+  .art-role {
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .art-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+  }
+  /* Article body. The editor emits h2/h3/p/ul/ol/blockquote/img/table and the Q&A
+     block, and nothing else survives the sanitiser - so this is the complete set of
+     what can appear here. :global because the HTML is injected with set:html and never
+     sees Astro's scoping. */
+  /* Article, then the rail beside it. One column until there is genuinely room for two:
+     squeezing an 18rem sidebar in earlier costs the article the width it needs to be
+     readable, and reading is what this page is for. Below the breakpoint the aside falls
+     underneath, where the share buttons land right where someone finishes reading. */
+  /* The leading lives on the GRID, not on .prose - both columns have to start at the
+     same height, and a margin on one of them only moves that one. */
+  .art-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem;
+    margin-top: 3rem;
+  }
+  @media (min-width: 1080px) {
+    .art-grid {
+      grid-template-columns: minmax(0, 1fr) 18rem;
+      gap: 3.5rem;
+      /* NOT align-items: start.
+       *
+       * A sticky element travels inside its containing block, and it can only travel as
+       * far as that block is taller than itself. `align-items: start` shrinks the aside
+       * column to its own content - so the sticky card inside it fills the whole thing,
+       * has nowhere to go, and scrolls away with the page like any other element. Left
+       * to stretch, the column is as tall as the article beside it, and the card has the
+       * whole length of the piece to slide down. */
+    }
+  }
+
+  .prose {
+    max-width: 52rem;
+    min-width: 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 1.05rem;
+    line-height: 1.8;
+  }
+  /* Centred only while it has the page to itself. With the rail beside it, centring the
+     article would open a gap in the middle of nothing and shove it away from its own
+     sidebar. */
+  @media (max-width: 1079px) {
+    .prose {
+      margin-inline: auto;
+    }
+  }
+  .prose :global(> * + *) {
+    margin-top: 1.35rem;
+  }
+  .prose :global(h2) {
+    margin-top: 2.75rem;
+    font-size: 1.6rem;
+    color: #fff;
+  }
+  .prose :global(h3) {
+    margin-top: 2rem;
+    font-size: 1.25rem;
+    color: #fff;
+  }
+  .prose :global(strong) {
+    color: #fff;
+    font-weight: 600;
+  }
+  .prose :global(a) {
+    color: var(--color-purple-300);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .prose :global(a:hover) {
+    color: #fff;
+  }
+  /* list-style, explicitly.
+   *
+   * Tailwind's preflight resets `ol, ul { list-style: none }` on every list on the
+   * site. Setting only the padding here left the markers switched off - the article's
+   * lists rendered as unindented, unnumbered runs of text, and so did the legal pages'.
+   * Say what the list is. */
+  .prose :global(ul) {
+    list-style: disc;
+    padding-left: 1.5rem;
+  }
+  .prose :global(ol) {
+    list-style: decimal;
+    padding-left: 1.6rem;
+  }
+  .prose :global(ul ul) {
+    list-style: circle;
+  }
+  .prose :global(ol ol) {
+    list-style: lower-alpha;
+  }
+  .prose :global(li) {
+    display: list-item;
+    margin-top: 0.5rem;
+    padding-left: 0.35rem;
+  }
+  .prose :global(li > ul),
+  .prose :global(li > ol) {
+    margin-top: 0.5rem;
+  }
+  .prose :global(li::marker) {
+    color: var(--color-purple-400);
+  }
+  .prose :global(blockquote) {
+    border-left: 3px solid var(--color-purple-400);
+    padding: 0.2rem 0 0.2rem 1.2rem;
+    color: rgba(255, 255, 255, 0.65);
+    font-style: italic;
+  }
+  .prose :global(img) {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+  }
+  .prose :global(code) {
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.3rem;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 0.9em;
+  }
+  .prose :global(pre) {
+    padding: 1rem;
+    border-radius: 0.6rem;
+    background: rgba(0, 0, 0, 0.35);
+    overflow-x: auto;
+  }
+  /*  Q&A block 
+     Separate cards rather than one divided slab: each question is its own object, so
+     the open one can lift out of the stack instead of just changing colour inside it.
+
+     Still a native <details>/<summary> underneath - keyboard accessible, and Google
+     reads the answers even while collapsed. The height animation is layered on top by
+     src/lib/faq-accordion.ts; without JavaScript this is still a working accordion,
+     just an instant one. */
+  .prose :global(.faq) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 3.5rem;
+  }
+
+  /* The heading, injected server-side (see the frontmatter). */
+  .prose :global(.faq-head) {
+    margin: 0 0 1.5rem;
+    text-align: center;
+  }
+  .prose :global(.faq-eyebrow) {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-purple-300);
+  }
+  .prose :global(.faq-title) {
+    margin-top: 0.9rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.75rem, 3.2vw, 2.6rem);
+    line-height: 1.12;
+    color: #fff;
+  }
+  .prose :global(.faq-sub) {
+    max-width: 34rem;
+    margin: 1rem auto 0;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .prose :global(.faq-item) {
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 1rem;
+    background: rgba(35, 35, 64, 0.4);
+    transition: border-color 0.32s var(--ease-out-brand),
+      background 0.32s var(--ease-out-brand), box-shadow 0.32s var(--ease-out-brand);
+  }
+  .prose :global(.faq-item:hover) {
+    border-color: rgba(139, 91, 189, 0.35);
+  }
+
+  .prose :global(.faq-item > summary) {
+    position: relative;
+    /* the right inset clears the chevron's circle (2.75rem wide, 1.35rem from the edge)
+       with room to spare - a question that runs up against it reads as clipped */
+    padding: 1.35rem 5.1rem 1.35rem 1.6rem;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    line-height: 1.4;
+    color: #fff;
+    /* Safari focuses the summary on click; keep the ring for keyboards only. */
+    outline: none;
+  }
+  .prose :global(.faq-item > summary:focus-visible) {
+    outline: 2px solid var(--color-purple-400);
+    outline-offset: -2px;
+    border-radius: 1rem;
+  }
+  /* the UA disclosure triangle */
+  .prose :global(.faq-item > summary::-webkit-details-marker) {
+    display: none;
+  }
+
+  /* The circular button, and the chevron in it.
+   *
+   * Both pseudo-elements occupy the SAME box, so the chevron is centred in the circle
+   * by construction and rotates about its middle. Drawing the chevron from two rotated
+   * borders instead meant its visual centre was not its box centre - the arrow sat
+   * slightly low and left of the circle, and rotating it moved it again. */
+  .prose :global(.faq-item > summary::before),
+  .prose :global(.faq-item > summary::after) {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 1.35rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-top: -1.375rem;
+  }
+  .prose :global(.faq-item > summary::before) {
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    transition: background 0.32s var(--ease-out-brand);
+  }
+  /* A mask, not a background image: the colour comes from background-color, so the same
+     asset can turn white when the card opens. */
+  .prose :global(.faq-item > summary::after) {
+    background-color: var(--color-purple-300);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      no-repeat center / 1.2rem;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      no-repeat center / 1.2rem;
+    transition: transform 0.32s var(--ease-out-brand), background-color 0.28s;
+  }
+  .prose :global(.faq-item:hover > summary::before) {
+    background: rgba(139, 91, 189, 0.22);
+  }
+
+  /*  the OPEN look 
+     Two selector sets, deliberately.
+
+     Before the script runs - and if it never does - [open] is the only signal there
+     is. Once it has run (.faq gains .js), .is-open leads instead: [open] has to STAY
+     set for the whole closing animation, or the browser hides the content mid-slide.
+     Hanging the colours and the chevron off [open] therefore held them until the
+     height had finished collapsing, and the close read as two separate movements. */
+  .prose :global(.faq:not(.js) .faq-item[open]),
+  .prose :global(.faq.js .faq-item.is-open) {
+    border-color: rgba(139, 91, 189, 0.5);
+    background: rgba(139, 91, 189, 0.08);
+    box-shadow: 0 18px 42px -24px rgba(0, 0, 0, 0.75);
+  }
+  /* Filled, not lit. The glow this used to cast made the open card's chevron the
+     brightest thing on the page - louder than the answer you opened it to read. */
+  .prose :global(.faq:not(.js) .faq-item[open] > summary::before),
+  .prose :global(.faq.js .faq-item.is-open > summary::before) {
+    background: var(--color-purple-500);
+  }
+  .prose :global(.faq:not(.js) .faq-item[open] > summary::after),
+  .prose :global(.faq.js .faq-item.is-open > summary::after) {
+    background-color: #fff;
+    transform: rotate(180deg);
+  }
+
+  /* The answer. TWO boxes: the outer one is what the script animates and carries NO
+     padding - with box-sizing: border-box a box cannot render shorter than its own
+     padding, so `height: 0` on a padded box stops dead at 24px and those last 24px
+     only disappear when `open` is finally removed. That was the stall halfway through
+     the close. The padding lives on the inner box, which nothing animates. */
+  .prose :global(.faq-a) {
+    overflow: hidden;
+  }
+  .prose :global(.faq-a-inner) {
+    padding: 0 1.6rem 1.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+  .prose :global(.faq-a-inner > * + *) {
+    margin-top: 0.9rem;
+  }
+  .prose :global(.faq-a-inner ul) {
+    list-style: disc;
+    padding-left: 1.4rem;
+  }
+  .prose :global(.faq-a-inner ol) {
+    list-style: decimal;
+    padding-left: 1.5rem;
+  }
+
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+  .prose :global(th),
+  .prose :global(td) {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    text-align: left;
+  }
+  .prose :global(th) {
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+  }
+
+  /*  related reading: a rail  */
+  .rel {
+    background: var(--color-navy-deep);
+    padding: 3.5rem 0;
+    border-top: 1px solid var(--color-line);
+  }
+  .rel-h {
+    margin-bottom: 1.75rem;
+  }
+
+  /* The two fade widths are custom properties so the script can move them, and they are
+     registered with @property so that move ANIMATES. An unregistered custom property is
+     just a string to the engine - it has no idea 0px and 3.5rem are two ends of the same
+     scale, so it cannot interpolate between them and the fade would snap on and off. */
+  @property --fade-start {
+    syntax: '<length>';
+    inherits: false;
+    initial-value: 0px;
+  }
+  @property --fade-end {
+    syntax: '<length>';
+    inherits: false;
+    initial-value: 0px;
+  }
+
+  /* Inside the container, the same width as the CTA below it - not bleeding past the
+     viewport edge. The affordance is the fade, not a card sliced in half by the screen. */
+  .rel-rail {
+    --fade: 4rem;
+    --fade-start: 0px;
+    --fade-end: 0px;
+
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 0;
+
+    /* Headroom for the hover lift.
+     *
+     * `overflow-x: auto` does not leave the other axis alone - CSS promotes overflow-y
+     * from `visible` to `auto` whenever its partner is not visible. So the rail clips
+     * vertically too, and a card that rises 4px on hover had its top 4px sliced off and
+     * its drop shadow with it: the card appeared to sink INTO the rail rather than lift
+     * out of it. This padding is the room it lifts into. The negative margins give it
+     * back to the layout, so the section's spacing is unchanged. */
+    padding-block: 0.9rem 1.7rem;
+    margin-block: -0.9rem -1.2rem;
+
+    /* Fade only the end that still has cards behind it. Both start at 0, and the script
+       raises whichever side has somewhere to scroll - so at rest, with everything in
+       view, there is no fade at all and the first card is not dimmed for no reason.
+       (Prefixed first, standard last - see the note on .glass in global.css.) */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--fade-start),
+      #000 calc(100% - var(--fade-end)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--fade-start),
+      #000 calc(100% - var(--fade-end)),
+      transparent 100%
+    );
+    transition: --fade-start 0.35s var(--ease-out-brand), --fade-end 0.35s var(--ease-out-brand);
+  }
+  .rel-track {
+    display: flex;
+    gap: 1.15rem;
+    width: max-content;
+  }
+
+  .rel-card {
+    flex: 0 0 auto;
+    width: 19rem;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.85rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: var(--color-navy-elevated);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.3s var(--ease-out-brand), border-color 0.3s, box-shadow 0.3s;
+  }
+  .rel-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-purple-400);
+    box-shadow: 0 22px 48px -26px rgba(0, 0, 0, 0.75);
+  }
+  .rel-thumb {
+    aspect-ratio: 16 / 9;
+  }
+  .rel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 1.1rem 1.2rem;
+    flex: 1;
+  }
+  .rel-cat {
+    align-self: flex-start;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(139, 91, 189, 0.2);
+    color: var(--color-purple-200);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .rel-body h3 {
+    font-size: 1rem;
+    line-height: 1.35;
+    flex: 1;
+  }
+  .rel-meta {
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  /* the last card in the rail */
+  .rel-all {
+    justify-content: center;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 2rem 1.25rem;
+    text-align: center;
+    background: rgba(139, 91, 189, 0.08);
+    border-color: rgba(139, 91, 189, 0.3);
+    border-style: dashed;
+  }
+  .rel-all:hover {
+    background: rgba(139, 91, 189, 0.16);
+    border-style: solid;
+  }
+  .rel-all-arrow {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--color-purple-500);
+    box-shadow: 0 10px 24px -8px rgba(107, 63, 160, 0.9);
+    transition: transform 0.3s var(--ease-out-brand);
+  }
+  .rel-all-arrow::after {
+    content: '';
+    width: 0.6rem;
+    height: 0.6rem;
+    border-top: 2px solid #fff;
+    border-right: 2px solid #fff;
+    transform: translateX(-0.12rem) rotate(45deg);
+  }
+  .rel-all:hover .rel-all-arrow {
+    transform: translateX(4px);
+  }
+  .rel-all-label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #fff;
+  }
+  .rel-all-sub {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+</style>
+
+<script>
+  // Smooth open/close on the Q&A blocks. Progressive enhancement: without this the
+  // <details> elements are still a working accordion, just an instant one.
+  import { initFaq } from '../../lib/faq-accordion';
+  initFaq();
+
+  // Fade whichever end of the related-reading rail still has cards behind it.
+  //
+  // Both fades start at 0 in the stylesheet, so with JavaScript off - or before this
+  // runs - the rail simply has no fade. That is the right failure: a permanently dimmed
+  // first card would be a lie about being able to scroll left.
+  const rail = document.getElementById('relRail');
+  if (rail) {
+    const FADE = '4rem';
+    const update = () => {
+      // A sub-pixel scrollWidth/clientWidth difference is not "more content" - round
+      // trips through devicePixelRatio leave a pixel or two on the table, and without
+      // the slack the right-hand fade never switches off at the end of the rail.
+      const max = rail.scrollWidth - rail.clientWidth;
+      rail.style.setProperty('--fade-start', rail.scrollLeft > 4 ? FADE : '0px');
+      rail.style.setProperty('--fade-end', rail.scrollLeft < max - 4 ? FADE : '0px');
+    };
+
+    update();
+    rail.addEventListener('scroll', update, { passive: true });
+    // The rail's own width changes with the viewport, and so does whether it overflows
+    // at all - at a wide enough window every card fits and neither fade belongs.
+    new ResizeObserver(update).observe(rail);
+  }
+</script>

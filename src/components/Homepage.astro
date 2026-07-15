@@ -1,0 +1,67 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Hero from './Hero.astro';
+import About from './About.astro';
+import RecoveryCta from './RecoveryCta.astro';
+import Services from './Services.astro';
+import Tracing from './Tracing.astro';
+import WaveLines from './WaveLines.astro';
+import Sustainability from './Sustainability.astro';
+import Testimonials from './Testimonials.astro';
+import Blogs from './Blogs.astro';
+import Partners from './Partners.astro';
+import Press from './Press.astro';
+import CtaStrip from './CtaStrip.astro';
+import ImpersonatorPopup from './ImpersonatorPopup.astro';
+import type { Locale } from '../i18n/config';
+
+// The homepage composition, factored out of [...lang]/index.astro so the article route
+// ([...lang]/[slug].astro) can render it too. A bare locale root like /nl/ IS the
+// homepage, but it also matches the [slug] article route (as slug="nl"). In production
+// the prerendered index is served off disk first and this never comes up; in dev (and
+// any time [slug] answers /nl/) rendering the homepage here - rather than rewriting, which
+// is forbidden to a prerendered route and would change the URL - keeps Astro.url as /nl/,
+// so every child component's localeFromUrl() still resolves the right language.
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+---
+
+<style>
+  /* One continuous gradient behind About + Recovery so they read as a single surface */
+  .about-block {
+    background: var(--gradient-depth);
+  }
+  /* Services + Tracing share one surface + one continuous wave field */
+  .invest-block {
+    position: relative;
+    background: var(--color-navy);
+    overflow: hidden;
+  }
+  .invest-block > :global(section) {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+  }
+</style>
+
+<Layout notice={false}>
+  <Hero />
+  <div class="about-block">
+    <About />
+    <RecoveryCta />
+  </div>
+  <div class="invest-block">
+    <WaveLines />
+    <Services />
+    <Tracing />
+  </div>
+  <Sustainability />
+  <Testimonials />
+  <Blogs server:defer locale={locale} />
+  <Partners />
+  <Press />
+  <CtaStrip />
+  <ImpersonatorPopup />
+</Layout>

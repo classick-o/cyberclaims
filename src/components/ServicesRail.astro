@@ -2,9 +2,17 @@
 // Horizontal, snap-scrolling rail of service cards (~4 visible on desktop).
 // Used on the service pages ("Explore other services") and About Us ("Explore our services").
 import Icon from './Icon.astro';
-import { SERVICES } from '../data/site';
 import { SERVICE_IMAGE } from '../data/services-content';
-import { link, serviceUrl } from '../lib/paths';
+import { asset, link, serviceUrl } from '../lib/paths';
+import { localeFromUrl } from '../i18n/config';
+import { useTranslations, getServices } from '../i18n';
+
+// Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
+// 14 components, and a prop that one of them forgets to pass renders another
+// language's URLs on the page without erroring.
+const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
+const SERVICES = getServices(locale);
 
 interface Props {
   lead: string; // plain part of the heading
@@ -23,10 +31,10 @@ const items = exclude ? SERVICES.filter((s) => s.href !== exclude) : SERVICES;
     <div class="svc-more-grid">
       {
         items.map((s) => (
-          <a href={link(serviceUrl(s.href))} class="svc-more-card" data-svc={s.href} data-reveal>
+          <a href={link(serviceUrl(s.href), locale)} class="svc-more-card" data-svc={s.href} data-reveal>
             <img
               class="smc-visual"
-              src={link(SERVICE_IMAGE[s.href])}
+              src={asset(SERVICE_IMAGE[s.href])}
               alt=""
               aria-hidden="true"
               loading="lazy"
@@ -35,7 +43,7 @@ const items = exclude ? SERVICES.filter((s) => s.href !== exclude) : SERVICES;
               <h3 class="smc-title">{s.title}</h3>
               <p class="smc-blurb">{s.blurb}</p>
               <span class="smc-more">
-                Explore service <Icon name="arrow" class="w-4 h-4" />
+                {t('home.servicesExplore')} <Icon name="arrow" class="w-4 h-4" />
               </span>
             </div>
           </a>

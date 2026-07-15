@@ -1,0 +1,105 @@
+---
+// The site had no 404 page. Every mistyped or retired URL fell through to the
+// server's default - a blank page with no way back and no branding.
+//
+// It matters more here than on most sites: people arrive at Cyberclaims URLs from
+// links sent to them by strangers, and some of those strangers are the scammers
+// impersonating us. A dead end is a bad place to leave them, so the impersonator
+// warning stays on this page.
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import { link } from '../lib/paths';
+import { CONTACT } from '../data/site';
+import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
+
+const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
+---
+
+<Layout title={t('notFound.metaTitle')} description={t('notFound.body')} noindex>
+  <section class="nf">
+    <div class="glow-blob" style="background:#6b3fa0;width:34rem;height:34rem;top:-10rem;left:-8rem;"></div>
+    <div class="wrap nf-inner">
+      <span class="nf-code" aria-hidden="true">404</span>
+      <h1 class="h-section nf-h">{t('notFound.title')}</h1>
+      <p class="nf-p">{t('notFound.body')}</p>
+
+      <div class="nf-links">
+        <a href={link('/', locale)} class="btn">{t('cta.backHome')}</a>
+        <a href={link('/news/', locale)} class="btn btn-ghost">{t('nav.news')}</a>
+        <a href={link('/contact-us/', locale)} class="btn btn-ghost">{t('nav.contact')}</a>
+      </div>
+
+      <p class="nf-help">
+        <span class="nf-help-ic"><Icon name="alert" class="w-4 h-4" /></span>
+        <span
+          set:html={t('notFound.help', {
+            start: `<a href="${link('/start-process/', locale)}">${t('notFound.helpStart')}</a>`,
+            email: `<a href="mailto:${CONTACT.email}">${CONTACT.email}</a>`,
+          })}
+        />
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .nf {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    min-height: 75svh;
+    padding: 9rem 0 5rem;
+    background: var(--gradient-depth);
+  }
+  .nf-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 44rem;
+  }
+  .nf-code {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(4rem, 12vw, 8rem);
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(139, 91, 189, 0.45);
+    margin-bottom: 0.75rem;
+  }
+  .nf-h {
+    margin-bottom: 1rem;
+  }
+  .nf-p {
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.7;
+    max-width: 48ch;
+  }
+  .nf-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 2rem 0 2.5rem;
+  }
+  .nf-help {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-line);
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .nf-help-ic {
+    color: var(--color-purple-300);
+    flex-shrink: 0;
+  }
+  .nf-help a {
+    color: var(--color-purple-300);
+  }
+  .nf-help a:hover {
+    color: #fff;
+  }
+</style>

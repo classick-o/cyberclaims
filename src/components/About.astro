@@ -2,32 +2,29 @@
 // "Hello, We Are Cyberclaims" - split section: copy left, animated blockchain-trace SVG right.
 import Aurora from './Aurora.astro';
 import Icon from './Icon.astro';
-import { link } from '../lib/paths';
+import { asset, link } from '../lib/paths';
+import { localeFromUrl } from '../i18n/config';
+import { useTranslations } from '../i18n';
 
-const points = [
-  'Certified experts in crypto & blockchain forensics',
-  'Global reach - work with you from anywhere',
-  'Free case review with a 48-hour response',
-];
+// Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
+// 14 components, and a prop that one of them forgets to pass renders another
+// language's URLs on the page without erroring.
+const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
+
+const points = [t('home.aboutPoint1'), t('home.aboutPoint2'), t('home.aboutPoint3')];
 ---
 
 <section class="about">
   <Aurora />
   <div class="wrap about-grid">
     <div class="about-copy" data-reveal>
-      <h2 class="h-section about-title">
-        Hello, we are <span class="accent">Cyberclaims</span>
-      </h2>
-      <p class="about-lead">
-        At Cyberclaims, you can rely on our team of dedicated and certified experts to
-        provide and implement the best solutions for the challenges hindering your
-        business’s growth.
-      </p>
-      <p class="about-body">
-        If you are a victim of cyber fraud or have lost digital assets due to cyber theft,
-        reaching out to us is the first step toward recovering your assets and getting the
-        support you need.
-      </p>
+      <h2
+        class="h-section about-title"
+        set:html={t('home.aboutTitle', { accent: `<span class="accent">${t('home.aboutTitleA')}</span>` })}
+      />
+      <p class="about-lead">{t('home.aboutLead')}</p>
+      <p class="about-body">{t('home.aboutBody')}</p>
       <ul class="about-points">
         {
           points.map((p) => (
@@ -39,7 +36,7 @@ const points = [
         }
       </ul>
       <div class="about-cta">
-        <a href={link('/about-us/')} class="btn">Read More</a>
+        <a href={link('/about-us/', locale)} class="btn">{t('cta.readMore')}</a>
       </div>
     </div>
 
@@ -48,8 +45,8 @@ const points = [
       <div class="trace-frame">
         <img
           class="trace-img"
-          src={link('/funds-flow.webp')}
-          alt="Live blockchain funds-flow trace: wallet, exchange and mixer nodes linked to a flagged cashout point"
+          src={asset('/funds-flow.webp')}
+          alt={t('home.aboutImageAlt')}
           width="2048"
           height="2048"
           loading="lazy"

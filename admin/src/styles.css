@@ -1,0 +1,1393 @@
+/* Cyberclaims admin.
+ *
+ * The same visual language as the site, not just the same hex codes: the aurora
+ * spotlight, frosted-glass panels, Poppins/Inter, and buttons that carry a purple
+ * glow. Someone moving between cyberclaims.net and /admin should not feel like they
+ * changed product.
+ *
+ * Tokens mirror src/styles/global.css. Keep them in step.
+ */
+
+:root {
+  /* purple scale (base 500 = #6B3FA0, the brand purple) */
+  --purple-50: #f2ecf9;
+  --purple-100: #e3d5f0;
+  --purple-200: #c7abe1;
+  --purple-300: #a880d1;
+  --purple-400: #8b5bbd;
+  --purple-500: #6b3fa0;
+  --purple-600: #593585;
+  --purple-700: #442866;
+  --purple-800: #2f1c47;
+  --purple-900: #1d1130;
+
+  --navy: #1a1a2e;
+  --navy-deep: #101020;
+  --navy-elevated: #232340;
+
+  --mist: #f5f4f9;
+  --line: rgba(255, 255, 255, 0.09);
+  --muted: rgba(255, 255, 255, 0.55);
+  --faint: rgba(255, 255, 255, 0.38);
+  --danger: #f87171;
+  --ok: #4ade80;
+
+  --gradient-brand: linear-gradient(135deg, #6b3fa0 0%, #8b5bbd 100%);
+  --gradient-depth: linear-gradient(160deg, #1a1a2e 0%, #101020 100%);
+  --glow-purple: 0 0 60px rgba(139, 91, 189, 0.35);
+
+  --font-display: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+  --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --ease-out-brand: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--gradient-depth);
+  background-attachment: fixed;
+  color: var(--mist);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--purple-300);
+  text-decoration: none;
+}
+a:hover {
+  color: #fff;
+}
+
+::selection {
+  background: var(--purple-500);
+  color: #fff;
+}
+
+/* ── the site's aurora: a purple spotlight from the top, with drifting light rays ── */
+.aurora {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 60rem;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: radial-gradient(
+    130% 70% at 50% -4%,
+    rgba(139, 91, 189, 0.42),
+    rgba(107, 63, 160, 0.16) 32%,
+    rgba(29, 17, 48, 0) 60%
+  );
+  -webkit-mask-image: linear-gradient(to bottom, #000 20%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 20%, transparent 100%);
+}
+.aurora::after {
+  content: '';
+  position: absolute;
+  inset: -10% 0 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 3.4rem,
+    rgba(168, 128, 209, 0.05) 3.9rem,
+    transparent 4.4rem
+  );
+  -webkit-mask-image: radial-gradient(65% 85% at 50% 0%, #000, transparent 72%);
+  mask-image: radial-gradient(65% 85% at 50% 0%, #000, transparent 72%);
+  animation: rays 26s ease-in-out infinite;
+}
+@keyframes rays {
+  50% {
+    transform: translateX(1.6rem);
+  }
+}
+
+.glow-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── shell ──────────────────────────────────────────────────────────────────── */
+.shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 15.5rem 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.5rem 1rem;
+  background: rgba(26, 26, 46, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  border-right: 1px solid var(--line);
+}
+
+/* the site's mark + wordmark, not a text placeholder */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.5rem 1.5rem;
+}
+.brand img {
+  width: 2.1rem;
+  height: 2.1rem;
+  object-fit: contain;
+}
+.brand-word {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.brand-word span {
+  color: var(--purple-300);
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.55rem;
+  border: 1px solid transparent;
+  color: var(--muted);
+  font-weight: 500;
+  transition: background 0.2s var(--ease-out-brand), color 0.2s, border-color 0.2s;
+}
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--mist);
+}
+.nav-link.active {
+  background: var(--purple-500);
+  border-color: var(--purple-400);
+  color: #fff;
+  box-shadow: 0 8px 24px -10px rgba(107, 63, 160, 0.85);
+}
+.nav-link svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.who {
+  padding: 0 0.75rem 0.7rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--faint);
+}
+.who strong {
+  display: block;
+  color: var(--mist);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.main {
+  position: relative;
+  z-index: 1;
+  padding: 2.25rem 2.25rem 3rem;
+  overflow-x: auto;
+}
+
+/* ── page head, with the site's eyebrow label ───────────────────────────────── */
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+.head h1 {
+  font-size: 1.75rem;
+}
+.head .sub {
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--purple-300);
+}
+.eyebrow::before {
+  content: '';
+  width: 1.6rem;
+  height: 1px;
+  background: var(--purple-400);
+}
+
+/* ── buttons: the site's, glow and lift included ────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.35rem;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  background: var(--purple-500);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 8px 24px -8px rgba(107, 63, 160, 0.7);
+  transition: transform 0.25s var(--ease-out-brand), box-shadow 0.25s var(--ease-out-brand),
+    background 0.25s var(--ease-out-brand);
+}
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: var(--purple-400);
+  box-shadow: 0 14px 34px -8px rgba(139, 91, 189, 0.85);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.btn.ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  box-shadow: none;
+}
+.btn.ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--purple-400);
+  transform: translateY(-2px);
+  box-shadow: none;
+}
+.btn.danger {
+  background: transparent;
+  border-color: rgba(248, 113, 113, 0.35);
+  color: var(--danger);
+  box-shadow: none;
+}
+.btn.danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.12);
+  transform: translateY(-2px);
+}
+.btn.sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.76rem;
+  border-radius: 0.45rem;
+}
+
+/* ── fields ─────────────────────────────────────────────────────────────────── */
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='date'],
+input[type='number'],
+input[type='search'],
+select,
+textarea {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.6rem;
+  color: var(--mist);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  transition: border-color 0.2s, background 0.2s;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--purple-400);
+  background: rgba(139, 91, 189, 0.08);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--faint);
+}
+select {
+  color-scheme: dark;
+  cursor: pointer;
+}
+textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--purple-300);
+}
+.field {
+  margin-bottom: 1.1rem;
+}
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.hint {
+  margin-top: 0.35rem;
+  font-size: 0.74rem;
+  color: var(--faint);
+}
+.err {
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--danger);
+}
+
+/* ── glass surfaces (the site's .glass) ─────────────────────────────────────── */
+.card {
+  background: rgba(35, 35, 64, 0.45);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 0.75rem;
+  padding: 1.4rem;
+}
+.card + .card {
+  margin-top: 1.15rem;
+}
+.card > h2 {
+  font-size: 0.95rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--line);
+}
+.card.flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--purple-300);
+  background: rgba(255, 255, 255, 0.025);
+  border-bottom: 1px solid var(--line);
+}
+td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+}
+tbody tr {
+  transition: background 0.15s;
+}
+tbody tr:hover {
+  background: rgba(139, 91, 189, 0.06);
+}
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.pill.draft,
+.pill.archived {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--muted);
+}
+.pill.published,
+.pill.qualified {
+  background: rgba(74, 222, 128, 0.14);
+  color: var(--ok);
+}
+.pill.new {
+  background: rgba(139, 91, 189, 0.22);
+  color: var(--purple-200);
+}
+.pill.contacted {
+  background: rgba(168, 128, 209, 0.16);
+  color: var(--purple-200);
+}
+.pill.closed {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--faint);
+}
+.pill.warn {
+  background: rgba(248, 113, 113, 0.14);
+  color: var(--danger);
+}
+
+.empty {
+  padding: 3.5rem 1rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.toolbar {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.15rem;
+}
+.toolbar select,
+.toolbar input {
+  width: auto;
+  min-width: 10rem;
+}
+.spacer {
+  flex: 1;
+}
+
+/* ── pagination ──────────────────────────────────────────────────────────────
+   Renders nothing when it all fits on one page (see Pager.jsx), so this only ever
+   shows on lists long enough to need it. */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+.pager-count {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.pager-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+}
+.pager-btn {
+  min-width: 2.1rem;
+  height: 2.1rem;
+  padding: 0 0.55rem;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--mist);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.pager-btn:hover:not(:disabled):not(.on) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.pager-btn.on {
+  background: var(--purple-500);
+  border-color: var(--purple-500);
+  color: #fff;
+  cursor: default;
+}
+.pager-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pager-gap {
+  padding: 0 0.15rem;
+  color: var(--faint);
+  user-select: none;
+}
+
+.banner {
+  padding: 0.8rem 1rem;
+  border-radius: 0.6rem;
+  margin-bottom: 1.15rem;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+.banner.error {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+.banner.ok {
+  background: rgba(139, 91, 189, 0.12);
+  border: 1px solid rgba(139, 91, 189, 0.35);
+  color: var(--purple-200);
+}
+
+/* ── login: the homepage hero, in miniature ─────────────────────────────────── */
+.login {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 1.5rem;
+}
+.login-card {
+  width: 100%;
+  max-width: 23rem;
+  padding: 2.25rem 2rem;
+  /* frosted, like the hero's lead form */
+  background: rgba(22, 22, 42, 0.62);
+  -webkit-backdrop-filter: blur(26px) saturate(150%);
+  backdrop-filter: blur(26px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 0.85rem;
+}
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.75rem;
+}
+.login-brand img {
+  width: 2.4rem;
+  height: 2.4rem;
+}
+.login h1 {
+  font-size: 1.35rem;
+  margin-bottom: 0.4rem;
+}
+.login .sub {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 1.6rem;
+}
+
+/* ── editor ─────────────────────────────────────────────────────────────────── */
+.editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 19.5rem;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.locale-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 1.15rem;
+  border-bottom: 1px solid var(--line);
+}
+.locale-tab {
+  padding: 0.55rem 0.95rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.locale-tab.active {
+  color: #fff;
+  border-bottom-color: var(--purple-400);
+}
+.locale-tab .missing {
+  color: var(--danger);
+  margin-left: 0.3rem;
+}
+
+.tt-toolbar {
+  display: flex;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 0;
+  border-radius: 0.6rem 0.6rem 0 0;
+  background: rgba(255, 255, 255, 0.03);
+}
+.tt-btn {
+  min-width: 2rem;
+  padding: 0.32rem 0.55rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.tt-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--mist);
+}
+.tt-btn.on {
+  background: var(--purple-500);
+  color: #fff;
+}
+/* already used up — the article has its one Q&A block. Not `disabled`: the button still
+   does something useful (it scrolls you to the block), it just has nothing left to add. */
+.tt-btn.spent:not(.on) {
+  color: var(--faint);
+  background: rgba(255, 255, 255, 0.04);
+}
+.tt-sep {
+  width: 1px;
+  background: var(--line);
+  margin: 0.2rem 0.35rem;
+}
+
+.tt-editor {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0 0 0.6rem 0.6rem;
+  background: rgba(255, 255, 255, 0.02);
+  min-height: 26rem;
+  max-height: 58vh;
+  overflow-y: auto;
+}
+.tt-editor .ProseMirror {
+  padding: 1.35rem;
+  outline: none;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.82);
+}
+.tt-editor .ProseMirror > * + * {
+  margin-top: 1rem;
+}
+.tt-editor h2 {
+  font-size: 1.35rem;
+  margin-top: 1.75rem;
+  color: #fff;
+}
+.tt-editor h3 {
+  font-size: 1.1rem;
+  margin-top: 1.4rem;
+  color: #fff;
+}
+.tt-editor strong {
+  color: #fff;
+}
+.tt-editor a {
+  color: var(--purple-300);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tt-editor ul,
+.tt-editor ol {
+  padding-left: 1.35rem;
+}
+.tt-editor li {
+  margin-top: 0.4rem;
+}
+.tt-editor li::marker {
+  color: var(--purple-400);
+}
+.tt-editor blockquote {
+  border-left: 3px solid var(--purple-400);
+  padding-left: 1rem;
+  color: var(--muted);
+  font-style: italic;
+}
+.tt-editor img {
+  max-width: 100%;
+  border-radius: 0.6rem;
+  border: 1px solid var(--line);
+}
+.tt-editor code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.3rem;
+  font-size: 0.9em;
+}
+.tt-editor pre {
+  background: rgba(0, 0, 0, 0.32);
+  padding: 0.95rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+.tt-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--faint);
+  float: left;
+  pointer-events: none;
+  height: 0;
+}
+
+/* ── media ──────────────────────────────────────────────────────────────────── */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.9rem;
+}
+.media-item {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: rgba(35, 35, 64, 0.45);
+  cursor: pointer;
+  transition: transform 0.3s var(--ease-out-brand), border-color 0.3s, box-shadow 0.3s;
+}
+.media-item:hover {
+  transform: translateY(-3px);
+  border-color: var(--purple-400);
+  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.7);
+}
+.media-item img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+.media-meta {
+  padding: 0.55rem 0.65rem 0.65rem;
+  font-size: 0.7rem;
+  color: var(--faint);
+  line-height: 1.5;
+}
+.media-meta .name {
+  color: var(--mist);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.media-noalt {
+  color: var(--danger);
+}
+
+.drop {
+  display: block;
+  padding: 2rem;
+  margin-bottom: 1.35rem;
+  border: 1.5px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: center;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.drop:hover,
+.drop.over {
+  border-color: var(--purple-400);
+  background: rgba(139, 91, 189, 0.07);
+  color: var(--mist);
+}
+
+.cover-preview img {
+  width: 100%;
+  border-radius: 0.6rem;
+  border: 1px solid var(--line);
+  display: block;
+}
+
+/* ── modal ──────────────────────────────────────────────────────────────────── */
+.modal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(10, 10, 20, 0.7);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 46rem;
+  max-height: 85vh;
+  background: rgba(26, 26, 46, 0.9);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.85rem;
+  box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.8);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.35rem;
+  border-bottom: 1px solid var(--line);
+}
+.modal-head h2 {
+  font-size: 1rem;
+}
+.modal-body {
+  padding: 1.35rem;
+  overflow-y: auto;
+}
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1.1rem 1.35rem;
+  border-top: 1px solid var(--line);
+}
+
+/* ── responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 1150px) {
+  .editor-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 820px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    padding: 0.75rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand,
+  .sidebar-foot {
+    display: none;
+  }
+  .nav-link {
+    white-space: nowrap;
+  }
+  .main {
+    padding: 1.35rem;
+  }
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+
+/* ── native controls ────────────────────────────────────────────────────────────
+ * <select> and <input type=checkbox] ship with the operating system's own widget,
+ * which on Windows is a grey chevron and a white square. Next to everything else here
+ * they read as unfinished. appearance:none and draw them ourselves.
+ */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.25rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  /* chevron, inlined so it costs no request and inherits no colour surprises */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a880d1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 0.7rem;
+}
+select:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+/* The popup list is drawn by the OS; `option` background is the one hook we get. */
+select option {
+  background: var(--navy);
+  color: var(--mist);
+}
+
+input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: background 0.18s var(--ease-out-brand), border-color 0.18s,
+    box-shadow 0.18s var(--ease-out-brand);
+}
+input[type='checkbox']::before {
+  content: '';
+  width: 0.62rem;
+  height: 0.62rem;
+  transform: scale(0);
+  transition: transform 0.16s var(--ease-out-brand);
+  background: #fff;
+  /* a tick, drawn with clip-path so there is no glyph or image to load */
+  clip-path: polygon(14% 44%, 0 65%, 40% 100%, 100% 16%, 84% 0%, 39% 66%);
+}
+input[type='checkbox']:hover {
+  border-color: var(--purple-400);
+}
+input[type='checkbox']:checked {
+  background: var(--purple-500);
+  border-color: var(--purple-400);
+  box-shadow: 0 6px 16px -6px rgba(107, 63, 160, 0.9);
+}
+input[type='checkbox']:checked::before {
+  transform: scale(1);
+}
+input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--purple-400);
+  outline-offset: 2px;
+}
+
+/* A checkbox with its label beside it — not the uppercase field label used above inputs. */
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0;
+  cursor: pointer;
+  color: var(--mist);
+  font-size: 0.86rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+input[type='color'] {
+  width: 2.75rem;
+  height: 2.4rem;
+  padding: 0.22rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.6rem;
+  cursor: pointer;
+}
+input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type='color']::-webkit-color-swatch {
+  border: 0;
+  border-radius: 0.4rem;
+}
+
+/* ── Q&A block, in the editor ───────────────────────────────────────────────────
+ * The page ships a collapsed <details> accordion. Here it is always open — a
+ * collapsed accordion would hide the text you are trying to write.
+ */
+.faq-block {
+  margin: 1.5rem 0;
+  border: 1px solid rgba(139, 91, 189, 0.32);
+  border-radius: 0.7rem;
+  background: rgba(139, 91, 189, 0.06);
+  overflow: hidden;
+}
+.faq-block-head {
+  padding: 0.55rem 0.9rem;
+  background: rgba(139, 91, 189, 0.14);
+  border-bottom: 1px solid rgba(139, 91, 189, 0.22);
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--purple-200);
+  user-select: none;
+}
+.faq-block-items {
+  padding: 0.35rem;
+}
+.faq-block-foot {
+  padding: 0.35rem 0.6rem 0.7rem;
+}
+.faq-add {
+  padding: 0.4rem 0.75rem;
+  border: 1px dashed rgba(139, 91, 189, 0.45);
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--purple-200);
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+.faq-add:hover {
+  background: rgba(139, 91, 189, 0.16);
+  border-color: var(--purple-400);
+  color: #fff;
+}
+
+.faq-item-edit {
+  position: relative;
+  padding: 0.75rem 2.25rem 0.75rem 0.75rem;
+  border-radius: 0.55rem;
+}
+.faq-item-edit + .faq-item-edit {
+  border-top: 1px solid rgba(139, 91, 189, 0.18);
+}
+.faq-item-edit:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+.faq-remove {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.55rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  display: grid;
+  place-content: center;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--faint);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+.faq-item-edit:hover .faq-remove {
+  opacity: 1;
+}
+.faq-remove:hover {
+  background: rgba(248, 113, 113, 0.14);
+  color: var(--danger);
+}
+
+/* Q and A gutter markers.
+ *
+ * ::after, NOT ::before — and that is load-bearing. An element has exactly one ::before,
+ * and Tiptap's Placeholder extension draws into ::before too. With the markers there,
+ * the two collided: the placeholder won the cascade, inherited the marker's
+ * position:absolute and its 1.35rem width, and rendered "The question a reader would
+ * actually ask" as a one-character-wide vertical column stacked over the answer.
+ *
+ * The markers are absolutely positioned, so ::after looks identical — and it leaves
+ * ::before free for the placeholder, which genuinely needs it.
+ */
+.faq-q,
+.faq-item-body > *:not(.faq-q) {
+  position: relative;
+  padding-left: 1.9rem;
+}
+.faq-q::after,
+.faq-item-body > .faq-q + *::after {
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  display: grid;
+  place-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 0.3rem;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.faq-q::after {
+  content: 'Q';
+  background: var(--purple-500);
+  color: #fff;
+}
+.faq-item-body > .faq-q + *::after {
+  content: 'A';
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--purple-200);
+}
+.faq-q {
+  min-height: 1.6rem;
+  outline: none;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  color: #fff;
+}
+.faq-item-body > *:not(.faq-q) {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+/* A real placeholder, not a label: float + height:0 takes it out of flow, so the caret
+ * sits at the start of the line rather than after the hint. Click anywhere in the field
+ * and you type straight over it; it vanishes on the first character. */
+.tt-editor .is-empty::before,
+.tt-editor .is-editor-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--faint);
+  font-weight: 400;
+}
+/* The question field is display-weight; its hint should not be. */
+.tt-editor .faq-q.is-empty::before {
+  font-family: var(--font-sans);
+}
+/* The answer's hint. Written here rather than in the Placeholder config because the
+   extension computes decorations against the incoming document while editor.state.doc
+   is still the previous one — so "is this paragraph inside a faqItem?" cannot be asked
+   reliably from there. The selector already knows. */
+.tt-editor .faq-item-body > .faq-q + .is-empty::before {
+  content: 'The answer.';
+}
+
+/* ── tag input (keywords) ───────────────────────────────────────────────────── */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.6rem;
+  padding: 0.4rem 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.6rem;
+  cursor: text;
+  transition: border-color 0.2s, background 0.2s;
+}
+.tags:focus-within {
+  border-color: var(--purple-400);
+  background: rgba(139, 91, 189, 0.08);
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.3rem 0.22rem 0.6rem;
+  border-radius: 999px;
+  background: var(--purple-500);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.tag-x {
+  display: grid;
+  place-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.tag-x:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+.tag-input {
+  flex: 1;
+  min-width: 7rem;
+  padding: 0.25rem 0.2rem;
+  background: transparent;
+  border: 0;
+  color: var(--mist);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+}
+.tag-input:focus {
+  outline: none;
+  background: transparent;
+}
+
+/* ── dialog (replaces window.prompt / window.confirm) ───────────────────────── */
+.modal-sm {
+  max-width: 27rem;
+}
+.modal-sm .modal-head h2 {
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+.modal-msg {
+  margin-bottom: 1.1rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.modal-sm .modal-body:last-of-type {
+  padding-bottom: 0.35rem;
+}
+
+/* ── stacked panels (Categories & Authors) ──────────────────────────────────── */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.stack .card + .card {
+  margin-top: 0;
+}
+
+/* one-line "add" row under a table */
+.inline-add {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+.inline-add input[type='text'] {
+  flex: 1;
+}
+
+/* ── toasts ─────────────────────────────────────────────────────────────────── */
+.toaster {
+  position: fixed;
+  left: 50%;
+  bottom: 1.75rem;
+  z-index: 60;
+  display: flex;
+  /* newest nearest the bottom edge, where the eye already is */
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 0.55rem;
+  /* the layer spans the page, so it must not eat clicks — only the toasts do */
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: min(36rem, calc(100vw - 2rem));
+  padding: 0.8rem 1.15rem 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: rgba(35, 35, 64, 0.92);
+  /* prefixed first, standard last — a minifier that collapses the pair keeps the last
+     one, and Chrome does not implement -webkit-backdrop-filter */
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 26px 60px -24px rgba(0, 0, 0, 0.85);
+  color: var(--mist);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  animation: toast-in 0.42s var(--ease-out-brand) both;
+}
+.toast:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.toast.leaving {
+  animation: toast-out 0.26s ease-in both;
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+.toast.success .toast-icon {
+  background: var(--purple-500);
+}
+.toast.success .toast-icon::before {
+  content: '✓';
+}
+.toast.error {
+  border-color: rgba(248, 113, 113, 0.35);
+}
+.toast.error .toast-icon {
+  background: var(--danger);
+  color: var(--navy-deep);
+}
+.toast.error .toast-icon::before {
+  content: '!';
+}
+.toast.info .toast-icon {
+  background: rgba(255, 255, 255, 0.12);
+}
+.toast.info .toast-icon::before {
+  content: 'i';
+  font-style: italic;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.9rem) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(0.4rem) scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast.leaving {
+    animation-duration: 0.01ms;
+  }
+}

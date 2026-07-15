@@ -1,0 +1,48 @@
+name: CI
+
+# Build + typecheck on every push. There is deliberately NO deploy job.
+#
+# The site is no longer static: /news/* and /sitemap.xml render on demand from MySQL,
+# and the admin needs a Node process. GitHub Pages cannot serve any of that, so the
+# old Pages workflow was deleted rather than left in place pretending to work.
+#
+# The deploy job lands here once the hosting decision does (VPS + nginx + PM2, or
+# Hostinger's Node hosting). Until then this at least stops a broken build reaching
+# main.
+
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm install`, not `npm ci`: Tailwind v4 -> rolldown pulls a cross-platform
+      # wasm binding (@emnapi) that resolves to different versions on Windows (where
+      # the lockfile is written) and Linux, so strict `npm ci` fails on lock drift.
+      - run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        run: npx astro check --minimal
+
+      - name: Build
+        run: npm run build
+        env:
+          # The Astro build imports the backend's models (the blog pages read the
+          # database directly), which means it loads the env schema. These are dummies
+          # — the build never opens a connection, it only needs the variables to parse.
+          NODE_ENV: development
+          DB_HOST: 127.0.0.1
+          DB_USER: ci
+          DB_PASSWORD: ci
+          DB_NAME: ci
+          JWT_SECRET: ci-only-secret-not-used-for-anything-at-all

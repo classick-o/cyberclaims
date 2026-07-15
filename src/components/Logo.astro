@@ -1,15 +1,21 @@
 ---
 // Cyberclaims mark - animated ring (upgrade of the spinning-logo GIF to CSS, brief §2.2).
-import { link } from '../lib/paths';
+import { asset, link } from '../lib/paths';
+import { localeFromUrl } from '../i18n/config';
+
+// Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
+// 14 components, and a prop that one of them forgets to pass renders another
+// language's URLs on the page without erroring.
+const locale = localeFromUrl(Astro.url);
 interface Props {
   class?: string;
 }
 const { class: className = '' } = Astro.props;
 ---
 
-<a href={link('/')} class={`logo ${className}`} aria-label="Cyberclaims home">
+<a href={link('/', locale)} class={`logo ${className}`} aria-label="Cyberclaims home">
   <span class="logo-mark" aria-hidden="true">
-    <img src={link('/logo-mark.webp')} alt="" width="40" height="40" />
+    <img src={asset('/logo-mark.webp')} alt="" width="40" height="40" />
   </span>
   <span class="logo-word">Cyber<span class="logo-word-accent">claims</span></span>
 </a>

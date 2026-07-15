@@ -1,0 +1,230 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Partners from '../../components/Partners.astro';
+import ServicesRail from '../../components/ServicesRail.astro';
+import RecoveryCta from '../../components/RecoveryCta.astro';
+import Aurora from '../../components/Aurora.astro';
+import CtaStrip from '../../components/CtaStrip.astro';
+import Icon from '../../components/Icon.astro';
+import { asset } from '../../lib/paths';
+import { localePaths, type Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n';
+
+// One file, one page per locale. The default locale maps to lang: undefined, and a
+// rest parameter matches zero segments - so English stays at /about-us/, not /en/about-us/.
+export const getStaticPaths = localePaths;
+const { locale } = Astro.props as { locale: Locale };
+const t = useTranslations(locale);
+
+const points = [t('home.aboutPoint1'), t('home.aboutPoint2'), t('home.aboutPoint3')];
+---
+
+<Layout title={t('about.metaTitle')} description={t('about.metaDesc')}>
+  <PageHero
+    eyebrow="Turning the impossible into reality"
+    title={t('about.heroTitle')}
+    image="/about-us-hero.webp"
+    imageAlt={t('about.heroImageAlt')}
+    imageWidth={1100}
+    imageHeight={1072}
+    fixedHeight
+  />
+
+  <section class="ab-body has-aurora">
+    <Aurora />
+    <div class="wrap">
+      <div class="ab-split" data-reveal>
+        <div class="ab-section">
+          <h2
+            class="ab-h"
+            set:html={t('about.s1Title', { accent: `<span class="accent">${t('about.s1TitleA')}</span>` })}
+          />
+          <p class="ab-p">{t('about.s1Body')}</p>
+        </div>
+        <div class="ab-visual">
+          <img
+            class="ab-img"
+            src={asset('/turning-impossible.webp')}
+            alt={t('about.s1ImageAlt')}
+            width="1100"
+            height="871"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="ab-rec">
+    <RecoveryCta />
+  </div>
+
+  <section class="ab-body">
+    <div class="wrap ab-inner">
+      <div class="ab-section" data-reveal>
+        <h2
+          class="ab-h"
+          set:html={t('home.aboutTitle', { accent: `<span class="accent">${t('home.aboutTitleA')}</span>` })}
+        />
+        <p class="ab-p">{t('about.s2Body1')}</p>
+        <p class="ab-p">{t('about.s2Body2')}</p>
+        <p class="ab-p">{t('about.s2Body3')}</p>
+        <ul class="ab-points">
+          {
+            points.map((p) => (
+              <li>
+                <span class="ab-check"><Icon name="check" class="w-4 h-4" /></span>
+                {p}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <ServicesRail lead={t('servicesRail.exploreOur')} accent={t('servicesRail.services')} />
+
+  <section class="ab-body">
+    <div class="wrap">
+      <div class="ab-split is-reversed" data-reveal>
+        <div class="ab-visual">
+          <img
+            class="ab-img"
+            src={asset('/values.webp')}
+            alt={t('about.s3ImageAlt')}
+            width="1100"
+            height="1008"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div class="ab-section">
+          <h2
+            class="ab-h"
+            set:html={t('about.s3Title', { accent: `<span class="accent">${t('about.s3TitleA')}</span>` })}
+          />
+          <p class="ab-p">{t('about.s3Body')}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Partners />
+  <CtaStrip />
+</Layout>
+
+<style>
+  .ab-body {
+    background: var(--color-navy);
+    padding: 3.5rem 0;
+  }
+  /* hosts the <Aurora /> glow behind this section's content */
+  .ab-body.has-aurora {
+    position: relative;
+    overflow: hidden;
+  }
+  /* the aurora is taller than this section, so `overflow:hidden` cuts it while
+     it is still lit - fade the last stretch back to navy to hide that seam */
+  .ab-body.has-aurora::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 12rem;
+    background: linear-gradient(to bottom, transparent, var(--color-navy));
+    pointer-events: none;
+    z-index: 0;
+  }
+  .has-aurora > .wrap {
+    position: relative;
+    z-index: 1;
+  }
+  /* RecoveryCta is transparent by design (it inherits the homepage's shared
+     gradient block), so give it the same navy surface as the sections around it */
+  .ab-rec {
+    background: var(--color-navy);
+  }
+  /* Full width of the site's container.
+   *
+   * NOT `max-width: none` - this element carries .wrap as well, so removing the cap
+   * entirely also removes .wrap's own 80rem, and the section runs edge-to-edge while
+   * the header and footer above and below it stay boxed. Full width means the width
+   * the page has, not more than it. The old 52rem cap left a narrow column of text
+   * with two thirds of the page empty beside it. */
+  .ab-inner {
+    max-width: 80rem;
+  }
+  .ab-section {
+    margin-bottom: 2.5rem;
+  }
+  .ab-section:last-child {
+    margin-bottom: 0;
+  }
+
+  /* text + artwork side by side */
+  .ab-split {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    align-items: center;
+  }
+  .ab-split .ab-section {
+    margin-bottom: 0;
+    min-width: 0;
+  }
+  .ab-img {
+    display: block;
+    width: 100%;
+    max-width: 26rem;
+    height: auto;
+    margin-inline: auto;
+  }
+  @media (min-width: 900px) {
+    .ab-split {
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 3.5rem;
+    }
+    /* artwork first in the source order, so it sits left without `order` tricks */
+    .ab-split.is-reversed {
+      grid-template-columns: 0.9fr 1.1fr;
+    }
+  }
+  .ab-h {
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    color: #fff;
+    margin: 0 0 1.1rem;
+  }
+  .ab-p {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+  }
+  .ab-points {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 1.4rem;
+  }
+  .ab-points li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.98rem;
+  }
+  .ab-check {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: rgba(139, 91, 189, 0.15);
+    color: var(--color-purple-300);
+  }
+</style>
