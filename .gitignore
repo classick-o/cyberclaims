@@ -9,6 +9,7 @@ dist/
 .env
 .env.*
 !.env.example
+.mcp.json
 
 # logs & caches
 *.log
