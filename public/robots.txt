@@ -6,4 +6,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
-Sitemap: https://www.cyberclaims.net/sitemap.xml
+Sitemap: https://cyberclaims.nl/sitemap.xml
