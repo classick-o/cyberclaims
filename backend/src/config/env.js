@@ -86,6 +86,10 @@ const schema = z
     // a precondition for serving.
     SCAMINFO_API_KEY: optional,
     SCAMINFO_API_URL: z.string().url().default('https://api.test.scaminfo.ai'),
+    // The test gateway (api.test.scaminfo.ai) sits behind HTTP Basic auth on top of the
+    // API key. Defaults match the test environment; unset/override on production.
+    SCAMINFO_BASIC_USER: optional,
+    SCAMINFO_BASIC_PASS: optional,
   });
 
 const parsed = schema.safeParse(present);

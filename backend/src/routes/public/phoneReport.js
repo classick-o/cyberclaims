@@ -19,6 +19,23 @@ const router = Router();
 // Live analysis can take ~60–75s, so give it headroom before we give up.
 const UPSTREAM_TIMEOUT_MS = 90_000;
 
+// The test gateway (api.test.scaminfo.ai) is fronted by HTTP Basic auth in addition to
+// the X-Api-Key. Attach it only for a test host; production (api.scaminfo.ai) doesn't
+// use it. Credentials default to the known test pair and can be overridden via env.
+function upstreamHeaders() {
+  const headers = {
+    'X-Api-Key': env.SCAMINFO_API_KEY,
+    'Content-Type': 'application/json',
+    Accept: 'application/pdf',
+  };
+  if (/test\.scaminfo\.ai/i.test(env.SCAMINFO_API_URL)) {
+    const user = env.SCAMINFO_BASIC_USER || 'test';
+    const pass = env.SCAMINFO_BASIC_PASS || 'scaminfo';
+    headers.Authorization = 'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64');
+  }
+  return headers;
+}
+
 const BRANDING = {
   company_name: 'CyberClaims',
   website: 'cyberclaims.nl',
@@ -45,11 +62,7 @@ router.post('/', honeypot, phoneReportLimiter, validate(phoneReportSchema), asyn
   try {
     const upstream = await fetch(`${env.SCAMINFO_API_URL}/public/v1/phone/report.pdf`, {
       method: 'POST',
-      headers: {
-        'X-Api-Key': env.SCAMINFO_API_KEY,
-        'Content-Type': 'application/json',
-        Accept: 'application/pdf',
-      },
+      headers: upstreamHeaders(),
       body: JSON.stringify({
         phone_number,
         language: locale, // schema already constrained this to en|nl|de|it|es|pt
