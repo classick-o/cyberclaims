@@ -10,7 +10,7 @@ import { mkdir } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import express from 'express';
-import { env, isProd, assertServeable, DEFAULT_ADMIN_PASSWORD } from './src/config/env.js';
+import { env, isProd, allowIndexing, assertServeable, DEFAULT_ADMIN_PASSWORD } from './src/config/env.js';
 import { api } from './src/app.js';
 import { securityHeaders } from './src/middleware/security.js';
 import { startRetentionJob } from './src/services/retention.js';
@@ -38,6 +38,31 @@ app.disable('x-powered-by');
 
 // CSP, HSTS, frame-ancestors - on the HTML. The API sets its own headers in app.js.
 app.use(securityHeaders);
+
+// Indexing switch. When ALLOW_INDEXING isn't 'true' (the default, and the case on the
+// cyberclaims.nl staging domain) every response carries X-Robots-Tag: noindex - a
+// runtime backstop that covers SSR pages, the sitemap and prerendered HTML alike,
+// regardless of what any page baked into its <meta> at build time.
+if (!allowIndexing) {
+  app.use((_req, res, next) => {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    next();
+  });
+}
+
+// robots.txt is served here, not from public/, so it tracks ALLOW_INDEXING without a
+// rebuild: block everything on a non-indexable deployment, otherwise allow crawling
+// (minus the CMS and API) and point at the sitemap.
+app.get('/robots.txt', (_req, res) => {
+  res.type('text/plain');
+  if (!allowIndexing) {
+    res.send('User-agent: *\nDisallow: /\n');
+    return;
+  }
+  res.send(
+    `User-agent: *\nAllow: /\n\nDisallow: /admin\nDisallow: /api/\n\nSitemap: ${env.SITE_URL.replace(/\/$/, '')}/sitemap.xml\n`
+  );
+});
 
 app.use('/api', api);
 

@@ -18,6 +18,8 @@
     "start": "node backend/server.js",
     "migrate": "node backend/scripts/migrate.js",
     "seed:admin": "node backend/scripts/seed-admin.js",
+    "seed:articles": "node backend/scripts/seed-articles.js",
+    "update:article-seo": "node backend/scripts/update-article-seo.js",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "preview": "astro preview",

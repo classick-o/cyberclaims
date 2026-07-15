@@ -14,6 +14,9 @@ import Press from './Press.astro';
 import CtaStrip from './CtaStrip.astro';
 import ImpersonatorPopup from './ImpersonatorPopup.astro';
 import type { Locale } from '../i18n/config';
+import { jsonLdScript } from '../lib/jsonld';
+import { asset } from '../lib/paths';
+import { CONTACT } from '../data/site';
 
 // The homepage composition, factored out of [...lang]/index.astro so the article route
 // ([...lang]/[slug].astro) can render it too. A bare locale root like /nl/ IS the
@@ -26,6 +29,47 @@ interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
+
+// Site-wide Organization + WebSite structured data. Emitted on the homepage (the
+// conventional home for these entities) so search engines have a canonical description
+// of who runs the site. Absolute URLs come from Astro.site, so each domain (cyberclaims.nl
+// staging, cyberclaims.net production) self-references correctly.
+const origin = (Astro.site?.origin ?? 'https://www.cyberclaims.net').replace(/\/$/, '');
+const orgLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${origin}/#organization`,
+      name: 'CyberClaims',
+      legalName: 'Transparent Business Solutions B.V.',
+      url: `${origin}/`,
+      logo: `${origin}${asset('/favicon-192.png')}`,
+      email: CONTACT.email,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Kalvermarkt 53',
+        postalCode: '2511 CB',
+        addressLocality: 'The Hague',
+        addressCountry: 'NL',
+      },
+      contactPoint: CONTACT.phones.map((p) => ({
+        '@type': 'ContactPoint',
+        telephone: p.number,
+        areaServed: p.region,
+        contactType: 'customer support',
+      })),
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${origin}/#website`,
+      url: `${origin}/`,
+      name: 'CyberClaims',
+      publisher: { '@id': `${origin}/#organization` },
+      inLanguage: locale,
+    },
+  ],
+};
 ---
 
 <style>
@@ -47,6 +91,7 @@ const { locale } = Astro.props;
 </style>
 
 <Layout notice={false}>
+  <script type="application/ld+json" slot="head" set:html={jsonLdScript(orgLd)} />
   <Hero />
   <div class="about-block">
     <About />

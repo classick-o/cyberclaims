@@ -30,6 +30,13 @@ const schema = z
     PORT: z.coerce.number().int().positive().default(3000),
     SITE_URL: z.string().url().default('http://localhost:3000'),
 
+    // Whether search engines may index the site. Default 'false' so a fresh deployment
+    // — and the cyberclaims.nl staging domain — is never accidentally indexed. Flip to
+    // 'true' only on the real production domain (cyberclaims.net). Drives the robots
+    // <meta>, the X-Robots-Tag header, and robots.txt. Read at BUILD time for the meta
+    // (so rebuild after changing it) and at runtime for the header + robots.txt.
+    ALLOW_INDEXING: z.enum(['true', 'false']).default('false'),
+
     // Number of proxies in front of us (Cloudflare = 1, bare VPS = 0).
     // Must NOT be `true`: that makes X-Forwarded-For spoofable and turns rate
     // limiting into decoration.
@@ -93,6 +100,7 @@ if (!parsed.success) {
 export const env = parsed.data;
 
 export const isProd = env.NODE_ENV === 'production';
+export const allowIndexing = env.ALLOW_INDEXING === 'true';
 export const emailEnabled = Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS);
 export const turnstileEnabled = Boolean(env.TURNSTILE_SECRET);
 export const scaminfoEnabled = Boolean(env.SCAMINFO_API_KEY);

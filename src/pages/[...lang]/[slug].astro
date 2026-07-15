@@ -167,7 +167,7 @@ if (!preview) {
 {homeLocale && <Homepage locale={homeLocale} />}
 {!homeLocale && post && (
 <Layout
-  title={`${post.seo_title ?? post.title} - Cyberclaims`}
+  title={post.seo_title ?? `${post.title} - Cyberclaims`}
   description={post.seo_description ?? post.excerpt ?? ''}
   path={`/${post.slug}/`}
   locale={locale}

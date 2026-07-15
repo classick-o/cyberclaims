@@ -30,6 +30,13 @@ const {
   noindex = false,
 } = Astro.props;
 
+// Site-wide indexing switch, read at build/SSR time from the environment. Off by
+// default (and off on the cyberclaims.nl staging domain), so unless a deployment
+// explicitly sets ALLOW_INDEXING=true every page carries noindex. A per-page
+// `noindex` prop (drafts, thank-you) still forces it regardless. The X-Robots-Tag
+// header in backend/server.js enforces the same thing at runtime as a backstop.
+const robotsNoindex = noindex || process.env.ALLOW_INDEXING !== 'true';
+
 // Prerendered pages hand the locale down as a prop. SSR routes (the blog) have no
 // getStaticPaths to do that, so they fall back to reading it out of the URL.
 const locale: Locale = Astro.props.locale ?? localeFromUrl(Astro.url);
@@ -62,7 +69,7 @@ const xDefaultPath = localeSlugs?.[DEFAULT_LOCALE] ? `/${localeSlugs[DEFAULT_LOC
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {robotsNoindex && <meta name="robots" content="noindex, nofollow" />}
 
     <link rel="canonical" href={absoluteUrl(path, locale, Astro.site)} />
 

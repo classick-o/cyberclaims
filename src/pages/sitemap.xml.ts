@@ -28,6 +28,7 @@ const STATIC_PAGES: { path: string; priority: number; changefreq: string }[] = [
   { path: '/business-services/', priority: 0.9, changefreq: 'monthly' },
   { path: '/news/', priority: 0.8, changefreq: 'weekly' },
   { path: '/url-checker/', priority: 0.7, changefreq: 'monthly' },
+  { path: '/phone-check/', priority: 0.8, changefreq: 'monthly' },
   { path: '/start-process/', priority: 0.9, changefreq: 'monthly' },
   { path: '/contact-us/', priority: 0.8, changefreq: 'monthly' },
   { path: '/privacy-policy/', priority: 0.3, changefreq: 'yearly' },

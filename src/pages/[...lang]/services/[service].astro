@@ -7,7 +7,8 @@ import CtaStrip from '../../../components/CtaStrip.astro';
 import Icon from '../../../components/Icon.astro';
 import ServicesRail from '../../../components/ServicesRail.astro';
 import { SERVICE_CONTENT, SERVICE_IMAGE, type ServiceBlock } from '../../../data/services-content';
-import { asset } from '../../../lib/paths';
+import { asset, absoluteUrl } from '../../../lib/paths';
+import { jsonLdScript } from '../../../lib/jsonld';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { useTranslations, getServices } from '../../../i18n';
 
@@ -91,9 +92,39 @@ const BENTO_IMG: Record<string, string> = {
   'email-forensics': '/bento/email-forensics.webp',
   'mobile-forensics': '/bento/mobile-forensics.webp',
 };
+
+// Service + breadcrumb structured data. Absolute URLs come from Astro.site, so each
+// domain self-references correctly.
+const svcUrl = absoluteUrl(`/services${service.href}`, locale, Astro.site);
+const svcOrigin = (Astro.site?.origin ?? 'https://www.cyberclaims.net').replace(/\/$/, '');
+const serviceLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Service',
+      '@id': `${svcUrl}#service`,
+      name: service.title,
+      description: service.blurb,
+      serviceType: service.title,
+      provider: { '@type': 'Organization', name: 'CyberClaims', url: `${svcOrigin}/` },
+      areaServed: 'Worldwide',
+      url: svcUrl,
+      inLanguage: locale,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/', locale, Astro.site) },
+        { '@type': 'ListItem', position: 2, name: t('nav.services'), item: absoluteUrl('/services/', locale, Astro.site) },
+        { '@type': 'ListItem', position: 3, name: service.title, item: svcUrl },
+      ],
+    },
+  ],
+};
 ---
 
 <Layout title={`${service.title} - Cyberclaims`} description={service.blurb}>
+  <script type="application/ld+json" slot="head" set:html={jsonLdScript(serviceLd)} />
   <PageHero
     eyebrow={content?.eyebrow ?? 'Our Services'}
     title={service.title}

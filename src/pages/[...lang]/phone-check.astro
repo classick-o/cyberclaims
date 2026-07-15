@@ -4,6 +4,8 @@ import Aurora from '../../components/Aurora.astro';
 import RecoveryCta from '../../components/RecoveryCta.astro';
 import Icon from '../../components/Icon.astro';
 import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
+import { jsonLdScript } from '../../lib/jsonld';
+import { absoluteUrl } from '../../lib/paths';
 import {
   PHONE_CHECK,
   PHONE_CHECK_LOCALES,
@@ -39,8 +41,24 @@ const DEFAULT_ISO: Record<PhoneCheckLocale, string> = {
   it: 'IT',
   es: 'ES',
   pt: 'PT',
+  fr: 'FR',
 };
 const defaultIso = DEFAULT_ISO[locale];
+
+// FAQPage structured data from the on-page FAQ — this is what makes Google render the
+// questions as rich results on "is this number a scam" queries, exactly the searches
+// these pages target. The answers here match the visible FAQ (Google penalises mismatches).
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  '@id': `${absoluteUrl('/phone-check/', locale as Locale, Astro.site)}#faq`,
+  inLanguage: locale,
+  mainEntity: c.faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout
@@ -50,6 +68,7 @@ const defaultIso = DEFAULT_ISO[locale];
   path="/phone-check/"
   localeSlugs={localeSlugs}
 >
+  <script type="application/ld+json" slot="head" set:html={jsonLdScript(faqLd)} />
   <section class="pc">
     <Aurora />
 

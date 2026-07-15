@@ -2,17 +2,17 @@
 //
 // These are SEO funnels, one per locale, targeting scam-heavy search markets. The copy
 // lives here (prose belongs in a data file, not the flat UIKey dictionary) and is keyed
-// by the SIX locales the ScamInfo partner API supports as report languages — en, nl,
-// de, it, es, pt. French is intentionally absent: the partner API does not produce a
-// French report, so there is no /fr/phone-check page.
+// by every site locale — en, nl, de, it, es, pt, fr. The `language` we send to ScamInfo
+// mirrors the locale; note that fr is outside the partner API's documented language set,
+// so a French request may come back in English until that's confirmed on their side.
 //
 // Deliberately, NO page states a risk verdict — the meta and on-page copy describe the
 // free report, and the actual result is delivered only inside the downloaded PDF (GDPR:
 // the sensitive assessment is not shown on, or stored by, the site).
 
-export type PhoneCheckLocale = 'en' | 'nl' | 'de' | 'it' | 'es' | 'pt';
+export type PhoneCheckLocale = 'en' | 'nl' | 'de' | 'it' | 'es' | 'pt' | 'fr';
 
-export const PHONE_CHECK_LOCALES: PhoneCheckLocale[] = ['en', 'nl', 'de', 'it', 'es', 'pt'];
+export const PHONE_CHECK_LOCALES: PhoneCheckLocale[] = ['en', 'nl', 'de', 'it', 'es', 'pt', 'fr'];
 
 export interface PhoneCheckStep {
   title: string;
@@ -355,5 +355,50 @@ export const PHONE_CHECK: Record<PhoneCheckLocale, PhoneCheckContent> = {
     ],
     disclaimer:
       'Este relatório é fornecido apenas para fins informativos e não constitui uma determinação legal. Se acredita que foi alvo de uma burla ou perdeu dinheiro, contacte a nossa equipa.',
+  },
+
+  fr: {
+    metaTitle: 'Rapport de sécurité gratuit pour numéros de téléphone | CyberClaims',
+    metaDescription:
+      'Saisissez un numéro de téléphone et obtenez un rapport de sécurité gratuit et détaillé au format PDF téléchargeable. Analyse indépendante de CyberClaims, spécialistes de l’aide aux victimes et de la récupération face à la cybercriminalité.',
+    eyebrow: 'Vérification gratuite du numéro',
+    h1: 'Ce numéro de téléphone est-il une arnaque ? Obtenez un rapport de sécurité gratuit',
+    subhead:
+      'Vous avez reçu un appel ou un SMS inattendu ? Saisissez le numéro ci-dessous et nous générerons un rapport de sécurité gratuit et détaillé à télécharger au format PDF — sans compte, rien n’est conservé.',
+    countryLabel: 'Pays',
+    numberLabel: 'Numéro de téléphone',
+    numberPlaceholder: 'ex. 6 12 34 56 78',
+    submit: 'Obtenir le rapport gratuit',
+    loading: 'Génération de votre rapport… cela peut prendre jusqu’à une minute.',
+    successTitle: 'Votre rapport est prêt',
+    successBody: 'Votre PDF a été téléchargé. Vérifiez votre dossier de téléchargements s’il n’apparaît pas.',
+    again: 'Vérifier un autre numéro',
+    errorGeneric: 'Une erreur s’est produite lors de la génération de votre rapport. Veuillez réessayer dans un instant.',
+    errorTimeout: 'Le rapport prend plus de temps que prévu. Veuillez réessayer.',
+    errorInvalid: 'Cela ne ressemble pas à un numéro de téléphone valide. Vérifiez-le et réessayez.',
+    privacyNote:
+      'Nous ne conservons pas le numéro que vous vérifiez. Le rapport est généré à la demande et vous est remis à vous seul.',
+    howTitle: 'Comment ça marche',
+    steps: [
+      { title: 'Saisissez le numéro', body: 'Choisissez le pays et saisissez le numéro de téléphone qui vous a contacté.' },
+      { title: 'Nous l’analysons', body: 'Nous effectuons des vérifications en temps réel sur les signaux de fraude, de réputation et d’exposition — généralement en moins d’une minute.' },
+      { title: 'Téléchargez votre PDF', body: 'Vous recevez un rapport de sécurité détaillé à télécharger et à conserver. Rien n’est conservé de notre côté.' },
+    ],
+    trustTitle: 'Pourquoi les gens font confiance à CyberClaims',
+    trustItems: [
+      'Spécialistes de l’aide aux victimes et de la récupération face à la cybercriminalité',
+      'Présents dans plus de 350 médias',
+      'Confidentiel — sans compte, aucune donnée conservée',
+      'Agence d’enquête privée agréée (ministère néerlandais de la Justice)',
+    ],
+    faqTitle: 'Questions fréquentes',
+    faqs: [
+      { q: 'Le rapport est-il vraiment gratuit ?', a: 'Oui. Le rapport de sécurité est entièrement gratuit et aucun compte n’est nécessaire.' },
+      { q: 'Que contient le rapport ?', a: 'Un PDF structuré qui résume ce qui est publiquement et techniquement connu sur le numéro, afin que vous décidiez comment réagir.' },
+      { q: 'Conservez-vous le numéro que je vérifie ?', a: 'Non. L’analyse est générée à la demande et le numéro n’est pas enregistré dans nos systèmes.' },
+      { q: 'Le numéro m’a appelé en se faisant passer pour ma banque — que dois-je faire ?', a: 'Ne partagez jamais de codes et ne transférez pas d’argent à la suite d’un appel inattendu. Générez le rapport et, si vous avez déjà perdu de l’argent, ouvrez un dossier auprès de notre équipe de récupération.' },
+    ],
+    disclaimer:
+      'Ce rapport est fourni à titre informatif uniquement et ne constitue pas une décision juridique. Si vous pensez être ciblé ou avoir perdu de l’argent, contactez notre équipe.',
   },
 };
