@@ -6,6 +6,7 @@ import { CONTACT } from '../data/site';
 import { asset, link, serviceUrl } from '../lib/paths';
 import { localeFromUrl } from '../i18n/config';
 import { useTranslations, getServices } from '../i18n';
+import { PHONE_CHECK_LOCALES } from '../data/phone-check-content';
 
 // Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
 // 14 components, and a prop that one of them forgets to pass renders another
@@ -20,6 +21,12 @@ const quickLinks = [
   { label: t('nav.contact'), href: '/contact-us/' },
 ];
 const resources = [
+  { label: t('nav.urlChecker'), href: '/url-checker/' },
+  // The phone check exists only for the six ScamInfo-supported locales (no /fr/), so
+  // only surface the link where the page actually exists — otherwise fr would 404.
+  ...((PHONE_CHECK_LOCALES as readonly string[]).includes(locale)
+    ? [{ label: t('nav.phoneCheck'), href: '/phone-check/' }]
+    : []),
   { label: t('legal.cookieTitle'), href: '/cookie-policy/' },
   { label: t('legal.privacyTitle'), href: '/privacy-policy/' },
   { label: t('legal.termsTitle'), href: '/terms-and-conditions/' },

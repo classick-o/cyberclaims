@@ -10,8 +10,9 @@
 // out exactly as it did before. Adding Dutch is this array plus src/i18n/nl.ts.
 
 // English is first, and stays the default. prefixDefaultLocale:false keeps it at `/` -
-// every existing URL survives - while the others live under /nl/, /fr/, /de/, /it/.
-export const LOCALES = ['en', 'nl', 'fr', 'de', 'it'] as const;
+// every existing URL survives - while the others live under /nl/, /fr/, /de/, /it/,
+// /es/, /pt/.
+export const LOCALES = ['en', 'nl', 'fr', 'de', 'it', 'es', 'pt'] as const;
 
 export type Locale = (typeof LOCALES)[number];
 
@@ -34,6 +35,8 @@ export const LOCALE_META: Record<Locale, {
   fr: { label: 'Français', htmlLang: 'fr', ogLocale: 'fr_FR', intl: 'fr-FR', flag: 'FR' },
   de: { label: 'Deutsch', htmlLang: 'de', ogLocale: 'de_DE', intl: 'de-DE', flag: 'DE' },
   it: { label: 'Italiano', htmlLang: 'it', ogLocale: 'it_IT', intl: 'it-IT', flag: 'IT' },
+  es: { label: 'Español', htmlLang: 'es', ogLocale: 'es_ES', intl: 'es-ES', flag: 'ES' },
+  pt: { label: 'Português', htmlLang: 'pt', ogLocale: 'pt_PT', intl: 'pt-PT', flag: 'PT' },
 };
 
 export function isLocale(value: unknown): value is Locale {

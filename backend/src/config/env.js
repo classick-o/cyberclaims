@@ -72,6 +72,13 @@ const schema = z
     NOTIFICATION_EMAIL: z.string().email().optional(),
 
     TURNSTILE_SECRET: optional,
+
+    // ScamInfo partner API (phone-number scam reports). The key is a server secret,
+    // never exposed to the browser. When absent, /api/phone-report returns a friendly
+    // 503 rather than the whole site refusing to boot — the report is one feature, not
+    // a precondition for serving.
+    SCAMINFO_API_KEY: optional,
+    SCAMINFO_API_URL: z.string().url().default('https://api.test.scaminfo.ai'),
   });
 
 const parsed = schema.safeParse(present);
@@ -88,6 +95,7 @@ export const env = parsed.data;
 export const isProd = env.NODE_ENV === 'production';
 export const emailEnabled = Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS);
 export const turnstileEnabled = Boolean(env.TURNSTILE_SECRET);
+export const scaminfoEnabled = Boolean(env.SCAMINFO_API_KEY);
 
 /**
  * Runtime preconditions for a production server. Called from server.js - deliberately

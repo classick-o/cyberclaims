@@ -4,11 +4,13 @@ import { nl } from './nl';
 import { fr } from './fr';
 import { de } from './de';
 import { it } from './it';
+import { es } from './es';
+import { pt } from './pt';
 import { SERVICES as SERVICE_DATA } from '../data/site';
 
 // One dictionary per locale. `satisfies` means a new entry in LOCALES without a
 // matching dictionary here is a compile error rather than a runtime `undefined`.
-const DICTIONARIES = { en, nl, fr, de, it } satisfies Record<Locale, Record<UIKey, string>>;
+const DICTIONARIES = { en, nl, fr, de, it, es, pt } satisfies Record<Locale, Record<UIKey, string>>;
 
 /**
  * t('nav.about') - typed against the English keys, so a typo is a build failure.

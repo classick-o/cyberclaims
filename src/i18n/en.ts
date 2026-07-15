@@ -26,6 +26,7 @@ export const en = {
   'nav.news': 'News',
   'nav.contact': 'Contact Us',
   'nav.urlChecker': 'URL Checker',
+  'nav.phoneCheck': 'Phone Check',
   'nav.startProcess': 'Start Process',
   'nav.menu': 'Menu',
   'nav.close': 'Close',

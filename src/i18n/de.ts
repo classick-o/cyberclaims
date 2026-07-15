@@ -14,6 +14,7 @@ export const de: Record<UIKey, string> = {
   'nav.news': 'Aktuelles',
   'nav.contact': 'Kontakt',
   'nav.urlChecker': 'URL-Checker',
+  'nav.phoneCheck': 'Telefon-Check',
   'nav.startProcess': 'Prozess starten',
   'nav.menu': 'Menü',
   'nav.close': 'Schließen',

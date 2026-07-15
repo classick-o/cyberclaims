@@ -16,6 +16,7 @@ export const nl: Record<UIKey, string> = {
   'nav.news': 'Nieuws',
   'nav.contact': 'Contact',
   'nav.urlChecker': 'URL-checker',
+  'nav.phoneCheck': 'Telefooncheck',
   'nav.startProcess': 'Start proces',
   'nav.menu': 'Menu',
   'nav.close': 'Sluiten',

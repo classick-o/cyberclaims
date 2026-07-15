@@ -1217,4 +1217,9 @@ export const SERVICE_CONTENT: Record<string, Record<string, ServicePage>> = {
   fr: localize(T_fr),
   de: localize(T_de),
   it: localize(T_it),
+  // Spanish & Portuguese ship with localised chrome/titles (from the i18n dictionaries)
+  // but the long-form service body falls back to English until a T_es / T_pt string map
+  // is written. The page reads SERVICE_CONTENT[locale], so it must have an entry here.
+  es: en,
+  pt: en,
 };

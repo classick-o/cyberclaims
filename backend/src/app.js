@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 
 import leadsRouter from './routes/public/leads.js';
 import healthRouter from './routes/public/health.js';
+import phoneReportRouter from './routes/public/phoneReport.js';
 
 import authRouter from './routes/admin/auth.js';
 import postsRouter from './routes/admin/posts.js';
@@ -30,6 +31,7 @@ api.use(express.urlencoded({ extended: false, limit: '32kb' }));
 // Public
 api.use('/lead', leadsRouter);
 api.use('/health', healthRouter);
+api.use('/phone-report', phoneReportRouter);
 
 // Admin
 // /auth is mounted OUTSIDE requireAuth - you cannot be authenticated in order to log

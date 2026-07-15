@@ -13,3 +13,17 @@ export const leadLimiter = rateLimit({
     message: 'Too many submissions from this address. Please try again in 15 minutes.',
   },
 });
+
+// The phone report proxies a paid, rate-limited partner API and each call runs a live
+// ~60s analysis, so the backstop here is tighter than the lead form: 6 reports per IP
+// per hour is plenty for a real visitor and makes scripted abuse pointless.
+export const phoneReportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 6,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'You have requested several reports recently. Please try again in an hour.',
+  },
+});

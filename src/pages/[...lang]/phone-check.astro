@@ -1,0 +1,610 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Aurora from '../../components/Aurora.astro';
+import RecoveryCta from '../../components/RecoveryCta.astro';
+import Icon from '../../components/Icon.astro';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
+import {
+  PHONE_CHECK,
+  PHONE_CHECK_LOCALES,
+  DIAL_COUNTRIES,
+  type PhoneCheckLocale,
+} from '../../data/phone-check-content';
+
+// One page per ScamInfo-supported locale (en, nl, de, it, es, pt) — NOT the full site
+// locale set: there is no French report, so no /fr/phone-check. The default locale (en)
+// maps to lang: undefined so it lives at /phone-check/, not /en/phone-check/.
+export function getStaticPaths() {
+  return PHONE_CHECK_LOCALES.map((locale) => ({
+    params: { lang: locale === DEFAULT_LOCALE ? undefined : locale },
+    props: { locale },
+  }));
+}
+
+const { locale } = Astro.props as { locale: PhoneCheckLocale };
+const c = PHONE_CHECK[locale];
+
+// hreflang / language-switcher map: exactly the six phone-check locales, each at
+// /phone-check/. Passing this to Layout stops it from advertising a /fr/phone-check
+// alternate that doesn't exist, and keeps es/pt (which the site now supports) correct.
+const localeSlugs = Object.fromEntries(
+  PHONE_CHECK_LOCALES.map((l) => [l, 'phone-check'])
+) as Partial<Record<Locale, string>>;
+
+// Default the country dropdown to the one matching the page's locale.
+const DEFAULT_ISO: Record<PhoneCheckLocale, string> = {
+  en: 'GB',
+  nl: 'NL',
+  de: 'DE',
+  it: 'IT',
+  es: 'ES',
+  pt: 'PT',
+};
+const defaultIso = DEFAULT_ISO[locale];
+---
+
+<Layout
+  title={c.metaTitle}
+  description={c.metaDescription}
+  locale={locale as Locale}
+  path="/phone-check/"
+  localeSlugs={localeSlugs}
+>
+  <section class="pc">
+    <Aurora />
+
+    <div class="wrap pc-inner">
+      <div class="pc-head" data-reveal>
+        <span class="pc-eyebrow">{c.eyebrow}</span>
+        <h1 class="pc-title">{c.h1}</h1>
+        <p class="pc-sub">{c.subhead}</p>
+      </div>
+
+      <div class="glass pc-card" data-reveal>
+        <form
+          class="pc-form"
+          id="pcForm"
+          novalidate
+          data-endpoint="/api/phone-report"
+          data-locale={locale}
+          data-loading={c.loading}
+          data-err-generic={c.errorGeneric}
+          data-err-timeout={c.errorTimeout}
+          data-err-invalid={c.errorInvalid}
+        >
+          <div class="pc-fields">
+            <div class="pc-field pc-country">
+              <label for="pcCountry">{c.countryLabel}</label>
+              <select id="pcCountry" name="country" autocomplete="tel-country-code">
+                {
+                  DIAL_COUNTRIES.map((country) => (
+                    <option value={country.dial} selected={country.iso === defaultIso}>
+                      {country.name} (+{country.dial})
+                    </option>
+                  ))
+                }
+              </select>
+            </div>
+            <div class="pc-field pc-number">
+              <label for="pcNumber">{c.numberLabel}</label>
+              <input
+                id="pcNumber"
+                name="number"
+                type="tel"
+                inputmode="tel"
+                autocomplete="tel-national"
+                placeholder={c.numberPlaceholder}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Honeypot: hidden from humans, catnip for bots. */}
+          <div class="pc-hp" aria-hidden="true">
+            <label>Leave this field empty<input type="text" name="_honey" tabindex="-1" autocomplete="off" /></label>
+          </div>
+
+          <button type="submit" class="btn pc-submit">{c.submit}</button>
+          <p class="pc-privacy">{c.privacyNote}</p>
+        </form>
+
+        <!-- Loading -->
+        <div class="pc-state pc-loading" id="pcLoading" hidden>
+          <span class="pc-spinner" aria-hidden="true"></span>
+          <p>{c.loading}</p>
+        </div>
+
+        <!-- Success -->
+        <div class="pc-state pc-success" id="pcSuccess" hidden>
+          <span class="pc-state-ic"><Icon name="check" class="w-full h-full" /></span>
+          <h2>{c.successTitle}</h2>
+          <p>{c.successBody}</p>
+          <button type="button" class="btn btn-ghost pc-again" id="pcAgain">{c.again}</button>
+        </div>
+
+        <!-- Error -->
+        <div class="pc-state pc-error" id="pcError" hidden>
+          <p class="pc-error-msg" id="pcErrorMsg"></p>
+          <button type="button" class="btn btn-ghost pc-again" id="pcRetry">{c.again}</button>
+        </div>
+      </div>
+
+      <!-- How it works -->
+      <section class="pc-how" data-reveal>
+        <h2 class="pc-h2">{c.howTitle}</h2>
+        <ol class="pc-steps">
+          {
+            c.steps.map((s, i) => (
+              <li class="pc-step">
+                <span class="pc-step-n">{i + 1}</span>
+                <div>
+                  <h3>{s.title}</h3>
+                  <p>{s.body}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+
+      <!-- Trust -->
+      <section class="pc-trust" data-reveal>
+        <h2 class="pc-h2">{c.trustTitle}</h2>
+        <ul class="pc-trust-list">
+          {
+            c.trustItems.map((item) => (
+              <li>
+                <span class="pc-trust-ic"><Icon name="shield" class="w-full h-full" /></span>
+                <span>{item}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <!-- FAQ -->
+      <section class="pc-faq" data-reveal>
+        <h2 class="pc-h2">{c.faqTitle}</h2>
+        <div class="pc-faq-list">
+          {
+            c.faqs.map((f) => (
+              <details class="pc-faq-item">
+                <summary>{f.q}</summary>
+                <p>{f.a}</p>
+              </details>
+            ))
+          }
+        </div>
+      </section>
+
+      <p class="pc-disclaimer" data-reveal>{c.disclaimer}</p>
+    </div>
+  </section>
+
+  <div class="pc-rec">
+    <RecoveryCta />
+  </div>
+</Layout>
+
+<style>
+  .pc {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-navy);
+    padding: 9.5rem 0 4rem;
+  }
+  .pc::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 12rem;
+    background: linear-gradient(to bottom, transparent, var(--color-navy));
+    pointer-events: none;
+    z-index: 0;
+  }
+  .pc-inner {
+    position: relative;
+    z-index: 1;
+  }
+  .pc-head {
+    max-width: 44rem;
+    margin: 0 auto 2rem;
+    text-align: center;
+  }
+  .pc-eyebrow {
+    display: inline-block;
+    margin-bottom: 0.9rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(139, 91, 189, 0.14);
+    border: 1px solid rgba(139, 91, 189, 0.3);
+    color: var(--color-purple-300);
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  .pc-title {
+    font-size: clamp(1.7rem, 4.2vw, 2.6rem);
+    line-height: 1.15;
+    color: #fff;
+    margin: 0 0 1rem;
+  }
+  .pc-sub {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.7;
+    max-width: 48ch;
+    margin: 0 auto;
+  }
+  .pc-card {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 2rem 1.8rem;
+  }
+  .pc-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .pc-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 0.8rem;
+  }
+  .pc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    text-align: left;
+  }
+  .pc-field label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .pc-field select,
+  .pc-field input {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.7rem;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 0.98rem;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .pc-field select {
+    appearance: none;
+  }
+  .pc-field select option {
+    color: #000;
+  }
+  .pc-field input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+  .pc-field select:focus,
+  .pc-field input:focus {
+    outline: none;
+    border-color: var(--color-purple-400);
+    background: rgba(139, 91, 189, 0.08);
+  }
+  .pc-hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .pc-submit {
+    justify-content: center;
+    width: 100%;
+    margin-top: 0.2rem;
+  }
+  .pc-privacy {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.42);
+    text-align: center;
+  }
+
+  /* States */
+  .pc-state {
+    text-align: center;
+    padding: 1rem 0;
+  }
+  .pc-state h2 {
+    color: #fff;
+    font-size: 1.3rem;
+    margin: 0.8rem 0 0.5rem;
+  }
+  .pc-state p {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.6;
+    margin: 0 auto;
+    max-width: 34ch;
+  }
+  .pc-spinner {
+    display: inline-block;
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 3px solid rgba(255, 255, 255, 0.18);
+    border-top-color: var(--color-purple-400);
+    border-radius: 50%;
+    animation: pc-spin 0.8s linear infinite;
+  }
+  @keyframes pc-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pc-spinner {
+      animation-duration: 2s;
+    }
+  }
+  .pc-state-ic {
+    display: inline-grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    padding: 0.7rem;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--color-purple-500);
+  }
+  .pc-error-msg {
+    color: #ffb4b4 !important;
+  }
+  .pc-again {
+    margin-top: 1.2rem;
+  }
+
+  /* How it works */
+  .pc-how,
+  .pc-trust,
+  .pc-faq {
+    max-width: 44rem;
+    margin: 4rem auto 0;
+  }
+  .pc-h2 {
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    color: #fff;
+    text-align: center;
+    margin: 0 0 2rem;
+  }
+  .pc-steps {
+    display: grid;
+    gap: 1.2rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .pc-step {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .pc-step-n {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    background: var(--color-purple-500);
+    color: #fff;
+    font-weight: 600;
+  }
+  .pc-step h3 {
+    color: #fff;
+    font-size: 1.05rem;
+    margin: 0.2rem 0 0.3rem;
+  }
+  .pc-step p {
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Trust */
+  .pc-trust-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .pc-trust-list li {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.7rem;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.92rem;
+    line-height: 1.4;
+  }
+  .pc-trust-ic {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    color: var(--color-purple-300);
+  }
+
+  /* FAQ */
+  .pc-faq-list {
+    display: grid;
+    gap: 0.7rem;
+  }
+  .pc-faq-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.7rem;
+    padding: 0 1.1rem;
+  }
+  .pc-faq-item summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 1rem 0;
+    color: #fff;
+    font-weight: 500;
+    position: relative;
+    padding-right: 1.5rem;
+  }
+  .pc-faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+  .pc-faq-item summary::after {
+    content: '+';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-purple-300);
+    font-size: 1.3rem;
+  }
+  .pc-faq-item[open] summary::after {
+    content: '−';
+  }
+  .pc-faq-item p {
+    margin: 0 0 1rem;
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.65;
+  }
+
+  .pc-disclaimer {
+    max-width: 44rem;
+    margin: 3rem auto 0;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+  }
+
+  .pc-rec {
+    background: var(--color-navy);
+    padding-top: 2.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .pc {
+      padding-top: 8rem;
+    }
+    .pc-fields {
+      grid-template-columns: 1fr;
+    }
+    .pc-trust-list {
+      grid-template-columns: 1fr;
+    }
+    .pc-card {
+      padding: 1.6rem 1.25rem;
+    }
+  }
+</style>
+
+<script>
+  // Phone-check submit flow: build an E.164 number, POST it to our server proxy, and
+  // stream back a PDF the browser downloads. No risk verdict is ever shown here — the
+  // result lives only inside the PDF.
+  const form = document.getElementById('pcForm') as HTMLFormElement | null;
+  if (form) {
+    const endpoint = form.dataset.endpoint!;
+    const locale = form.dataset.locale!;
+    const msg = {
+      generic: form.dataset.errGeneric!,
+      timeout: form.dataset.errTimeout!,
+      invalid: form.dataset.errInvalid!,
+    };
+
+    const card = form.closest('.pc-card')!;
+    const loadingEl = card.querySelector<HTMLElement>('#pcLoading')!;
+    const successEl = card.querySelector<HTMLElement>('#pcSuccess')!;
+    const errorEl = card.querySelector<HTMLElement>('#pcError')!;
+    const errorMsgEl = card.querySelector<HTMLElement>('#pcErrorMsg')!;
+    const countryEl = form.querySelector<HTMLSelectElement>('#pcCountry')!;
+    const numberEl = form.querySelector<HTMLInputElement>('#pcNumber')!;
+
+    const show = (el: HTMLElement | null) => {
+      for (const s of [form, loadingEl, successEl, errorEl]) s.hidden = s !== el;
+    };
+
+    const toE164 = (dial: string, national: string) => {
+      const n = national.replace(/\D/g, '').replace(/^0+/, '');
+      return `+${dial}${n}`;
+    };
+
+    const fail = (text: string) => {
+      errorMsgEl.textContent = text;
+      show(errorEl);
+    };
+
+    document.getElementById('pcAgain')?.addEventListener('click', () => show(form));
+    document.getElementById('pcRetry')?.addEventListener('click', () => show(form));
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const national = numberEl.value.trim();
+      if (national.replace(/\D/g, '').length < 4) {
+        numberEl.focus();
+        fail(msg.invalid);
+        return;
+      }
+      const phone_number = toE164(countryEl.value, national);
+
+      show(loadingEl);
+
+      // Client-side ceiling slightly above the server's 90s upstream timeout.
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), 95_000);
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/pdf' },
+          body: JSON.stringify({ phone_number, locale }),
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          let text = msg.generic;
+          if (res.status === 422) text = msg.invalid;
+          try {
+            const data = await res.json();
+            if (data?.message) text = data.message;
+          } catch {
+            /* non-JSON error body — keep the localized default */
+          }
+          fail(text);
+          return;
+        }
+
+        const blob = await res.blob();
+        let filename = 'cyberclaims-phone-report.pdf';
+        const cd = res.headers.get('Content-Disposition');
+        const m = cd?.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+        if (m) filename = decodeURIComponent(m[1]);
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        show(successEl);
+      } catch (err) {
+        fail((err as Error)?.name === 'AbortError' ? msg.timeout : msg.generic);
+      } finally {
+        window.clearTimeout(timer);
+      }
+    });
+  }
+</script>
