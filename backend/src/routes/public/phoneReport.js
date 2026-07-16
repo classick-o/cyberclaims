@@ -65,7 +65,7 @@ router.post('/', honeypot, phoneReportLimiter, validate(phoneReportSchema), asyn
       headers: upstreamHeaders(),
       body: JSON.stringify({
         phone_number,
-        language: locale, // schema already constrained this to en|nl|de|it|es|pt
+        language: locale, // schema constrained this to en|nl|de|it|es|pt|fr
         branding: BRANDING,
       }),
       signal: controller.signal,
