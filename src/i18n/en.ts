@@ -219,9 +219,9 @@ export const en = {
   'servicesRail.services': 'services',
 
   // About page
-  'about.metaTitle': 'About Us - Cyberclaims',
+  'about.metaTitle': 'About CyberClaims: Leaders in Crypto Recovery & Scam Assistance',
   'about.metaDesc':
-    'Discover who we are and how we help recover your lost funds and cryptocurrency with certified crypto & blockchain forensics.',
+    'We are experts in crypto recovery and scam assistance. Helping you track and recover lost funds from online fraud. Learn more about our services.',
   'about.heroTitle': 'Discover who we are and how we help recover your lost funds',
   'about.heroImageAlt':
     'Five linked tiles climbing left to right: a cracked coin, a magnifying glass, a network of traced wallets, a case file, and a recovered wallet',

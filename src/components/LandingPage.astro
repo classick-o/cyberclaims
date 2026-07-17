@@ -1,0 +1,394 @@
+---
+// Conversion landing page (Google Ads). Renders one LandingConfig: a hero with the full
+// lead form, the techniques + expert-recovery copy, then the shared testimonials, latest
+// news and CTA. Lives at the config's root slug so the ad campaigns keep their URLs.
+import Layout from '../layouts/Layout.astro';
+import Aurora from './Aurora.astro';
+import Testimonials from './Testimonials.astro';
+import Blogs from './Blogs.astro';
+import CtaStrip from './CtaStrip.astro';
+import Turnstile from './Turnstile.astro';
+import Icon from './Icon.astro';
+import type { LandingConfig } from '../data/landing-content';
+
+interface Props {
+  config: LandingConfig;
+}
+const { config: c } = Astro.props;
+const f = c.form;
+---
+
+<Layout
+  title={c.title}
+  description={c.metaDescription}
+  locale="en"
+  htmlLang={c.htmlLang}
+  path={`/${c.slug}/`}
+  localeSlugs={{ en: c.slug }}
+  notice={false}
+>
+  <!-- Hero: headline + the lead form -->
+  <section class="lp-hero">
+    <Aurora />
+    <div class="wrap lp-hero-inner">
+      <div class="lp-hero-copy" data-reveal>
+        <span class="lp-eyebrow">{c.eyebrow}</span>
+        <h1 class="lp-title">{c.h1}</h1>
+        <p class="lp-formlead">{f.heading}</p>
+      </div>
+
+      <div class="glass lp-form-card" data-reveal>
+        <div id="landingFormHead">
+          <form class="lead-form" id="landingForm" method="post" action="/api/lead" novalidate>
+            <div class="field">
+              <input type="text" name="full_name" required placeholder=" " />
+              <label>{f.fullName}</label>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <input type="email" name="email" required placeholder=" " />
+                <label>{f.email}</label>
+              </div>
+              <div class="field">
+                <input type="tel" name="phone" required placeholder=" " />
+                <label>{f.phone}</label>
+              </div>
+            </div>
+            <div class="field">
+              <input type="text" name="country" required placeholder=" " />
+              <label>{f.country}</label>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <input type="text" name="platform_name" placeholder=" " />
+                <label>{f.platformName}</label>
+              </div>
+              <div class="field">
+                <input type="text" name="platform_website" placeholder=" " />
+                <label>{f.platformWebsite}</label>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <input type="date" name="first_transaction" required />
+                <label class="static">{f.firstTx}</label>
+              </div>
+              <div class="field">
+                <input type="date" name="last_transaction" required />
+                <label class="static">{f.lastTx}</label>
+              </div>
+            </div>
+
+            <input class="hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" />
+            <Turnstile />
+            <p class="form-status" data-form-status role="alert" hidden></p>
+            <button type="submit" class="btn lp-submit">{f.submit}</button>
+            <p class="lp-legal">{f.legal}</p>
+          </form>
+        </div>
+
+        <div class="lp-success" id="landingSuccess" hidden>
+          <span class="lp-success-icon"><Icon name="check" class="w-full h-full" /></span>
+          <h2 class="lp-success-h">{f.successTitle}</h2>
+          <p class="lp-success-p">{f.successBody}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Intro -->
+  <section class="lp-sec lp-intro">
+    <div class="wrap lp-narrow" data-reveal>
+      <h2 class="lp-h2">{c.introHeading}</h2>
+      <p class="lp-body">{c.introBody}</p>
+    </div>
+  </section>
+
+  <!-- Techniques -->
+  <section class="lp-sec lp-tech">
+    <div class="wrap" data-reveal>
+      <h2 class="lp-h2 lp-center">{c.techHeading}</h2>
+      <div class="lp-tech-grid">
+        {
+          c.techniques.map((tech, i) => (
+            <div class="glass lp-tech-card">
+              <span class="lp-tech-n">{String(i + 1).padStart(2, '0')}</span>
+              <h3 class="lp-tech-title">{tech.title}</h3>
+              <p class="lp-tech-body">{tech.body}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Expert recovery -->
+  <section class="lp-sec lp-recovery">
+    <div class="wrap lp-narrow" data-reveal>
+      <h2 class="lp-h2">{c.recoveryHeading}</h2>
+      {c.recoveryBody.map((p) => <p class="lp-body">{p}</p>)}
+      <p class="lp-body">{c.audienceIntro}</p>
+      <ul class="lp-list">
+        {c.audience.map((a) => <li><Icon name="check" class="w-5 h-5" />{a}</li>)}
+      </ul>
+      <p class="lp-body lp-traced-h">{c.tracedHeading}</p>
+      <ul class="lp-list">
+        {c.traced.map((tr) => <li><Icon name="check" class="w-5 h-5" />{tr}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <Testimonials />
+  <Blogs server:defer locale="en" />
+  <CtaStrip />
+</Layout>
+
+<style>
+  .lp-hero {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-navy);
+    padding: 9rem 0 4rem;
+  }
+  .lp-hero-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 30rem);
+    gap: 2.5rem;
+    align-items: start;
+  }
+  .lp-eyebrow {
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(139, 91, 189, 0.14);
+    border: 1px solid rgba(139, 91, 189, 0.3);
+    color: var(--color-purple-300);
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  .lp-title {
+    font-size: clamp(2rem, 5vw, 3.1rem);
+    line-height: 1.1;
+    color: #fff;
+    margin: 0 0 1.1rem;
+  }
+  .lp-formlead {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.6;
+    max-width: 34ch;
+    font-size: 1.05rem;
+  }
+  .lp-form-card {
+    padding: 1.8rem 1.6rem;
+  }
+  .lead-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+  }
+  .field {
+    position: relative;
+  }
+  .field input {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.6rem;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--color-purple-400);
+    background: rgba(139, 91, 189, 0.08);
+  }
+  /* Floating label for text/email/tel; static for date inputs (they have their own UI). */
+  .field label {
+    position: absolute;
+    left: 0.85rem;
+    top: 0.85rem;
+    padding: 0 0.3rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.95rem;
+    pointer-events: none;
+    transition: transform 0.15s, color 0.15s, font-size 0.15s;
+    background: var(--color-navy-elevated, #14142a);
+  }
+  .field input:focus + label,
+  .field input:not(:placeholder-shown) + label,
+  .field label.static {
+    transform: translateY(-1.35rem);
+    font-size: 0.72rem;
+    color: var(--color-purple-300);
+  }
+  .field label.static {
+    top: 0.55rem;
+  }
+  .hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .lp-submit {
+    justify-content: center;
+    width: 100%;
+    margin-top: 0.3rem;
+  }
+  .form-status {
+    margin: 0;
+    color: #ffb4b4;
+    font-size: 0.85rem;
+  }
+  .lp-legal {
+    margin: 0;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+  }
+  .lp-success {
+    text-align: center;
+    padding: 1.5rem 0.5rem;
+  }
+  .lp-success-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    padding: 0.7rem;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--color-purple-500);
+  }
+  .lp-success-h {
+    color: #fff;
+    font-size: 1.3rem;
+    margin: 0.8rem 0 0.5rem;
+  }
+  .lp-success-p {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.6;
+    max-width: 34ch;
+    margin: 0 auto;
+  }
+
+  /* Content sections */
+  .lp-sec {
+    background: var(--color-navy);
+    padding: 3.5rem 0;
+  }
+  .lp-narrow {
+    max-width: 48rem;
+  }
+  .lp-h2 {
+    font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+    color: #fff;
+    margin: 0 0 1.2rem;
+  }
+  .lp-center {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .lp-body {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.8;
+    margin: 0 0 1.1rem;
+  }
+  .lp-traced-h {
+    margin-top: 1.6rem;
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .lp-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    display: grid;
+    gap: 0.7rem;
+  }
+  .lp-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: rgba(255, 255, 255, 0.82);
+  }
+  .lp-list :global(svg) {
+    color: var(--color-purple-300);
+    flex-shrink: 0;
+  }
+
+  .lp-tech-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.2rem;
+    max-width: 56rem;
+    margin: 0 auto;
+  }
+  .lp-tech-card {
+    padding: 1.6rem 1.5rem;
+  }
+  .lp-tech-n {
+    color: var(--color-purple-400);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+  }
+  .lp-tech-title {
+    color: #fff;
+    font-size: 1.15rem;
+    margin: 0.4rem 0 0.6rem;
+  }
+  .lp-tech-body {
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.65;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 860px) {
+    .lp-hero-inner {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 620px) {
+    .lp-hero {
+      padding-top: 7.5rem;
+    }
+    .field-row,
+    .lp-tech-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  import { initForm } from '../lib/lead-form';
+
+  const form = document.getElementById('landingForm') as HTMLFormElement | null;
+  const head = document.getElementById('landingFormHead');
+  const success = document.getElementById('landingSuccess');
+
+  if (form && head && success) {
+    initForm(form, {
+      endpoint: '/api/lead',
+      source: 'landing',
+      onSuccess: () => {
+        form.hidden = true;
+        success.hidden = false;
+        success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      },
+    });
+  }
+</script>

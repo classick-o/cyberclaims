@@ -50,7 +50,9 @@ const SHARE = [
 <aside class="art-aside">
   <div class="aside-sticky">
     <nav class="aside-card" aria-labelledby="aside-services">
-      <h2 class="aside-h" id="aside-services">{t('aside.services')}</h2>
+      {/* Sidebar labels are navigation, not article content — plain elements, not
+          headings, so they don't pollute the page's heading outline. */}
+      <p class="aside-h" id="aside-services">{t('aside.services')}</p>
 
       {/* Each service's own icon, from site.ts - the same glyph its page uses, so a reader
           who has seen the page recognises the row instead of reading ten near-identical
@@ -82,7 +84,7 @@ const SHARE = [
     </nav>
 
     <div class="aside-card">
-      <h2 class="aside-h">{t('share.title')}</h2>
+      <p class="aside-h">{t('share.title')}</p>
       {/* rel="noopener" so the window we open gets no handle on ours through
           window.opener, and "noreferrer" so we do not hand a social network our reader's
           last URL for free. */}

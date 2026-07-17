@@ -231,7 +231,7 @@ if (!preview) {
               <>
                 <span class="art-dot" />
                 <span>
-                  {t('news.by')} <strong>{post.author_name}</strong>
+                  {t('news.by')}{' '}<strong>{post.author_name}</strong>
                   {post.author_role && <span class="art-role">, {post.author_role}</span>}
                 </span>
               </>
@@ -253,7 +253,9 @@ if (!preview) {
     related.length > 0 && (
       <section class="rel">
         <div class="wrap">
-          <h2 class="h-section rel-h">{t('news.related')}</h2>
+          {/* A navigational label, not a content heading — deliberately not an <h2> so
+              it stays out of the article's heading outline (it isn't about the topic). */}
+          <p class="h-section rel-h">{t('news.related')}</p>
 
           {/* A rail, not a grid - but a rail that lines up with everything else on the
               page rather than running off the side of it. What tells you it scrolls is

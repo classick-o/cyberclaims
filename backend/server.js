@@ -36,6 +36,19 @@ const app = express();
 app.set('trust proxy', env.TRUST_PROXY);
 app.disable('x-powered-by');
 
+// Canonical host: 301 any www.* host to its non-www form, keeping path + query. The
+// canonical tags already point at the non-www host (SITE_URL is non-www), but a canonical
+// is a hint, not a redirect - without this, every page also resolves at https://www.…,
+// so a crawler sees two live 200s for every URL and indexes both. Domain-agnostic, so it
+// does the right thing on cyberclaims.nl and cyberclaims.net alike.
+app.use((req, res, next) => {
+  const host = req.headers.host || '';
+  if (host.startsWith('www.')) {
+    return res.redirect(301, `https://${host.slice(4)}${req.originalUrl}`);
+  }
+  next();
+});
+
 // CSP, HSTS, frame-ancestors - on the HTML. The API sets its own headers in app.js.
 app.use(securityHeaders);
 
@@ -43,9 +56,14 @@ app.use(securityHeaders);
 // cyberclaims.nl staging domain) every response carries X-Robots-Tag: noindex - a
 // runtime backstop that covers SSR pages, the sitemap and prerendered HTML alike,
 // regardless of what any page baked into its <meta> at build time.
+//
+// `noindex` only, NOT `noindex, nofollow`: nofollow would make every internal link on
+// the site un-followable, which pollutes crawls and, more importantly, stops a crawler
+// from reaching (and honouring the noindex on) the pages those links point to. noindex
+// with the implicit `follow` is the correct "keep this out of the index" directive.
 if (!allowIndexing) {
   app.use((_req, res, next) => {
-    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    res.setHeader('X-Robots-Tag', 'noindex');
     next();
   });
 }
@@ -78,6 +96,18 @@ app.get(/^(\/[a-z]{2})?\/news\/([^/]+)\/?$/, (req, res) => {
   const slug = req.params[1];
   const query = req.originalUrl.slice(req.path.length); // keeps ?preview=1
   res.redirect(301, `${prefix}/${slug}/${query}`);
+});
+
+// Service pages moved from the OLD singular /service/<slug>/ to the new plural
+// /services/<slug>/. 301 the old path (optional locale prefix included) so inbound links
+// and search rankings from the previous site carry straight over. A bare /service/ goes
+// to the /services/ listing.
+app.get(/^(\/[a-z]{2})?\/service\/([^/]+)\/?$/, (req, res) => {
+  const prefix = req.params[0] ?? '';
+  res.redirect(301, `${prefix}/services/${req.params[1]}/`);
+});
+app.get(/^(\/[a-z]{2})?\/service\/?$/, (req, res) => {
+  res.redirect(301, `${req.params[0] ?? ''}/services/`);
 });
 
 // Uploaded media. Filenames are content-random and never reused, so these are

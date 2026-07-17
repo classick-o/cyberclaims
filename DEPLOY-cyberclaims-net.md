@@ -178,6 +178,9 @@ curl -sI https://cyberclaims.net/                     # 200, and NO "X-Robots-Ta
 curl -s https://cyberclaims.net/robots.txt            # "Allow: /" + Sitemap: …/sitemap.xml
 curl -s https://cyberclaims.net/ | grep -c 'noindex'  # 0
 
+# canonical host: www 301s to non-www (the app does this itself, domain-agnostic)
+curl -sI https://www.cyberclaims.net/ | grep -iE 'HTTP|location'   # 301 -> https://cyberclaims.net/
+
 # SEO / content
 curl -s https://cyberclaims.net/sitemap.xml | grep -c '<loc>'          # ~230+ (pages×locales + 89 articles + phone-check)
 curl -s https://cyberclaims.net/sitemap.xml | grep -c 'flash-loan'     # articles present (>0)

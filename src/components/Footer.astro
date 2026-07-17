@@ -52,7 +52,7 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
 
       <!-- Services -->
       <div class="footer-col">
-        <h4 class="footer-h">{t('nav.services')}</h4>
+        <p class="footer-h">{t('nav.services')}</p>
         <ul>
           {getServices(locale).slice(0, 8).map((s) => <li><a href={link(serviceUrl(s.href), locale)}>{s.title}</a></li>)}
         </ul>
@@ -60,11 +60,11 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
 
       <!-- Quick links + Resources -->
       <div class="footer-col">
-        <h4 class="footer-h">{t('footer.colCompany')}</h4>
+        <p class="footer-h">{t('footer.colCompany')}</p>
         <ul>
           {quickLinks.map((l) => <li><a href={link(l.href, locale)}>{l.label}</a></li>)}
         </ul>
-        <h4 class="footer-h footer-h-sub">{t('footer.colResources')}</h4>
+        <p class="footer-h footer-h-sub">{t('footer.colResources')}</p>
         <ul>
           {resources.map((l) => <li><a href={link(l.href, locale)}>{l.label}</a></li>)}
         </ul>
@@ -72,7 +72,7 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
 
       <!-- Contact -->
       <div class="footer-col">
-        <h4 class="footer-h">{t('footer.colContact')}</h4>
+        <p class="footer-h">{t('footer.colContact')}</p>
         <ul class="contact-list">
           {CONTACT.phones.map((p) => (
             <li>

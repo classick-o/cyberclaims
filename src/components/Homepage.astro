@@ -17,6 +17,7 @@ import type { Locale } from '../i18n/config';
 import { jsonLdScript } from '../lib/jsonld';
 import { asset } from '../lib/paths';
 import { CONTACT } from '../data/site';
+import { useTranslations } from '../i18n';
 
 // The homepage composition, factored out of [...lang]/index.astro so the article route
 // ([...lang]/[slug].astro) can render it too. A bare locale root like /nl/ IS the
@@ -29,6 +30,7 @@ interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
+const t = useTranslations(locale);
 
 // Site-wide Organization + WebSite structured data. Emitted on the homepage (the
 // conventional home for these entities) so search engines have a canonical description
@@ -90,7 +92,7 @@ const orgLd = {
   }
 </style>
 
-<Layout notice={false}>
+<Layout notice={false} title={`${t('nav.home')} - Cyberclaims`}>
   <script type="application/ld+json" slot="head" set:html={jsonLdScript(orgLd)} />
   <Hero />
   <div class="about-block">

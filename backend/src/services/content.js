@@ -243,6 +243,13 @@ export const RESERVED_SLUGS = new Set([
   'start-process',
   'thank-you',
   'url-checker',
+  'phone-check',
+  // conversion landing pages - src/pages/*.astro (root slugs)
+  'recover-your-lost-digital-funds-scam-recovery-services',
+  'recover-your-lost-digital-funds-in-australia-scam-recovery-services',
+  'recover-your-lost-digital-funds-in-canada-scam-recovery-services',
+  'recover-your-lost-digital-funds-in-the-usa-scam-recovery-services',
+  'truffa-recupero',
   '404',
   // legal documents - src/content/legal/
   'privacy-policy',

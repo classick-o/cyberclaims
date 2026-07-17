@@ -10,6 +10,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { Post, cached } from '../lib/content';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../i18n/config';
+import { LANDING_SLUGS } from '../data/landing-content';
 
 // Everything prerendered, with the priority the content deserves.
 const STATIC_PAGES: { path: string; priority: number; changefreq: string }[] = [
@@ -77,6 +78,15 @@ export const GET: APIRoute = async ({ site }) => {
     <lastmod>${new Date(post.updated_at).toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>`);
+  }
+
+  // Conversion landing pages — single root URLs, not multiplied per locale.
+  for (const slug of LANDING_SLUGS) {
+    entries.push(`  <url>
+    <loc>${escape(`${origin}/${slug}/`)}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>`);
   }
 

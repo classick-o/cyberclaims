@@ -1,0 +1,7 @@
+---
+import LandingPage from '../components/LandingPage.astro';
+import { LANDING_PAGES } from '../data/landing-content';
+const config = LANDING_PAGES.find((p) => p.slug === 'recover-your-lost-digital-funds-in-the-usa-scam-recovery-services')!;
+---
+
+<LandingPage config={config} />
