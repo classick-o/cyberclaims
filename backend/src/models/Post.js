@@ -2,6 +2,13 @@ import { pool } from '../config/database.js';
 import { sanitizeBody, readingMinutes, slugify, autoExcerpt, slugConflict } from '../services/content.js';
 import { toLimit, toOffset } from '../services/pagination.js';
 
+// The default content locale. When a post (or a whole listing) has no translation for
+// the requested locale, the public queries fall back to this one so the localized URL
+// still renders English rather than 404-ing / showing an empty page. The article page
+// then canonicalises a fallback to its English URL, so this never creates duplicate
+// content in search.
+const DEFAULT_LOCALE = 'en';
+
 const parseJson = (v) => {
   if (v == null) return null;
   if (typeof v === 'object') return v;
@@ -76,63 +83,89 @@ export class Post {
     locale,
     { categorySlug = null, limit = 24, offset = 0, excludeId = null } = {}
   ) {
-    const params = [locale, locale, locale];
-    if (categorySlug) params.push(categorySlug);
-    if (excludeId) params.push(Number(excludeId));
-    params.push(toLimit(limit, { def: 24 }), toOffset(offset));
-
-    const [rows] = await pool.query(
-      `SELECT ${PUBLIC_COLUMNS} ${PUBLIC_JOINS}
-        WHERE p.status = 'published' AND p.published_at <= NOW()
-          ${categorySlug ? 'AND ct.slug = ?' : ''}
-          ${excludeId ? 'AND p.id <> ?' : ''}
-        ORDER BY p.published_at DESC, p.id DESC
-        LIMIT ? OFFSET ?`,
-      params
-    );
-    return rows.map(hydrate);
+    const run = async (loc) => {
+      const params = [loc, loc, loc];
+      if (categorySlug) params.push(categorySlug);
+      if (excludeId) params.push(Number(excludeId));
+      params.push(toLimit(limit, { def: 24 }), toOffset(offset));
+      const [rows] = await pool.query(
+        `SELECT ${PUBLIC_COLUMNS} ${PUBLIC_JOINS}
+          WHERE p.status = 'published' AND p.published_at <= NOW()
+            ${categorySlug ? 'AND ct.slug = ?' : ''}
+            ${excludeId ? 'AND p.id <> ?' : ''}
+          ORDER BY p.published_at DESC, p.id DESC
+          LIMIT ? OFFSET ?`,
+        params
+      );
+      return rows.map(hydrate);
+    };
+    const rows = await run(locale);
+    // No posts translated for this locale -> show the English list rather than an empty
+    // /nl/news/. (Category-filtered pages fall back too; the slug matches the English one.)
+    if (rows.length === 0 && locale !== DEFAULT_LOCALE) return run(DEFAULT_LOCALE);
+    return rows;
   }
 
   // `p.id DESC` for the same reason as findPublished: without a unique last sort key,
   // two articles that tie leave the winner up to MySQL, and "which article is the hero"
   // could then answer differently on two consecutive page loads.
   static async findFeatured(locale) {
-    const [rows] = await pool.query(
-      `SELECT ${PUBLIC_COLUMNS} ${PUBLIC_JOINS}
-        WHERE p.status = 'published' AND p.published_at <= NOW()
-        ORDER BY p.featured DESC, p.published_at DESC, p.id DESC
-        LIMIT 1`,
-      [locale, locale, locale]
-    );
-    return hydrate(rows[0]) ?? null;
+    const run = async (loc) => {
+      const [rows] = await pool.query(
+        `SELECT ${PUBLIC_COLUMNS} ${PUBLIC_JOINS}
+          WHERE p.status = 'published' AND p.published_at <= NOW()
+          ORDER BY p.featured DESC, p.published_at DESC, p.id DESC
+          LIMIT 1`,
+        [loc, loc, loc]
+      );
+      return hydrate(rows[0]) ?? null;
+    };
+    return (await run(locale)) ?? (locale !== DEFAULT_LOCALE ? run(DEFAULT_LOCALE) : null);
   }
 
   /**
    * `preview` lets the admin see a draft on the real site, with the real CSS -
    * the thing a static build could never give us without rebuilding on every keystroke.
+   *
+   * Falls back to the default-locale translation when the requested locale has none, so
+   * /nl/<english-slug>/ renders the English article instead of 404-ing. `is_fallback` is
+   * set on the returned post so the page can canonicalise it to its English URL.
    */
   static async findBySlug(locale, slug, { preview = false } = {}) {
-    const [rows] = await pool.query(
-      `SELECT ${PUBLIC_COLUMNS}, pt.body_html, p.status, p.updated_at
-         ${PUBLIC_JOINS}
-        WHERE pt.slug = ?
-          ${preview ? '' : "AND p.status = 'published' AND p.published_at <= NOW()"}
-        LIMIT 1`,
-      [locale, locale, locale, slug]
-    );
-    return hydrate(rows[0]) ?? null;
+    const run = async (loc) => {
+      const [rows] = await pool.query(
+        `SELECT ${PUBLIC_COLUMNS}, pt.body_html, p.status, p.updated_at
+           ${PUBLIC_JOINS}
+          WHERE pt.slug = ?
+            ${preview ? '' : "AND p.status = 'published' AND p.published_at <= NOW()"}
+          LIMIT 1`,
+        [loc, loc, loc, slug]
+      );
+      return hydrate(rows[0]) ?? null;
+    };
+    let post = await run(locale);
+    if (!post && locale !== DEFAULT_LOCALE) {
+      post = await run(DEFAULT_LOCALE);
+      if (post) post.is_fallback = true;
+    }
+    return post;
   }
 
   /** Cards under an article: same category first, newest, never itself. */
   static async findRelated(locale, postId, categoryId, limit = 3) {
-    const [rows] = await pool.query(
-      `SELECT ${PUBLIC_COLUMNS} ${PUBLIC_JOINS}
-        WHERE p.status = 'published' AND p.published_at <= NOW() AND p.id <> ?
-        ORDER BY (p.category_id = ?) DESC, p.published_at DESC, p.id DESC
-        LIMIT ?`,
-      [locale, locale, locale, postId, categoryId ?? 0, toLimit(limit, { def: 3 })]
-    );
-    return rows.map(hydrate);
+    const run = async (loc) => {
+      const [rows] = await pool.query(
+        `SELECT ${PUBLIC_COLUMNS} ${PUBLIC_JOINS}
+          WHERE p.status = 'published' AND p.published_at <= NOW() AND p.id <> ?
+          ORDER BY (p.category_id = ?) DESC, p.published_at DESC, p.id DESC
+          LIMIT ?`,
+        [loc, loc, loc, postId, categoryId ?? 0, toLimit(limit, { def: 3 })]
+      );
+      return rows.map(hydrate);
+    };
+    const rows = await run(locale);
+    if (rows.length === 0 && locale !== DEFAULT_LOCALE) return run(DEFAULT_LOCALE);
+    return rows;
   }
 
   /** Every published (post, locale) pair - the sitemap needs all of them. */

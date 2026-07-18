@@ -29,6 +29,12 @@ interface Props {
    * is Italian, so it declares lang="it".
    */
   htmlLang?: string;
+  /**
+   * Override the canonical (and og:url). Used by a post served as an English fallback at
+   * a localized URL (/nl/<slug>/): the URL exists and renders, but points its canonical
+   * at the real English article so search consolidates rather than seeing duplicates.
+   */
+  canonicalUrl?: string;
 }
 const {
   title = 'Cyberclaims - Crypto Tracing & Fraud Investigation',
@@ -68,6 +74,9 @@ const alternates: [Locale, string][] =
     ? (Object.entries(localeSlugs) as [Locale, string][]).map(([l, slug]) => [l, `/${slug}/`])
     : LOCALES.map((l) => [l, path]);
 const xDefaultPath = localeSlugs?.[DEFAULT_LOCALE] ? `/${localeSlugs[DEFAULT_LOCALE]}/` : path;
+
+// canonical + og:url, overridable for English-fallback pages.
+const canonical = Astro.props.canonicalUrl ?? absoluteUrl(path, locale, Astro.site);
 ---
 
 <!doctype html>
@@ -78,7 +87,7 @@ const xDefaultPath = localeSlugs?.[DEFAULT_LOCALE] ? `/${localeSlugs[DEFAULT_LOC
     <meta name="description" content={description} />
     {robotsNoindex && <meta name="robots" content="noindex" />}
 
-    <link rel="canonical" href={absoluteUrl(path, locale, Astro.site)} />
+    <link rel="canonical" href={canonical} />
 
     {/* hreflang. Inert while LOCALES has one entry; correct the moment it doesn't. */}
     {
@@ -97,7 +106,7 @@ const xDefaultPath = localeSlugs?.[DEFAULT_LOCALE] ? `/${localeSlugs[DEFAULT_LOC
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content={meta.ogLocale} />
-    <meta property="og:url" content={absoluteUrl(path, locale, Astro.site)} />
+    <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="icon" type="image/png" sizes="32x32" href={asset('/favicon-32.png')} />

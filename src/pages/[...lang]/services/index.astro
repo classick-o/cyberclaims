@@ -5,7 +5,6 @@ import PageHero from '../../../components/PageHero.astro';
 import ArcGlow from '../../../components/ArcGlow.astro';
 import CtaStrip from '../../../components/CtaStrip.astro';
 import Icon from '../../../components/Icon.astro';
-import { URL_CHECKER } from '../../../data/site';
 import { SERVICE_IMAGE } from '../../../data/services-content';
 import { asset, link, serviceUrl } from '../../../lib/paths';
 import { localePaths, type Locale } from '../../../i18n/config';
@@ -56,24 +55,6 @@ const SERVICES = getServices(locale);
             </a>
           ))
         }
-
-        {/* the URL Checker is a tool, not a /services/ page - hence the plain href */}
-        <a href={link(URL_CHECKER.href, locale)} class="svc-card" data-svc="/url-checker/" data-reveal>
-          <img
-            class="svc-card-visual"
-            src={asset('/sv-url-checker.webp')}
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-          />
-          <div class="svc-card-body">
-            <h2 class="svc-card-title">{t('nav.urlChecker')}</h2>
-            <p class="svc-card-blurb">{t('services.urlCheckerBlurb')}</p>
-            <span class="svc-card-more">
-              {t('services.openChecker')} <Icon name="arrow" class="w-4 h-4" />
-            </span>
-          </div>
-        </a>
       </div>
     </div>
   </section>
@@ -137,11 +118,6 @@ const SERVICES = getServices(locale);
   .svc-card[data-svc='/cryptocurrency-tracing/'] .svc-card-visual {
     width: 118%;
     max-width: 34rem;
-  }
-  /* a single wide tile - at 104% it overflows the card and gets clipped */
-  .svc-card[data-svc='/url-checker/'] .svc-card-visual {
-    width: 66%;
-    top: 1.8rem;
   }
   /* these three sit low in their frame - lift them up */
   .svc-card[data-svc='/cryptocurrency-recovery/'] .svc-card-visual,

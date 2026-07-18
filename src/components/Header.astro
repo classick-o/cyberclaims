@@ -3,7 +3,7 @@
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
 import LangSwitch from './LangSwitch.astro';
-import { URL_CHECKER } from '../data/site';
+import { PHONE_CHECK } from '../data/site';
 import { link, serviceUrl, localeHref, asset } from '../lib/paths';
 import { localeFromUrl, LOCALES, LOCALE_META } from '../i18n/config';
 import { useTranslations, getServices } from '../i18n';
@@ -49,9 +49,9 @@ const localeSlugs = Astro.props.localeSlugs;
               ))
             }
           </div>
-          <a href={link(URL_CHECKER.href, locale)} class="mega-foot">
-            <Icon name={URL_CHECKER.icon} class="w-4 h-4" /> {t('nav.urlChecker')} - verify a suspicious
-            link
+          <a href={link(PHONE_CHECK.href, locale)} class="mega-foot">
+            <Icon name={PHONE_CHECK.icon} class="w-4 h-4" /> {t('nav.phoneCheck')} - check a suspicious
+            number
           </a>
         </div>
       </div>
@@ -95,7 +95,7 @@ const localeSlugs = Astro.props.localeSlugs;
         </summary>
         <div class="mobile-services">
           {services.map((s) => <a href={link(serviceUrl(s.href), locale)}>{s.title}</a>)}
-          <a href={link(URL_CHECKER.href, locale)}>{t('nav.urlChecker')}</a>
+          <a href={link(PHONE_CHECK.href, locale)}>{t('nav.phoneCheck')}</a>
         </div>
       </details>
       <a href={link('/news/', locale)}>{t('nav.news')}</a>

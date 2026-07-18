@@ -21,9 +21,6 @@ const quickLinks = [
   { label: t('nav.contact'), href: '/contact-us/' },
 ];
 const resources = [
-  { label: t('nav.urlChecker'), href: '/url-checker/' },
-  // The phone check exists only for the six ScamInfo-supported locales (no /fr/), so
-  // only surface the link where the page actually exists — otherwise fr would 404.
   ...((PHONE_CHECK_LOCALES as readonly string[]).includes(locale)
     ? [{ label: t('nav.phoneCheck'), href: '/phone-check/' }]
     : []),

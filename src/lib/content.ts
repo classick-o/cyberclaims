@@ -44,7 +44,13 @@ export type PostCard = {
   seo_description: string | null;
 };
 
-export type FullPost = PostCard & { body_html: string; status: string; updated_at: string };
+export type FullPost = PostCard & {
+  body_html: string;
+  status: string;
+  updated_at: string;
+  /** True when this was served as the English fallback for a locale it isn't translated into. */
+  is_fallback?: boolean;
+};
 
 /**
  * Is this request coming from a signed-in editor?

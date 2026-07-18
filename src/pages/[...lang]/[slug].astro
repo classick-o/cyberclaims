@@ -18,7 +18,7 @@ import { link, absoluteUrl } from '../../lib/paths';
 import { jsonLdScript } from '../../lib/jsonld';
 import { srcset, smallest } from '../../lib/media';
 import { Post, cached, isEditor, extractFaq, type FullPost, type PostCard } from '../../lib/content';
-import { localeFromUrl, isLocale } from '../../i18n/config';
+import { localeFromUrl, isLocale, DEFAULT_LOCALE } from '../../i18n/config';
 import { useTranslations, formatDate } from '../../i18n';
 
 const locale = localeFromUrl(Astro.url);
@@ -173,6 +173,7 @@ if (!preview) {
   locale={locale}
   localeSlugs={localeSlugs}
   noindex={preview}
+  canonicalUrl={post.is_fallback ? absoluteUrl(`/${post.slug}/`, DEFAULT_LOCALE, Astro.site) : undefined}
 >
   <script type="application/ld+json" slot="head" set:html={jsonLdScript(jsonLd)} />
 

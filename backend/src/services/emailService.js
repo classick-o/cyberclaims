@@ -40,6 +40,7 @@ const SOURCE_LABEL = {
   contact: 'Contact page',
   start_process: 'Start Process wizard',
   url_checker: 'URL Checker',
+  landing: 'Landing page',
 };
 
 function row(label, value) {

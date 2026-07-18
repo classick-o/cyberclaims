@@ -38,6 +38,8 @@ export const SERVICES: Service[] = [
 
 // The name comes from the dictionary (`nav.urlChecker`); href/icon are structural.
 export const URL_CHECKER = { href: '/url-checker/', icon: 'link' };
+// The phone checker replaces the URL checker as the featured tool in the nav.
+export const PHONE_CHECK = { href: '/phone-check/', icon: 'phone' };
 
 // Sustainability metrics - preserved from the live site ("We prioritise Sustainability").
 // NOTE: live site shows 0 / 0 / 0 - placeholders below await real figures from TBS.
