@@ -2,11 +2,10 @@
 // 4-column footer + trust badges (brief §4 Footer).
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
-import { CONTACT } from '../data/site';
+import { CONTACT, PHONE_CHECK } from '../data/site';
 import { asset, link, serviceUrl } from '../lib/paths';
-import { localeFromUrl } from '../i18n/config';
+import { localeFromUrl, DEFAULT_LOCALE } from '../i18n/config';
 import { useTranslations, getServices } from '../i18n';
-import { PHONE_CHECK_LOCALES } from '../data/phone-check-content';
 
 // Resolved from the URL rather than threaded down as a prop: link(, locale) is called across
 // 14 components, and a prop that one of them forgets to pass renders another
@@ -20,10 +19,10 @@ const quickLinks = [
   { label: t('nav.startProcess'), href: '/start-process/' },
   { label: t('nav.contact'), href: '/contact-us/' },
 ];
+// `unprefixed` opts a link out of locale prefixing: the phone checker is a single root
+// URL (the UK page), so /nl/who-called-me-uk/ would 404.
 const resources = [
-  ...((PHONE_CHECK_LOCALES as readonly string[]).includes(locale)
-    ? [{ label: t('nav.phoneCheck'), href: '/phone-check/' }]
-    : []),
+  { label: t('nav.phoneCheck'), href: PHONE_CHECK.href, unprefixed: true },
   { label: t('legal.cookieTitle'), href: '/cookie-policy/' },
   { label: t('legal.privacyTitle'), href: '/privacy-policy/' },
   { label: t('legal.termsTitle'), href: '/terms-and-conditions/' },
@@ -63,7 +62,7 @@ const flagOf = (region: string): string => (region === 'UK' ? 'GB' : region);
         </ul>
         <p class="footer-h footer-h-sub">{t('footer.colResources')}</p>
         <ul>
-          {resources.map((l) => <li><a href={link(l.href, locale)}>{l.label}</a></li>)}
+          {resources.map((l) => <li><a href={link(l.href, l.unprefixed ? DEFAULT_LOCALE : locale)}>{l.label}</a></li>)}
         </ul>
       </div>
 

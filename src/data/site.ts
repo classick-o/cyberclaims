@@ -39,7 +39,12 @@ export const SERVICES: Service[] = [
 // The name comes from the dictionary (`nav.urlChecker`); href/icon are structural.
 export const URL_CHECKER = { href: '/url-checker/', icon: 'link' };
 // The phone checker replaces the URL checker as the featured tool in the nav.
-export const PHONE_CHECK = { href: '/phone-check/', icon: 'phone' };
+//
+// It points at the UK variant, which IS the site's phone checker: the one indexed page,
+// living at a single root URL (no locale prefix). Link to it with the DEFAULT locale so
+// the href stays unprefixed - link(href, 'nl') would produce /nl/who-called-me-uk/, which
+// does not exist. The generic /phone-check/ locales are still reachable but noindex.
+export const PHONE_CHECK = { href: '/who-called-me-uk/', icon: 'phone' };
 
 // Sustainability metrics - preserved from the live site ("We prioritise Sustainability").
 // NOTE: live site shows 0 / 0 / 0 - placeholders below await real figures from TBS.

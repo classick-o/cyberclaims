@@ -9,7 +9,7 @@ import Icon from './Icon.astro';
 import { PHONE_CHECK } from '../data/site';
 import { link, serviceUrl } from '../lib/paths';
 import { useTranslations, getServices } from '../i18n';
-import type { Locale } from '../i18n/config';
+import { DEFAULT_LOCALE, type Locale } from '../i18n/config';
 
 interface Props {
   /** Absolute URL of the article - the share targets need the real thing, not a path. */
@@ -77,7 +77,8 @@ const SHARE = [
 
       {/* Not one of the ten - it is a tool, not a service. A button, because it is the
           one thing here you DO rather than read about. */}
-      <a href={link(PHONE_CHECK.href, locale)} class="btn aside-btn">
+      {/* DEFAULT_LOCALE: the phone checker is one root URL, never locale-prefixed. */}
+      <a href={link(PHONE_CHECK.href, DEFAULT_LOCALE)} class="btn aside-btn">
         <Icon name={PHONE_CHECK.icon} class="w-4 h-4" />
         {t('nav.phoneCheck')}
       </a>

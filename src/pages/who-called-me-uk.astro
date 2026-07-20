@@ -1,0 +1,18 @@
+---
+// UK country variant of the phone checker. Same template as /phone-check/ - this file is
+// only a URL plus a pointer at its data (PHONE_CHECK_VARIANTS in phone-check-content.ts).
+// Adding another country is a data entry there and a four-line file like this one.
+import PhoneCheckPage from '../components/PhoneCheckPage.astro';
+import { PHONE_CHECK_VARIANTS } from '../data/phone-check-content';
+
+const c = PHONE_CHECK_VARIANTS.find((v) => v.slug === 'who-called-me-uk')!;
+---
+
+<PhoneCheckPage
+  c={c}
+  locale="en"
+  reportLocale={c.reportLocale}
+  defaultIso={c.defaultIso}
+  path={`/${c.slug}/`}
+  localeSlugs={{ en: c.slug }}
+/>

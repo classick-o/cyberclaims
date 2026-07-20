@@ -14,6 +14,9 @@ export type PhoneCheckLocale = 'en' | 'nl' | 'de' | 'it' | 'es' | 'pt' | 'fr';
 
 export const PHONE_CHECK_LOCALES: PhoneCheckLocale[] = ['en', 'nl', 'de', 'it', 'es', 'pt', 'fr'];
 
+// Slugs of the country variants, so the sitemap and the reserved-slug guard can see them.
+export const PHONE_CHECK_VARIANT_SLUGS = ['who-called-me-uk'];
+
 export interface PhoneCheckStep {
   title: string;
   body: string;
@@ -22,6 +25,12 @@ export interface PhoneCheckFaq {
   q: string;
   a: string;
 }
+/** A free-text section on a country variant ("How to block spam calls", …). */
+export interface PhoneCheckSection {
+  heading: string;
+  body: string;
+}
+
 export interface PhoneCheckContent {
   metaTitle: string;
   metaDescription: string;
@@ -47,6 +56,27 @@ export interface PhoneCheckContent {
   faqTitle: string;
   faqs: PhoneCheckFaq[];
   disclaimer: string;
+
+  // ── country-variant extras (optional; the generic /phone-check/ pages omit them) ──
+  /** The "How can CyberClaims check phone numbers in <country>?" block, under the tool. */
+  countrySection?: PhoneCheckSection;
+  /** Extra prose blocks after the FAQ (blocking spam calls, what to do if scammed, …). */
+  extraSections?: PhoneCheckSection[];
+  /** Render the "Speak With an Investigator" case form at the foot of the page. */
+  showInvestigator?: boolean;
+}
+
+/**
+ * A country landing variant of the phone checker. Same page template, own URL + copy -
+ * adding another country is a data entry here, not a new page.
+ */
+export interface PhoneCheckVariant extends PhoneCheckContent {
+  /** Root slug, e.g. 'who-called-me-uk'. */
+  slug: string;
+  /** ISO of the country preselected in the tool's dropdown. */
+  defaultIso: string;
+  /** Report language sent to ScamInfo. */
+  reportLocale: PhoneCheckLocale;
 }
 
 // Country dial codes for the selector. Locale-independent; names are in English to keep
@@ -84,6 +114,106 @@ export const DIAL_COUNTRIES: DialCountry[] = [
   { name: 'United Arab Emirates', iso: 'AE', dial: '971' },
   { name: 'South Africa', iso: 'ZA', dial: '27' },
   { name: 'India', iso: 'IN', dial: '91' },
+];
+
+// ── Country variants ────────────────────────────────────────────────────────
+// Same page template as /phone-check/, own URL + country-specific SEO copy. To add
+// another country, copy this object, swap the copy, and add its slug above.
+export const PHONE_CHECK_VARIANTS: PhoneCheckVariant[] = [
+  {
+    slug: 'who-called-me-uk',
+    defaultIso: 'GB',
+    reportLocale: 'en',
+    metaTitle: 'Who called me UK | Phone number lookup | Cyberclaims',
+    metaDescription:
+      'Received a call you don’t recognise? Look up any UK phone number and download a full safety report as a PDF. Free, and nothing is stored.',
+    eyebrow: 'Free UK phone number lookup',
+    h1: 'Who called me - check any phone number directly',
+    subhead:
+      'Received a call from a phone number you do not recognize? Check any phone number and get a full safety report to find out who called you. Download the report as a pdf, no information will be stored.',
+    countryLabel: 'Country',
+    numberLabel: 'Phone number',
+    numberPlaceholder: 'e.g. 20 7946 0958',
+    submit: 'Get free safety report',
+    loading: 'Generating your report… this can take up to a minute.',
+    successTitle: 'Your report is ready',
+    successBody: 'Your PDF has downloaded. Check your downloads folder if you don’t see it.',
+    again: 'Check another number',
+    errorGeneric: 'Something went wrong generating your report. Please try again in a moment.',
+    errorTimeout: 'The report is taking longer than expected. Please try again.',
+    errorInvalid: 'That doesn’t look like a valid phone number. Please check it and try again.',
+    privacyNote:
+      'We don’t store the number you check. The report is generated on demand and delivered only to you.',
+    countrySection: {
+      heading: 'How can Cyberclaims check phone numbers in the United Kingdom?',
+      body: 'Every year 4.6 million people are affected by cyber crime and fraud in the United Kingdom, many of which are firstly contacted by phone. Our phone number lookup analyses the phone number pattern to identify the caller location, carrier details and device type. To lookup the caller’s identity we check the phone number against leak databases, fraud databases and we check social media and communication platforms such as Whatsapp and Telegram. Your results will be available for download as a pdf and will not be stored by us.',
+    },
+    howTitle: 'How it works',
+    steps: [
+      { title: 'Enter the number', body: 'Pick the country and type the phone number that contacted you.' },
+      { title: 'We analyse it', body: 'We run live checks across fraud, reputation and exposure signals — usually in under a minute.' },
+      { title: 'Download your PDF', body: 'You get a detailed, branded safety report to download and keep. Nothing is stored on our side.' },
+    ],
+    trustTitle: 'Why people trust CyberClaims',
+    trustItems: [
+      'Cybercrime victim support & recovery specialists',
+      'Featured in 350+ news outlets',
+      'Confidential — no account, no data kept',
+      'Authorised private investigation agency (Dutch Ministry of Justice)',
+    ],
+    faqTitle: 'Frequently asked questions',
+    faqs: [
+      {
+        q: 'What is a phone number lookup?',
+        a: 'A phone number lookup tool combines public and private sources to identify phone number meta data, carrier details and associated services the phone number may have been used for in order to find the identity of the caller and provide a safety assessment.',
+      },
+      {
+        q: 'Why should I check unknown phone numbers in the UK?',
+        a: 'According to the BBC, 48% of landline users in the United Kingdom reported receiving a suspicious call in the previous three months. These calls can be anything from spam calls to calls with the intention to scam or defraud people. If you have received a phone call from an unknown number, it is a good idea to find out who is behind the call and to report the number.',
+      },
+      {
+        q: 'If the caller knows information about me, does that mean that they are legitimate?',
+        a: 'No! Scammers have various methods to obtain personal information of their victims in order to convince them that they represent legitimate companies. Do not fall for this. If you are in doubt it is always best to just hang up the call and call the company that the unknown caller was claiming to be from via its official number. You can also use our phone number lookup to double check the phone number.',
+      },
+      {
+        q: 'How do I know if a phone call is a potential scam?',
+        a: 'Scam callers often use disposable phone numbers via Voice over internet protocol (VOIP) services. Our phone number checker detects when phone numbers are VOIP calls which is a strong indication that the caller could be calling with malicious intent. Furthermore, we also check fraud and spam databases to see if the number has previously been reported.',
+      },
+      {
+        q: 'How to check if a number is spam in the UK?',
+        a: 'In 2024, the ICO received 44,404 complaints about nuisance calls in the United Kingdom. We check phone numbers for common markers of spam calling such as checking the carrier and device type and spam databases. It is important to check unknown numbers and to report them if the calls are unwanted.',
+      },
+      {
+        q: 'How does Cyberclaims know who called me?',
+        a: 'We check leak databases to see if the number and identity of the owner have ever been leaked. We also check social media and communication platforms such as Whatsapp and Telegram. These kinds of checks are your best bet in finding out the identity of the caller.',
+      },
+      {
+        q: 'Where should I report suspicious phone numbers and scam calls in the UK?',
+        a: 'A number of reporting guidelines are outlined by gov.uk. It is important to report scam calls immediately so that authorities have the best chance of investigating cases and protecting the public.',
+      },
+      {
+        q: 'What do I do if a caller claims to be from my bank in the UK?',
+        a: 'Call 159 if you are in the UK and you received a call claiming to be from your bank. 159 will connect you to a service representative of your bank.',
+      },
+      {
+        q: 'How to get fewer spam calls in the United Kingdom?',
+        a: 'You can register with the TPS to make sure that legitimate companies will no longer call you with sales inquiries.',
+      },
+    ],
+    extraSections: [
+      {
+        heading: 'How to block spam calls',
+        body: 'In the UK, you can block spam calls by registering your phone number with the TPS. This will make sure that legitimate companies will no longer call you with sales inquiries. If you are already registered with the TPS and still receive spam calls you can report the number with the TPS and they will forward your complaint to the ICO, who do have enforcement powers.',
+      },
+      {
+        heading: 'What should I do if I am victim of a scam',
+        body: 'If you are in the UK, we recommend you start with following the reporting guidelines from the UK government. If you have reported the scam with official bodies and you want extra guidance, you can always file a contact request with Cyberclaims and we will review your case in 48 hours.',
+      },
+    ],
+    showInvestigator: true,
+    disclaimer:
+      'This report is provided for information only and is not a legal determination. If you believe you’ve been targeted or have lost money, contact our team.',
+  },
 ];
 
 export const PHONE_CHECK: Record<PhoneCheckLocale, PhoneCheckContent> = {

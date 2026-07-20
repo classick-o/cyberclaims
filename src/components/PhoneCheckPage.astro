@@ -1,0 +1,351 @@
+---
+// The phone-checker page, rendered from data.
+//
+// Used by BOTH the localized /phone-check/ pages and the country variants (e.g.
+// /who-called-me-uk/). A country page is therefore just a different URL + copy, not a
+// second implementation: the optional blocks (countrySection, extraSections,
+// showInvestigator) are what a variant adds on top.
+import Layout from '../layouts/Layout.astro';
+import Aurora from './Aurora.astro';
+import RecoveryCta from './RecoveryCta.astro';
+import Icon from './Icon.astro';
+import PhoneCheckTool from './PhoneCheckTool.astro';
+import InvestigatorForm from './InvestigatorForm.astro';
+import { jsonLdScript } from '../lib/jsonld';
+import { absoluteUrl } from '../lib/paths';
+import type { Locale } from '../i18n/config';
+import type { PhoneCheckContent } from '../data/phone-check-content';
+
+interface Props {
+  c: PhoneCheckContent;
+  /** Locale for the Layout (canonical/chrome). */
+  locale: Locale;
+  /** Language the PDF report comes back in. */
+  reportLocale: string;
+  defaultIso: string;
+  /** Locale-independent path, e.g. '/phone-check/' or '/who-called-me-uk/'. */
+  path: string;
+  localeSlugs?: Partial<Record<Locale, string>>;
+  /**
+   * Keep this variant out of search. Exactly ONE phone-checker page is indexed - the UK
+   * one, which is the site's phone checker - so the generic /phone-check/ locales set
+   * this and are also absent from the sitemap.
+   */
+  noindex?: boolean;
+}
+const { c, locale, reportLocale, defaultIso, path, localeSlugs, noindex = false } = Astro.props;
+
+// FAQPage structured data from the on-page FAQ — the markup that surfaces these as rich
+// results on "who called me" / "is this number a scam" queries. Answers match the visible
+// copy exactly (Google penalises mismatches).
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  '@id': `${absoluteUrl(path, locale, Astro.site)}#faq`,
+  inLanguage: reportLocale,
+  mainEntity: c.faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+---
+
+<Layout
+  title={c.metaTitle}
+  description={c.metaDescription}
+  locale={locale}
+  path={path}
+  localeSlugs={localeSlugs}
+  noindex={noindex}
+>
+  <script type="application/ld+json" slot="head" set:html={jsonLdScript(faqLd)} />
+
+  <section class="pc">
+    <Aurora />
+
+    <div class="wrap pc-inner">
+      <div class="pc-head" data-reveal>
+        <span class="pc-eyebrow">{c.eyebrow}</span>
+        <h1 class="pc-title">{c.h1}</h1>
+        <p class="pc-sub">{c.subhead}</p>
+      </div>
+
+      <PhoneCheckTool c={c} locale={reportLocale} defaultIso={defaultIso} />
+
+      {/* Country variants: the "How can we check numbers in <country>?" block */}
+      {
+        c.countrySection && (
+          <section class="pc-sec" data-reveal>
+            <h2 class="pc-h2">{c.countrySection.heading}</h2>
+            <p class="pc-prose">{c.countrySection.body}</p>
+          </section>
+        )
+      }
+
+      <!-- How it works -->
+      <section class="pc-how" data-reveal>
+        <h2 class="pc-h2">{c.howTitle}</h2>
+        <ol class="pc-steps">
+          {
+            c.steps.map((s, i) => (
+              <li class="pc-step">
+                <span class="pc-step-n">{i + 1}</span>
+                <div>
+                  <h3>{s.title}</h3>
+                  <p>{s.body}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+
+      <!-- Trust -->
+      <section class="pc-trust" data-reveal>
+        <h2 class="pc-h2">{c.trustTitle}</h2>
+        <ul class="pc-trust-list">
+          {
+            c.trustItems.map((item) => (
+              <li>
+                <span class="pc-trust-ic"><Icon name="shield" class="w-full h-full" /></span>
+                <span>{item}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <!-- FAQ -->
+      <section class="pc-faq" data-reveal>
+        <h2 class="pc-h2">{c.faqTitle}</h2>
+        <div class="pc-faq-list">
+          {
+            c.faqs.map((f) => (
+              <details class="pc-faq-item">
+                <summary>{f.q}</summary>
+                <p>{f.a}</p>
+              </details>
+            ))
+          }
+        </div>
+      </section>
+
+      {/* Country variants: trailing prose (blocking spam calls, what to do if scammed) */}
+      {
+        c.extraSections?.map((s) => (
+          <section class="pc-sec" data-reveal>
+            <h2 class="pc-h2">{s.heading}</h2>
+            <p class="pc-prose">{s.body}</p>
+          </section>
+        ))
+      }
+
+      <p class="pc-disclaimer" data-reveal>{c.disclaimer}</p>
+    </div>
+  </section>
+
+  {c.showInvestigator && <InvestigatorForm />}
+
+  <div class="pc-rec">
+    <RecoveryCta />
+  </div>
+</Layout>
+
+<style>
+  .pc {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-navy);
+    padding: 9.5rem 0 4rem;
+  }
+  /* the aurora is taller than this section, so `overflow:hidden` cuts it while it is
+     still lit - fade the last stretch back to navy to hide that seam */
+  .pc::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 12rem;
+    background: linear-gradient(to bottom, transparent, var(--color-navy));
+    pointer-events: none;
+    z-index: 0;
+  }
+  .pc-inner {
+    position: relative;
+    z-index: 1;
+  }
+  .pc-head {
+    max-width: 44rem;
+    margin: 0 auto 2rem;
+    text-align: center;
+  }
+  .pc-eyebrow {
+    display: inline-block;
+    margin-bottom: 0.9rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(139, 91, 189, 0.14);
+    border: 1px solid rgba(139, 91, 189, 0.3);
+    color: var(--color-purple-300);
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  .pc-title {
+    font-size: clamp(1.7rem, 4.2vw, 2.6rem);
+    line-height: 1.15;
+    color: #fff;
+    margin: 0 0 1rem;
+  }
+  .pc-sub {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.7;
+    max-width: 52ch;
+    margin: 0 auto;
+  }
+
+  .pc-sec,
+  .pc-how,
+  .pc-trust,
+  .pc-faq {
+    max-width: 44rem;
+    margin: 4rem auto 0;
+  }
+  .pc-h2 {
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    color: #fff;
+    text-align: center;
+    margin: 0 0 1.5rem;
+  }
+  .pc-prose {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.85;
+    margin: 0;
+  }
+
+  .pc-steps {
+    display: grid;
+    gap: 1.2rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .pc-step {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .pc-step-n {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    background: var(--color-purple-500);
+    color: #fff;
+    font-weight: 600;
+  }
+  .pc-step h3 {
+    color: #fff;
+    font-size: 1.05rem;
+    margin: 0.2rem 0 0.3rem;
+  }
+  .pc-step p {
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .pc-trust-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .pc-trust-list li {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.7rem;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.92rem;
+    line-height: 1.4;
+  }
+  .pc-trust-ic {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    color: var(--color-purple-300);
+  }
+
+  .pc-faq-list {
+    display: grid;
+    gap: 0.7rem;
+  }
+  .pc-faq-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.7rem;
+    padding: 0 1.1rem;
+  }
+  .pc-faq-item summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 1rem 0;
+    color: #fff;
+    font-weight: 500;
+    position: relative;
+    padding-right: 1.5rem;
+  }
+  .pc-faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+  .pc-faq-item summary::after {
+    content: '+';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-purple-300);
+    font-size: 1.3rem;
+  }
+  .pc-faq-item[open] summary::after {
+    content: '−';
+  }
+  .pc-faq-item p {
+    margin: 0 0 1rem;
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.65;
+  }
+
+  .pc-disclaimer {
+    max-width: 44rem;
+    margin: 3rem auto 0;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+  }
+  .pc-rec {
+    background: var(--color-navy);
+    padding-top: 2.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .pc {
+      padding-top: 8rem;
+    }
+    .pc-trust-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

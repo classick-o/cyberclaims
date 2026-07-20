@@ -1,0 +1,216 @@
+---
+// "Speak With an Investigator" - the case-assessment form on the country landing pages.
+//
+// Goes through the same lead pipeline as every other form on the site (/api/lead), tagged
+// source 'investigator' so it is filterable in the admin and labelled in the notification
+// email. Fields map straight onto the leads table: full_name, email, phone, message.
+import Icon from './Icon.astro';
+import Turnstile from './Turnstile.astro';
+
+interface Props {
+  heading?: string;
+  intro?: string;
+}
+const {
+  heading = 'Speak With an Investigator',
+  intro = 'Lost money to a scam? Our investigators can assess your case and explain how CyberClaims may be able to assist with a professional investigation.',
+} = Astro.props;
+---
+
+<section class="inv">
+  <div class="wrap">
+    <div class="glass inv-card" data-reveal>
+      <div id="invHead">
+        <h2 class="inv-title">{heading}</h2>
+        <p class="inv-intro">{intro}</p>
+
+        <form class="inv-form" id="invForm" method="post" action="/api/lead" novalidate>
+          <div class="field">
+            <input type="text" name="full_name" required placeholder=" " />
+            <label>Full Name <span aria-hidden="true">*</span></label>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <input type="email" name="email" required placeholder=" " />
+              <label>Email <span aria-hidden="true">*</span></label>
+            </div>
+            <div class="field">
+              <input type="tel" name="phone" placeholder=" " />
+              <label>Your Phone</label>
+            </div>
+          </div>
+          <p class="inv-hint">Mobile or phone number</p>
+          <div class="field">
+            <textarea name="message" rows="5" required placeholder=" "></textarea>
+            <label>What happened? <span aria-hidden="true">*</span></label>
+          </div>
+
+          <input class="hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <Turnstile />
+          <p class="form-status" data-form-status role="alert" hidden></p>
+          <button type="submit" class="btn inv-submit">Submit Case</button>
+          <p class="inv-legal">
+            Protected by CAPTCHA. Your details are confidential and reviewed by certified experts.
+          </p>
+        </form>
+      </div>
+
+      <div class="inv-success" id="invSuccess" hidden>
+        <span class="inv-success-icon"><Icon name="check" class="w-full h-full" /></span>
+        <h2 class="inv-title">We have your details</h2>
+        <p class="inv-intro">
+          A certified investigator will review your case and respond within 48 hours. Everything you
+          sent us is confidential.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .inv {
+    background: var(--color-navy);
+    padding: 3.5rem 0;
+  }
+  .inv-card {
+    max-width: 42rem;
+    margin: 0 auto;
+    padding: 2.2rem 2rem;
+  }
+  .inv-title {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    color: #fff;
+    margin: 0 0 0.7rem;
+    text-align: center;
+  }
+  .inv-intro {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.7;
+    margin: 0 auto 1.8rem;
+    max-width: 46ch;
+    text-align: center;
+  }
+  .inv-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .field {
+    position: relative;
+  }
+  .field input,
+  .field textarea {
+    width: 100%;
+    padding: 0.95rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.65rem;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 0.96rem;
+    resize: vertical;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .field input:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--color-purple-400);
+    background: rgba(139, 91, 189, 0.08);
+  }
+  .field label {
+    position: absolute;
+    left: 0.85rem;
+    top: 0.9rem;
+    padding: 0 0.3rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.96rem;
+    pointer-events: none;
+    transition: transform 0.15s, color 0.15s, font-size 0.15s;
+    background: var(--color-navy-elevated, #14142a);
+  }
+  .field input:focus + label,
+  .field input:not(:placeholder-shown) + label,
+  .field textarea:focus + label,
+  .field textarea:not(:placeholder-shown) + label {
+    transform: translateY(-1.4rem);
+    font-size: 0.72rem;
+    color: var(--color-purple-300);
+  }
+  .inv-hint {
+    margin: -0.4rem 0 0;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+  }
+  .hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .form-status {
+    margin: 0;
+    color: #ffb4b4;
+    font-size: 0.85rem;
+  }
+  .inv-submit {
+    justify-content: center;
+    width: 100%;
+    margin-top: 0.2rem;
+  }
+  .inv-legal {
+    margin: 0;
+    font-size: 0.73rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+  }
+  .inv-success {
+    text-align: center;
+    padding: 1.5rem 0.5rem;
+  }
+  .inv-success-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    padding: 0.7rem;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--color-purple-500);
+  }
+
+  @media (max-width: 620px) {
+    .field-row {
+      grid-template-columns: 1fr;
+    }
+    .inv-card {
+      padding: 1.7rem 1.25rem;
+    }
+  }
+</style>
+
+<script>
+  import { initForm } from '../lib/lead-form';
+
+  const form = document.getElementById('invForm') as HTMLFormElement | null;
+  const head = document.getElementById('invHead');
+  const success = document.getElementById('invSuccess');
+
+  if (form && head && success) {
+    initForm(form, {
+      endpoint: '/api/lead',
+      source: 'investigator',
+      onSuccess: () => {
+        head.hidden = true;
+        success.hidden = false;
+        success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      },
+    });
+  }
+</script>

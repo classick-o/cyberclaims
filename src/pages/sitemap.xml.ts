@@ -11,6 +11,7 @@ import type { APIRoute } from 'astro';
 import { Post, cached } from '../lib/content';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../i18n/config';
 import { LANDING_SLUGS } from '../data/landing-content';
+import { PHONE_CHECK_VARIANT_SLUGS } from '../data/phone-check-content';
 
 // Everything prerendered, with the priority the content deserves.
 const STATIC_PAGES: { path: string; priority: number; changefreq: string }[] = [
@@ -28,7 +29,9 @@ const STATIC_PAGES: { path: string; priority: number; changefreq: string }[] = [
   { path: '/social-media-investigation/', priority: 0.9, changefreq: 'monthly' },
   { path: '/business-services/', priority: 0.9, changefreq: 'monthly' },
   { path: '/news/', priority: 0.8, changefreq: 'weekly' },
-  { path: '/phone-check/', priority: 0.8, changefreq: 'monthly' },
+  // NOTE: /phone-check/ is deliberately absent. Exactly one phone-checker page is
+  // indexed - the UK variant - which is listed via PHONE_CHECK_VARIANT_SLUGS below.
+  // The generic /phone-check/ locales are noindex.
   { path: '/start-process/', priority: 0.9, changefreq: 'monthly' },
   { path: '/contact-us/', priority: 0.8, changefreq: 'monthly' },
   { path: '/privacy-policy/', priority: 0.3, changefreq: 'yearly' },
@@ -80,8 +83,9 @@ export const GET: APIRoute = async ({ site }) => {
   </url>`);
   }
 
-  // Conversion landing pages — single root URLs, not multiplied per locale.
-  for (const slug of LANDING_SLUGS) {
+  // Conversion landing pages + phone-checker country variants — single root URLs, not
+  // multiplied per locale.
+  for (const slug of [...LANDING_SLUGS, ...PHONE_CHECK_VARIANT_SLUGS]) {
     entries.push(`  <url>
     <loc>${escape(`${origin}/${slug}/`)}</loc>
     <changefreq>monthly</changefreq>

@@ -41,6 +41,7 @@ const SOURCE_LABEL = {
   start_process: 'Start Process wizard',
   url_checker: 'URL Checker',
   landing: 'Landing page',
+  investigator: 'Speak With an Investigator',
 };
 
 function row(label, value) {
