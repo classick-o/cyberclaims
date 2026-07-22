@@ -146,7 +146,7 @@ export const PHONE_CHECK_VARIANTS: PhoneCheckVariant[] = [
       'We don’t store the number you check. The report is generated on demand and delivered only to you.',
     countrySection: {
       heading: 'How can Cyberclaims check phone numbers in the United Kingdom?',
-      body: 'Every year 4.6 million people are affected by cyber crime and fraud in the United Kingdom, many of which are firstly contacted by phone. Our phone number lookup analyses the phone number pattern to identify the caller location, carrier details and device type. To lookup the caller’s identity we check the phone number against leak databases, fraud databases and we check social media and communication platforms such as Whatsapp and Telegram. Your results will be available for download as a pdf and will not be stored by us.',
+      body: 'Every year <a href="https://www.reportfraud.police.uk/" target="_blank" rel="noopener noreferrer">4.6 million people are affected by cyber crime and fraud</a> in the United Kingdom, many of which are firstly contacted by phone. Our phone number lookup analyses the phone number pattern to identify the caller location, carrier details and device type. To lookup the caller’s identity we check the phone number against leak databases, fraud databases and we check social media and communication platforms such as Whatsapp and Telegram. Your results will be available for download as a pdf and will not be stored by us.',
     },
     howTitle: 'How it works',
     steps: [
@@ -169,7 +169,7 @@ export const PHONE_CHECK_VARIANTS: PhoneCheckVariant[] = [
       },
       {
         q: 'Why should I check unknown phone numbers in the UK?',
-        a: 'According to the BBC, 48% of landline users in the United Kingdom reported receiving a suspicious call in the previous three months. These calls can be anything from spam calls to calls with the intention to scam or defraud people. If you have received a phone call from an unknown number, it is a good idea to find out who is behind the call and to report the number.',
+        a: 'According to the BBC, <a href="https://www.bbc.com/news/articles/c29dwl5e5zjo" target="_blank" rel="noopener noreferrer">48% of landline users in the United Kingdom reported receiving a suspicious call in the previous three months</a>. These calls can be anything from spam calls to calls with the intention to scam or defraud people. If you have received a phone call from an unknown number, it is a good idea to find out who is behind the call and to report the number.',
       },
       {
         q: 'If the caller knows information about me, does that mean that they are legitimate?',
@@ -181,7 +181,7 @@ export const PHONE_CHECK_VARIANTS: PhoneCheckVariant[] = [
       },
       {
         q: 'How to check if a number is spam in the UK?',
-        a: 'In 2024, the ICO received 44,404 complaints about nuisance calls in the United Kingdom. We check phone numbers for common markers of spam calling such as checking the carrier and device type and spam databases. It is important to check unknown numbers and to report them if the calls are unwanted.',
+        a: 'In 2024, the ICO <a href="https://ico.org.uk/about-the-ico/media-centre/news-and-blogs/2025/01/new-year-new-you-2025-is-the-year-to-tighten-up-your-data-privacy/" target="_blank" rel="noopener noreferrer">received 44,404 complaints about nuisance calls</a> in the United Kingdom. We check phone numbers for common markers of spam calling such as checking the carrier and device type and spam databases. It is important to check unknown numbers and to report them if the calls are unwanted.',
       },
       {
         q: 'How does Cyberclaims know who called me?',
@@ -189,7 +189,7 @@ export const PHONE_CHECK_VARIANTS: PhoneCheckVariant[] = [
       },
       {
         q: 'Where should I report suspicious phone numbers and scam calls in the UK?',
-        a: 'A number of reporting guidelines are outlined by gov.uk. It is important to report scam calls immediately so that authorities have the best chance of investigating cases and protecting the public.',
+        a: '<a href="https://www.gov.uk/report-suspicious-emails-websites-phishing/report-scam-HMRC-messages-calls-social-media" target="_blank" rel="noopener noreferrer">A number of reporting guidelines are outlined here by gov.uk</a>. It is important to report scam calls immediately so that authorities have the best chance of investigating cases and protecting the public.',
       },
       {
         q: 'What do I do if a caller claims to be from my bank in the UK?',
@@ -197,17 +197,17 @@ export const PHONE_CHECK_VARIANTS: PhoneCheckVariant[] = [
       },
       {
         q: 'How to get fewer spam calls in the United Kingdom?',
-        a: 'You can register with the TPS to make sure that legitimate companies will no longer call you with sales inquiries.',
+        a: '<a href="https://www.tpsonline.org.uk/register" target="_blank" rel="noopener noreferrer">You can register with the TPS</a> to make sure that legitimate companies will no longer call you with sales inquiries.',
       },
     ],
     extraSections: [
       {
         heading: 'How to block spam calls',
-        body: 'In the UK, you can block spam calls by registering your phone number with the TPS. This will make sure that legitimate companies will no longer call you with sales inquiries. If you are already registered with the TPS and still receive spam calls you can report the number with the TPS and they will forward your complaint to the ICO, who do have enforcement powers.',
+        body: 'In the UK, you can block spam calls <a href="https://www.tpsonline.org.uk/register" target="_blank" rel="noopener noreferrer">by registering your phone number with the TPS</a>. This will make sure that legitimate companies will no longer call you with sales inquiries. If you are already registered with the TPS and still receive spam calls you can <a href="https://www.tpsonline.org.uk/complaint" target="_blank" rel="noopener noreferrer">report the number with the TPS</a> and they will forward your complaint to the <a href="https://ico.org.uk/" target="_blank" rel="noopener noreferrer">ICO</a>, who do have enforcement powers.',
       },
       {
         heading: 'What should I do if I am victim of a scam',
-        body: 'If you are in the UK, we recommend you start with following the reporting guidelines from the UK government. If you have reported the scam with official bodies and you want extra guidance, you can always file a contact request with Cyberclaims and we will review your case in 48 hours.',
+        body: 'If you are in the UK, we recommend you start with following <a href="https://www.gov.uk/report-suspicious-emails-websites-phishing/report-scam-HMRC-messages-calls-social-media" target="_blank" rel="noopener noreferrer">the reporting guidelines from the UK government</a>. If you have reported the scam with official bodies and you want extra guidance, you can always file a <a href="/contact-us/">contact request with Cyberclaims</a> and we will review your case in 48 hours.',
       },
     ],
     showInvestigator: true,

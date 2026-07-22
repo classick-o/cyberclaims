@@ -46,7 +46,9 @@ const faqLd = {
   mainEntity: c.faqs.map((f) => ({
     '@type': 'Question',
     name: f.q,
-    acceptedAnswer: { '@type': 'Answer', text: f.a },
+    // Answers may carry inline <a> citations (see the UK variant). Structured data wants
+    // the plain text, so strip the markup here while the visible answer keeps the links.
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() },
   })),
 };
 ---
@@ -78,7 +80,8 @@ const faqLd = {
         c.countrySection && (
           <section class="pc-sec" data-reveal>
             <h2 class="pc-h2">{c.countrySection.heading}</h2>
-            <p class="pc-prose">{c.countrySection.body}</p>
+            {/* Trusted copy from our own data file; may include inline citation links. */}
+            <p class="pc-prose" set:html={c.countrySection.body} />
           </section>
         )
       }
@@ -124,7 +127,7 @@ const faqLd = {
             c.faqs.map((f) => (
               <details class="pc-faq-item">
                 <summary>{f.q}</summary>
-                <p>{f.a}</p>
+                <p set:html={f.a} />
               </details>
             ))
           }
@@ -136,7 +139,7 @@ const faqLd = {
         c.extraSections?.map((s) => (
           <section class="pc-sec" data-reveal>
             <h2 class="pc-h2">{s.heading}</h2>
-            <p class="pc-prose">{s.body}</p>
+            <p class="pc-prose" set:html={s.body} />
           </section>
         ))
       }
@@ -222,6 +225,18 @@ const faqLd = {
     color: rgba(255, 255, 255, 0.72);
     line-height: 1.85;
     margin: 0;
+  }
+  /* Inline citation links (BBC, ICO, gov.uk, TPS, …) in prose + FAQ answers. */
+  .pc-prose :global(a),
+  .pc-faq-item p :global(a) {
+    color: var(--color-purple-300);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.2s;
+  }
+  .pc-prose :global(a:hover),
+  .pc-faq-item p :global(a:hover) {
+    color: #fff;
   }
 
   .pc-steps {
