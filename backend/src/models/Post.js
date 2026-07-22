@@ -399,13 +399,23 @@ export class Post {
   static async setStatus(id, status) {
     // NOW(), not a JS Date - see the comment in save(). A first publish stamps the
     // date; re-publishing something that was already dated keeps its original date.
-    await pool.execute(
-      `UPDATE posts
-          SET status = ?,
-              published_at = IF(? = 'published' AND published_at IS NULL, NOW(), published_at)
-        WHERE id = ?`,
-      [status, status, id]
-    );
+    //
+    // The `published` case is a SEPARATE statement rather than one
+    // `IF(? = 'published' …)` expression, because MariaDB's prepared-statement protocol
+    // rejects a parameter marker used as an operand inside IF() there (it 500s with an
+    // opaque error). Here no placeholder sits inside the conditional, so it prepares
+    // cleanly on both MariaDB and MySQL. `status` is enum-validated, so the literal is safe.
+    if (status === 'published') {
+      await pool.execute(
+        `UPDATE posts
+            SET status = 'published',
+                published_at = IF(published_at IS NULL, NOW(), published_at)
+          WHERE id = ?`,
+        [id]
+      );
+    } else {
+      await pool.execute('UPDATE posts SET status = ? WHERE id = ?', [status, id]);
+    }
   }
 
   static async remove(id) {
