@@ -42,6 +42,7 @@ const SOURCE_LABEL = {
   url_checker: 'URL Checker',
   landing: 'Landing page',
   investigator: 'Speak With an Investigator',
+  scam_report: 'Reported scam number (phone checker)',
 };
 
 function row(label, value) {

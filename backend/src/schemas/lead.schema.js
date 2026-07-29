@@ -26,7 +26,7 @@ const date = z
   .transform((v) => v || null);
 
 export const leadSchema = z.object({
-  source: z.enum(['hero', 'contact', 'start_process', 'url_checker', 'landing', 'investigator'], {
+  source: z.enum(['hero', 'contact', 'start_process', 'url_checker', 'landing', 'investigator', 'scam_report'], {
     errorMap: () => ({ message: 'Unknown form.' }),
   }),
 

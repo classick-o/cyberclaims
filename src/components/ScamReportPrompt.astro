@@ -1,0 +1,210 @@
+---
+// "Was this number involved in a scam?" - the post-report reporting prompt.
+//
+// Shown only after a report has been generated, so the lookup turns into a data-collection
+// funnel instead of a one-way check. Goes through the same lead pipeline as every other
+// form on the site (/api/lead), tagged source 'scam_report'.
+//
+// Privacy: the checker promises we don't store the number you look up, and we don't. This
+// form is the one place the number IS sent to us - because the visitor deliberately reports
+// it - so the copy says so explicitly rather than quietly contradicting that promise.
+import Icon from './Icon.astro';
+import Turnstile from './Turnstile.astro';
+---
+
+<div class="sr" id="srBlock">
+  <div id="srIntro">
+    <h3 class="sr-title">Was this number involved in a scam?</h3>
+    <p class="sr-text">
+      If you received a suspicious call or message from this number, let us know. Your report
+      helps us flag risky numbers for others and supports our fraud intelligence network.
+    </p>
+    <button type="button" class="btn btn-ghost sr-open" id="srOpen">Report this number →</button>
+  </div>
+
+  <form class="sr-form" id="srForm" method="post" action="/api/lead" novalidate hidden>
+    <p class="sr-number-row">
+      Reporting: <strong class="sr-number" id="srNumberLabel"></strong>
+    </p>
+
+    <div class="sr-field">
+      <input type="text" name="full_name" required placeholder=" " />
+      <label>Your name <span aria-hidden="true">*</span></label>
+    </div>
+    <div class="sr-field">
+      <input type="email" name="email" required placeholder=" " />
+      <label>Your email <span aria-hidden="true">*</span></label>
+    </div>
+    <div class="sr-field">
+      <textarea name="message" rows="4" placeholder=" "></textarea>
+      <label>What happened? (optional)</label>
+    </div>
+
+    {/* The reported number. Filled in by PhoneCheckTool once a report has been generated. */}
+    <input type="hidden" name="phone" id="srNumber" />
+
+    <input class="sr-hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" />
+    <Turnstile />
+    <p class="form-status sr-status" data-form-status role="alert" hidden></p>
+    <button type="submit" class="btn sr-submit">Send report</button>
+    <p class="sr-legal">
+      Submitting this report shares the number, and the details you enter, with our fraud team.
+      The lookup itself is still not stored.
+    </p>
+  </form>
+
+  <div class="sr-done" id="srDone" hidden>
+    <span class="sr-done-ic"><Icon name="check" class="w-full h-full" /></span>
+    <p class="sr-text">
+      Thank you — this number has been reported to our fraud team. Reports like yours help us
+      flag risky numbers for other people.
+    </p>
+  </div>
+</div>
+
+<style>
+  .sr {
+    margin-top: 1.6rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+  }
+  .sr-title {
+    color: #fff;
+    font-size: 1.05rem;
+    margin: 0 0 0.5rem;
+    text-align: center;
+  }
+  .sr-text {
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.6;
+    font-size: 0.9rem;
+    margin: 0 auto 1.1rem;
+    max-width: 44ch;
+    text-align: center;
+  }
+  .sr-open {
+    display: flex;
+    margin: 0 auto;
+  }
+
+  .sr-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .sr-number-row {
+    margin: 0;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-align: center;
+  }
+  .sr-number {
+    color: var(--color-purple-300);
+  }
+  .sr-field {
+    position: relative;
+  }
+  .sr-field input,
+  .sr-field textarea {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.65rem;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    resize: vertical;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .sr-field input:focus,
+  .sr-field textarea:focus {
+    outline: none;
+    border-color: var(--color-purple-400);
+    background: rgba(139, 91, 189, 0.08);
+  }
+  .sr-field label {
+    position: absolute;
+    left: 0.85rem;
+    top: 0.85rem;
+    padding: 0 0.3rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.95rem;
+    pointer-events: none;
+    transition: transform 0.15s, color 0.15s, font-size 0.15s;
+    background: var(--color-navy-elevated, #14142a);
+  }
+  .sr-field input:focus + label,
+  .sr-field input:not(:placeholder-shown) + label,
+  .sr-field textarea:focus + label,
+  .sr-field textarea:not(:placeholder-shown) + label {
+    transform: translateY(-1.35rem);
+    font-size: 0.72rem;
+    color: var(--color-purple-300);
+  }
+  .sr-hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .sr-status {
+    margin: 0;
+    color: #ffb4b4;
+    font-size: 0.85rem;
+  }
+  .sr-submit {
+    justify-content: center;
+    width: 100%;
+  }
+  .sr-legal {
+    margin: 0;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+  }
+
+  .sr-done {
+    text-align: center;
+  }
+  .sr-done-ic {
+    display: inline-grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0.55rem;
+    margin-bottom: 0.6rem;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--color-purple-500);
+  }
+</style>
+
+<script>
+  import { initForm } from '../lib/lead-form';
+
+  const form = document.getElementById('srForm') as HTMLFormElement | null;
+  const intro = document.getElementById('srIntro');
+  const done = document.getElementById('srDone');
+  const open = document.getElementById('srOpen');
+
+  if (form && intro && done && open) {
+    open.addEventListener('click', () => {
+      intro.hidden = true;
+      form.hidden = false;
+      form.querySelector<HTMLInputElement>('input[name="full_name"]')?.focus();
+    });
+
+    initForm(form, {
+      endpoint: '/api/lead',
+      source: 'scam_report',
+      onSuccess: () => {
+        form.hidden = true;
+        done.hidden = false;
+      },
+    });
+  }
+</script>

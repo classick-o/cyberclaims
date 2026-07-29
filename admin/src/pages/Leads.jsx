@@ -6,11 +6,17 @@ import Pager from '../components/Pager.jsx';
 
 const PAGE_SIZE = 50;
 const STATUSES = ['new', 'contacted', 'qualified', 'closed'];
+// Keep in lockstep with the source ENUM in lead.schema.js / the leads table. A missing
+// entry here isn't fatal (the table falls back to the raw value) but it drops the form
+// from the filter dropdown, which is how 'landing' and 'investigator' went unfilterable.
 const SOURCES = {
   hero: 'Homepage',
   contact: 'Contact page',
   start_process: 'Start Process',
   url_checker: 'URL Checker',
+  landing: 'Landing page',
+  investigator: 'Speak With an Investigator',
+  scam_report: 'Reported scam number',
 };
 
 const when = (v) =>

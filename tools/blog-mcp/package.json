@@ -1,0 +1,22 @@
+{
+  "name": "cyberclaims-blog-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server for creating and publishing blog posts on the Cyberclaims site.",
+  "type": "module",
+  "bin": {
+    "cyberclaims-blog-mcp": "index.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.mjs",
+    "check": "node index.mjs --check"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "marked": "^14.1.0",
+    "zod": "^3.24.0"
+  }
+}

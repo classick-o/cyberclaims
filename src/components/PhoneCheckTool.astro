@@ -6,6 +6,7 @@
 // our server proxy (/api/phone-report), which holds the ScamInfo key. No risk verdict is
 // rendered here - the result lives only inside the downloaded PDF.
 import Icon from './Icon.astro';
+import ScamReportPrompt from './ScamReportPrompt.astro';
 import { DIAL_COUNTRIES, type PhoneCheckContent } from '../data/phone-check-content';
 
 interface Props {
@@ -79,6 +80,9 @@ const { c, locale, defaultIso } = Astro.props;
     <h2>{c.successTitle}</h2>
     <p>{c.successBody}</p>
     <button type="button" class="btn btn-ghost pc-again" id="pcAgain">{c.again}</button>
+
+    {/* Turns the lookup into a reporting funnel instead of a one-way check. */}
+    <ScamReportPrompt />
   </div>
 
   <!-- Error -->
@@ -257,7 +261,23 @@ const { c, locale, defaultIso } = Astro.props;
       show(errorEl);
     };
 
-    document.getElementById('pcAgain')?.addEventListener('click', () => show(form));
+    // Put the report prompt back to its unopened state, so checking a second number
+    // doesn't leave the previous number's form (or its "thank you") on screen.
+    const resetReportPrompt = () => {
+      const intro = document.getElementById('srIntro');
+      const reportForm = document.getElementById('srForm') as HTMLFormElement | null;
+      const done = document.getElementById('srDone');
+      if (!intro || !reportForm || !done) return;
+      reportForm.reset();
+      reportForm.hidden = true;
+      done.hidden = true;
+      intro.hidden = false;
+    };
+
+    document.getElementById('pcAgain')?.addEventListener('click', () => {
+      resetReportPrompt();
+      show(form);
+    });
     document.getElementById('pcRetry')?.addEventListener('click', () => show(form));
 
     form.addEventListener('submit', async (e) => {
@@ -311,6 +331,14 @@ const { c, locale, defaultIso } = Astro.props;
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
+
+        // Hand the number to the report prompt. This is the ONLY place it can reach us,
+        // and only if the visitor then chooses to report it - the lookup itself still
+        // stores nothing.
+        const reportNumber = document.getElementById('srNumber') as HTMLInputElement | null;
+        const reportLabel = document.getElementById('srNumberLabel');
+        if (reportNumber) reportNumber.value = phone_number;
+        if (reportLabel) reportLabel.textContent = phone_number;
 
         show(successEl);
       } catch (err) {

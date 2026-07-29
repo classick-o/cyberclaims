@@ -21,7 +21,14 @@ type Options = {
   /** Where to POST. Same-origin path. */
   endpoint: string;
   /** Which form this is - the lead endpoint stores it, so we know where a case came from. */
-  source?: 'hero' | 'contact' | 'start_process' | 'url_checker' | 'landing' | 'investigator';
+  source?:
+    | 'hero'
+    | 'contact'
+    | 'start_process'
+    | 'url_checker'
+    | 'landing'
+    | 'investigator'
+    | 'scam_report';
   /** Called only once the server confirms. Never on a failure. */
   onSuccess: () => void;
 };

@@ -15,7 +15,7 @@ export type PhoneCheckLocale = 'en' | 'nl' | 'de' | 'it' | 'es' | 'pt' | 'fr';
 export const PHONE_CHECK_LOCALES: PhoneCheckLocale[] = ['en', 'nl', 'de', 'it', 'es', 'pt', 'fr'];
 
 // Slugs of the country variants, so the sitemap and the reserved-slug guard can see them.
-export const PHONE_CHECK_VARIANT_SLUGS = ['who-called-me-uk'];
+export const PHONE_CHECK_VARIANT_SLUGS = ['who-called-me-uk', 'who-called-me'];
 
 export interface PhoneCheckStep {
   title: string;
@@ -208,6 +208,104 @@ export const PHONE_CHECK_VARIANTS: PhoneCheckVariant[] = [
       {
         heading: 'What should I do if I am victim of a scam',
         body: 'If you are in the UK, we recommend you start with following <a href="https://www.gov.uk/report-suspicious-emails-websites-phishing/report-scam-HMRC-messages-calls-social-media" target="_blank" rel="noopener noreferrer">the reporting guidelines from the UK government</a>. If you have reported the scam with official bodies and you want extra guidance, you can always file a <a href="/contact-us/">contact request with Cyberclaims</a> and we will review your case in 48 hours.',
+      },
+    ],
+    showInvestigator: true,
+    disclaimer:
+      'This report is provided for information only and is not a legal determination. If you believe you’ve been targeted or have lost money, contact our team.',
+  },
+  // Global/generic sibling of the UK page. The lookup itself was always worldwide - this
+  // variant only drops the UK framing (the UK stat, "in the United Kingdom", TPS/ICO/159,
+  // gov.uk reporting) so the copy doesn't assert a UK-only audience. The UK page stays live
+  // for its own keyword set; keep the two metaTitles distinct so they don't compete.
+  {
+    slug: 'who-called-me',
+    defaultIso: 'GB',
+    reportLocale: 'en',
+    metaTitle: 'Who called me? | Free phone number lookup | Cyberclaims',
+    metaDescription:
+      'Received a call you don’t recognise? Look up any phone number worldwide and download a full safety report as a PDF. Free, and nothing is stored.',
+    eyebrow: 'Free phone number lookup',
+    h1: 'Who called me - check any phone number directly',
+    subhead:
+      'Received a call from a phone number you do not recognize? Check any phone number and get a full safety report to find out who called you. Download the report as a pdf, no information will be stored.',
+    countryLabel: 'Country',
+    numberLabel: 'Phone number',
+    numberPlaceholder: 'e.g. 20 7946 0958',
+    submit: 'Get free safety report',
+    loading: 'Generating your report… this can take up to a minute.',
+    successTitle: 'Your report is ready',
+    successBody: 'Your PDF has downloaded. Check your downloads folder if you don’t see it.',
+    again: 'Check another number',
+    errorGeneric: 'Something went wrong generating your report. Please try again in a moment.',
+    errorTimeout: 'The report is taking longer than expected. Please try again.',
+    errorInvalid: 'That doesn’t look like a valid phone number. Please check it and try again.',
+    privacyNote:
+      'We don’t store the number you check. The report is generated on demand and delivered only to you.',
+    countrySection: {
+      heading: 'How can Cyberclaims check phone numbers worldwide?',
+      body: 'Every year millions of people are affected by <a href="https://www.gasa.org/" target="_blank" rel="noopener noreferrer">cyber crime and fraud worldwide</a>, many of which are firstly contacted by phone. Our phone number lookup works for numbers in any country: it analyses the phone number pattern to identify the caller location, carrier details and device type. To lookup the caller’s identity we check the phone number against leak databases, fraud databases and we check social media and communication platforms such as Whatsapp and Telegram. Your results will be available for download as a pdf and will not be stored by us.',
+    },
+    howTitle: 'How it works',
+    steps: [
+      { title: 'Enter the number', body: 'Pick the country and type the phone number that contacted you.' },
+      { title: 'We analyse it', body: 'We run live checks across fraud, reputation and exposure signals — usually in under a minute.' },
+      { title: 'Download your PDF', body: 'You get a detailed, branded safety report to download and keep. Nothing is stored on our side.' },
+    ],
+    trustTitle: 'Why people trust CyberClaims',
+    trustItems: [
+      'Cybercrime victim support & recovery specialists',
+      'Featured in 350+ news outlets',
+      'Confidential — no account, no data kept',
+      'Authorised private investigation agency (Dutch Ministry of Justice)',
+    ],
+    faqTitle: 'Frequently asked questions',
+    faqs: [
+      {
+        q: 'What is a phone number lookup?',
+        a: 'A phone number lookup tool combines public and private sources to identify phone number meta data, carrier details and associated services the phone number may have been used for in order to find the identity of the caller and provide a safety assessment.',
+      },
+      {
+        q: 'Why should I check unknown phone numbers?',
+        a: 'Unwanted and suspicious calls are a worldwide problem — the <a href="https://www.gasa.org/" target="_blank" rel="noopener noreferrer">Global Anti-Scam Alliance</a> tracks scams affecting people in almost every country, and the phone is still one of the most common first points of contact. These calls can be anything from spam calls to calls with the intention to scam or defraud people. If you have received a phone call from an unknown number, it is a good idea to find out who is behind the call and to report the number.',
+      },
+      {
+        q: 'If the caller knows information about me, does that mean that they are legitimate?',
+        a: 'No! Scammers have various methods to obtain personal information of their victims in order to convince them that they represent legitimate companies. Do not fall for this. If you are in doubt it is always best to just hang up the call and call the company that the unknown caller was claiming to be from via its official number. You can also use our phone number lookup to double check the phone number.',
+      },
+      {
+        q: 'How do I know if a phone call is a potential scam?',
+        a: 'Scam callers often use disposable phone numbers via Voice over internet protocol (VOIP) services. Our phone number checker detects when phone numbers are VOIP calls which is a strong indication that the caller could be calling with malicious intent. Furthermore, we also check fraud and spam databases to see if the number has previously been reported.',
+      },
+      {
+        q: 'How to check if a number is spam?',
+        a: 'We check phone numbers for common markers of spam calling, such as the carrier and device type behind the number, and we check it against spam and fraud databases to see whether it has been reported before. It is important to check unknown numbers and to report them if the calls are unwanted.',
+      },
+      {
+        q: 'How does Cyberclaims know who called me?',
+        a: 'We check leak databases to see if the number and identity of the owner have ever been leaked. We also check social media and communication platforms such as Whatsapp and Telegram. These kinds of checks are your best bet in finding out the identity of the caller.',
+      },
+      {
+        q: 'Where should I report suspicious phone numbers and scam calls?',
+        a: 'Most countries have a national fraud reporting body, police service or telecoms regulator that takes reports of scam calls — report there first, and tell your bank straight away if any money or card details were involved. It is important to report scam calls immediately so that authorities have the best chance of investigating cases and protecting the public. You can also <a href="/contact-us/">file a report with Cyberclaims</a>.',
+      },
+      {
+        q: 'What do I do if a caller claims to be from my bank?',
+        a: 'Hang up, and call your bank back on the number printed on your bank card or shown in its official app — never a number the caller gives you. A genuine bank will never object to you calling them back, and will never ask you to move money to a "safe account".',
+      },
+      {
+        q: 'How to get fewer spam calls?',
+        a: 'Many countries run a do-not-call or telephone preference register that legitimate companies are required to respect, so registering your number there will cut down on sales calls. Your phone and your network provider will also have call-blocking and spam-filtering options you can switch on.',
+      },
+    ],
+    extraSections: [
+      {
+        heading: 'How to block spam calls',
+        body: 'Start by registering your number with the do-not-call or telephone preference register in your country — legitimate companies are required to respect it, so it removes most unwanted sales calls. Both Android and iPhone let you block an individual number and silence calls from unknown numbers, and most network providers offer their own spam filtering. If you are already registered and still receive spam calls, report the number to your national telecoms or data-protection regulator, as they are the body with enforcement powers.',
+      },
+      {
+        heading: 'What should I do if I am victim of a scam',
+        body: 'Act quickly: contact your bank or payment provider immediately so they can try to stop or recall the payment, then report the scam to the police or the national fraud reporting body in your country, and keep every message, receipt and phone number as evidence. If you have reported the scam with official bodies and you want extra guidance, you can always file a <a href="/contact-us/">contact request with Cyberclaims</a> and we will review your case in 48 hours.',
       },
     ],
     showInvestigator: true,

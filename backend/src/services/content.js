@@ -250,8 +250,9 @@ export const RESERVED_SLUGS = new Set([
   'recover-your-lost-digital-funds-in-canada-scam-recovery-services',
   'recover-your-lost-digital-funds-in-the-usa-scam-recovery-services',
   'truffa-recupero',
-  // phone-checker country variants - src/pages/who-called-me-*.astro
+  // phone-checker variants - src/pages/who-called-me*.astro
   'who-called-me-uk',
+  'who-called-me',
   '404',
   // legal documents - src/content/legal/
   'privacy-policy',

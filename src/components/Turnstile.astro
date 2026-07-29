@@ -30,7 +30,20 @@ const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITEKEY;
         data-timeout-callback="__ccTurnstileFail"
         data-expired-callback="__ccTurnstileFail"
       />
-      <script is:inline async defer src="https://challenges.cloudflare.com/turnstile/v0/api.js" />
+      {/* Load the API exactly once per page. A page can now carry two widgets - the
+          phone checker's "report this number" prompt sits on the same page as the
+          investigator form - and a second <script src> tag would execute the API a
+          second time, which re-scans and can double-render the widgets. */}
+      <script is:inline>
+        if (!document.querySelector('script[data-cf-turnstile-api]')) {
+          const s = document.createElement('script');
+          s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+          s.async = true;
+          s.defer = true;
+          s.setAttribute('data-cf-turnstile-api', '');
+          document.head.appendChild(s);
+        }
+      </script>
     </>
   )
 }
