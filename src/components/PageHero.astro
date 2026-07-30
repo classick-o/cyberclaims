@@ -40,6 +40,14 @@ interface Props {
   imageMaxWidthMobile?: string; // separate cap below 1024px, where the art bleeds
   fullHeightMobile?: boolean; // below 1024px, make the hero fill the screen
   scrollHint?: boolean; // below 1024px, show an animated "scroll down" cue
+  /**
+   * Below 1024px: shrink the hero to its content and drop the CTA button.
+   *
+   * For pages whose real call to action is the thing directly underneath - /start-process/
+   * IS a form, so a phone visitor should meet the first field, not 46rem of artwork and a
+   * button pointing somewhere else.
+   */
+  compactMobile?: boolean;
 }
 const {
   eyebrow,
@@ -57,6 +65,7 @@ const {
   imageMaxWidthMobile,
   fullHeightMobile = false,
   scrollHint = false,
+  compactMobile = false,
 } = Astro.props;
 
 // Below 1024px a real image becomes a backdrop behind the copy. Never do this to
@@ -74,7 +83,7 @@ const imgVars = [
 <section
   class={`page-hero${fixedHeight ? ' is-fixed' : ''}${bleed ? ' is-bleed' : ''}${
     bleed && fullHeightMobile ? ' is-tall' : ''
-  }`}
+  }${compactMobile ? ' is-compact-sm' : ''}`}
 >
   <div
     class="glow-blob ph-glow-1"
@@ -367,6 +376,29 @@ const imgVars = [
     .page-hero.is-bleed .ph-copy {
       position: relative;
       z-index: 2;
+    }
+
+    /* `is-compact-sm`: hug the content and drop the CTA, so whatever follows the hero
+       (on /start-process/, the form itself) is what the visitor actually lands on. */
+    .page-hero.is-compact-sm {
+      padding: 7.5rem 0 2rem;
+    }
+    .page-hero.is-compact-sm.is-bleed {
+      /* the 46rem backdrop is what pushed the form a full screen down */
+      min-height: 0;
+    }
+    .page-hero.is-compact-sm .ph-cta {
+      display: none;
+    }
+    /* Drop the artwork too. Squeezed into a short hero it collides with the headline
+       and reads as clutter; the gradient alone is cleaner and keeps the focus on the
+       form directly below. */
+    .page-hero.is-compact-sm.is-bleed .ph-visual {
+      display: none;
+    }
+    .page-hero.is-compact-sm.is-bleed::after {
+      /* no artwork left to scrim */
+      display: none;
     }
   }
   @media (min-width: 1024px) {
