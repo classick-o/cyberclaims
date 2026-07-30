@@ -192,6 +192,14 @@ export default function Leads() {
               <Detail label="Phone" value={open.phone} />
               <Detail label="Country" value={open.country} />
               <Detail label="Form" value={SOURCES[open.source] ?? open.source} />
+              {/* Scam-report form (phone checker). NULL on every other form, and Detail
+                  renders nothing for an empty value, so these stay invisible elsewhere. */}
+              <Detail label="Reported number" value={open.reported_number} />
+              <Detail label="What happened" value={open.scam_type} />
+              <Detail
+                label="Lost money"
+                value={open.lost_money === null || open.lost_money === undefined ? null : open.lost_money ? 'Yes' : 'No'}
+              />
               <Detail label="Amount lost" value={open.amount_lost} />
               <Detail label="Platform" value={open.platform_name} />
               <Detail label="Platform site" value={open.platform_website} />

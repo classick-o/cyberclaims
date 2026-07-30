@@ -31,14 +31,24 @@ const { c, locale, defaultIso } = Astro.props;
     data-err-generic={c.errorGeneric}
     data-err-timeout={c.errorTimeout}
     data-err-invalid={c.errorInvalid}
+    data-err-country={c.errorCountry ?? 'Please choose the country the number is from.'}
   >
     <div class="pc-fields">
       <div class="pc-field pc-country">
         <label for="pcCountry">{c.countryLabel}</label>
-        <select id="pcCountry" name="country" autocomplete="tel-country-code">
+        <select id="pcCountry" name="country" autocomplete="tel-country-code" required>
+          {/* Pages that serve one country preselect it; the global page preselects nothing
+              and shows this instead, so the dial code is always a deliberate choice. */}
+          {
+            !defaultIso && (
+              <option value="" selected disabled>
+                {c.countryPlaceholder ?? 'Select country'}
+              </option>
+            )
+          }
           {
             DIAL_COUNTRIES.map((country) => (
-              <option value={country.dial} selected={country.iso === defaultIso}>
+              <option value={country.dial} selected={!!defaultIso && country.iso === defaultIso}>
                 {country.name} (+{country.dial})
               </option>
             ))
@@ -237,6 +247,7 @@ const { c, locale, defaultIso } = Astro.props;
       generic: form.dataset.errGeneric!,
       timeout: form.dataset.errTimeout!,
       invalid: form.dataset.errInvalid!,
+      country: form.dataset.errCountry!,
     };
 
     const card = form.closest('.pc-card')!;
@@ -282,6 +293,13 @@ const { c, locale, defaultIso } = Astro.props;
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      // The global page preselects no country, so guard it before building the number -
+      // otherwise an unset dial code silently produces a malformed E.164.
+      if (!countryEl.value) {
+        countryEl.focus();
+        fail(msg.country);
+        return;
+      }
       const national = numberEl.value.trim();
       if (national.replace(/\D/g, '').length < 4) {
         numberEl.focus();

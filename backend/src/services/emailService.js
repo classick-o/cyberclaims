@@ -73,6 +73,9 @@ export async function sendLeadNotification(lead, leadId) {
           ${row('Email', lead.email)}
           ${row('Phone', lead.phone)}
           ${row('Country', lead.country)}
+          ${row('Reported number', lead.reported_number)}
+          ${row('What happened', lead.scam_type)}
+          ${row('Lost money', lead.lost_money === null || lead.lost_money === undefined ? null : lead.lost_money ? 'Yes' : 'No')}
           ${row('Amount lost', lead.amount)}
           ${row('Platform', lead.platform_name)}
           ${row('Platform site', lead.platform_website)}

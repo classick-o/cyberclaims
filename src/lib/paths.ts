@@ -88,16 +88,22 @@ export function swapLocale(pathname: string, target: Locale, locales: readonly s
  * in English is /nl/hoe-herken.../ in Dutch, NOT /nl/how-to-spot.../ (which 404s). The
  * article page passes `localeSlugs` - a map of locale to that locale's slug for THIS post
  * - and this builds the real URL. A locale the article was never translated into falls
- * back to that language's article index rather than to a dead link.
+ * back to `fallbackPath` in that language rather than to a dead link.
+ *
+ * `fallbackPath` defaults to the article index, which is right for articles but wrong
+ * everywhere else: the phone-checker variants (/who-called-me-uk/, /who-called-me/) also
+ * declare only `en`, so switching language there used to dump the reader on /nl/news/.
+ * Those pages pass '/phone-check/' - the same tool in the target language.
  */
 export function localeHref(
   target: Locale,
   pathname: string,
-  localeSlugs?: Partial<Record<Locale, string>>
+  localeSlugs?: Partial<Record<Locale, string>>,
+  fallbackPath = '/news/'
 ): string {
   if (localeSlugs) {
     const slug = localeSlugs[target];
-    return slug ? link(`/${slug}/`, target) : link('/news/', target);
+    return slug ? link(`/${slug}/`, target) : link(fallbackPath, target);
   }
   return swapLocale(pathname, target, LOCALES);
 }

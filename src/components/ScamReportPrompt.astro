@@ -5,11 +5,35 @@
 // funnel instead of a one-way check. Goes through the same lead pipeline as every other
 // form on the site (/api/lead), tagged source 'scam_report'.
 //
+// Field mapping: `phone` is the REPORTER's own number (for follow-up, as on every other
+// form) and `reported_number` is the number being reported. Name + Surname are two inputs
+// for the visitor but one `full_name` column, and amount + currency collapse into
+// `amount_lost` - both composed on submit into hidden inputs.
+//
 // Privacy: the checker promises we don't store the number you look up, and we don't. This
 // form is the one place the number IS sent to us - because the visitor deliberately reports
 // it - so the copy says so explicitly rather than quietly contradicting that promise.
 import Icon from './Icon.astro';
 import Turnstile from './Turnstile.astro';
+
+// Broad enough to cover the common cases without becoming a wall of options. 'Something
+// else' promotes the free-text field to required, since it's the only signal left.
+const SCAM_TYPES = [
+  'Phishing (fake bank/company message or call asking for info)',
+  'Investment/Trading scam (crypto, forex, stocks, fake platforms)',
+  'Romance scam',
+  'Impersonation scam (police, government, tech support, bank)',
+  'Advance-fee scam (paid upfront for a prize, loan, job, etc.)',
+  'Online shopping scam (fake store, item never arrived)',
+  'Job/Employment scam',
+  'Delivery/Courier scam (fake shipping fee or customs message)',
+  'Tech support scam',
+  'Threatening/Extortion call',
+  'Robocall/Spam (unwanted marketing, no scam attempt)',
+  'Something else',
+];
+
+const CURRENCIES = ['EUR', 'GBP', 'USD', 'CHF', 'CAD', 'AUD', 'SEK', 'NOK', 'DKK', 'PLN', 'BRL', 'MXN', 'ZAR', 'AED', 'INR'];
 ---
 
 <div class="sr" id="srBlock">
@@ -27,21 +51,77 @@ import Turnstile from './Turnstile.astro';
       Reporting: <strong class="sr-number" id="srNumberLabel"></strong>
     </p>
 
-    <div class="sr-field">
-      <input type="text" name="full_name" required placeholder=" " />
-      <label>Your name <span aria-hidden="true">*</span></label>
-    </div>
-    <div class="sr-field">
-      <input type="email" name="email" required placeholder=" " />
-      <label>Your email <span aria-hidden="true">*</span></label>
-    </div>
-    <div class="sr-field">
-      <textarea name="message" rows="4" placeholder=" "></textarea>
-      <label>What happened? (optional)</label>
+    <div class="sr-row">
+      <div class="sr-field">
+        <input type="text" name="first_name" id="srFirst" required placeholder=" " autocomplete="given-name" />
+        <label for="srFirst">Name <span aria-hidden="true">*</span></label>
+      </div>
+      <div class="sr-field">
+        <input type="text" name="last_name" id="srLast" required placeholder=" " autocomplete="family-name" />
+        <label for="srLast">Surname <span aria-hidden="true">*</span></label>
+      </div>
     </div>
 
+    <div class="sr-row">
+      <div class="sr-field">
+        <input type="email" name="email" id="srEmail" required placeholder=" " autocomplete="email" />
+        <label for="srEmail">Email <span aria-hidden="true">*</span></label>
+      </div>
+      <div class="sr-field">
+        <input type="tel" name="phone" id="srPhone" required placeholder=" " autocomplete="tel" />
+        <label for="srPhone">Your phone <span aria-hidden="true">*</span></label>
+      </div>
+    </div>
+    <p class="sr-hint">Your own number, so an investigator can follow up.</p>
+
+    <div class="sr-field sr-select">
+      <label class="sr-label" for="srType">What happened? <span aria-hidden="true">*</span></label>
+      <select name="scam_type" id="srType" required>
+        <option value="" selected disabled>Select what happened</option>
+        {SCAM_TYPES.map((type) => <option value={type}>{type}</option>)}
+      </select>
+    </div>
+
+    <fieldset class="sr-toggle-set">
+      <legend class="sr-label">Did you lose money? <span aria-hidden="true">*</span></legend>
+      <div class="sr-toggle">
+        <label class="sr-toggle-opt">
+          <input type="radio" name="lost_money" value="yes" required />
+          <span>Yes</span>
+        </label>
+        <label class="sr-toggle-opt">
+          <input type="radio" name="lost_money" value="no" required />
+          <span>No</span>
+        </label>
+      </div>
+    </fieldset>
+
+    {/* Revealed only when "Yes" is chosen. Kept `disabled` while hidden so the browser
+        neither validates nor submits it. */}
+    <div class="sr-amount" id="srAmountWrap" hidden>
+      <div class="sr-row sr-row-amount">
+        <div class="sr-field">
+          <input type="text" name="amount_value" id="srAmount" placeholder=" " inputmode="decimal" disabled />
+          <label for="srAmount">How much did you lose? <span aria-hidden="true">*</span></label>
+        </div>
+        <div class="sr-field sr-select sr-currency">
+          <select name="currency" id="srCurrency" disabled aria-label="Currency">
+            {CURRENCIES.map((code) => <option value={code}>{code}</option>)}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="sr-field">
+      <textarea name="message" id="srMessage" rows="4" placeholder=" "></textarea>
+      <label for="srMessage" id="srMessageLabel">Additional details (optional)</label>
+    </div>
+
+    {/* Composed on submit from the fields above; the columns they map to. */}
+    <input type="hidden" name="full_name" id="srFullName" />
+    <input type="hidden" name="amount" id="srAmountCombined" />
     {/* The reported number. Filled in by PhoneCheckTool once a report has been generated. */}
-    <input type="hidden" name="phone" id="srNumber" />
+    <input type="hidden" name="reported_number" id="srNumber" />
 
     <input class="sr-hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" />
     <Turnstile />
@@ -102,11 +182,20 @@ import Turnstile from './Turnstile.astro';
   .sr-number {
     color: var(--color-purple-300);
   }
+  .sr-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+  .sr-row-amount {
+    grid-template-columns: 1fr 7.5rem;
+  }
   .sr-field {
     position: relative;
   }
   .sr-field input,
-  .sr-field textarea {
+  .sr-field textarea,
+  .sr-field select {
     width: 100%;
     padding: 0.9rem 1rem;
     background: rgba(255, 255, 255, 0.04);
@@ -118,13 +207,23 @@ import Turnstile from './Turnstile.astro';
     resize: vertical;
     transition: border-color 0.2s, background 0.2s;
   }
+  .sr-field select {
+    appearance: none;
+    cursor: pointer;
+  }
+  .sr-field select option {
+    color: #000;
+  }
   .sr-field input:focus,
-  .sr-field textarea:focus {
+  .sr-field textarea:focus,
+  .sr-field select:focus {
     outline: none;
     border-color: var(--color-purple-400);
     background: rgba(139, 91, 189, 0.08);
   }
-  .sr-field label {
+  /* Floating label - only for the free-text inputs, not the selects (a select always
+     has a value, so :not(:placeholder-shown) never applies to it). */
+  .sr-field > label:not(.sr-label) {
     position: absolute;
     left: 0.85rem;
     top: 0.85rem;
@@ -143,6 +242,65 @@ import Turnstile from './Turnstile.astro';
     font-size: 0.72rem;
     color: var(--color-purple-300);
   }
+  /* Static labels above the selects and the toggle. */
+  .sr-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    padding: 0;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .sr-currency {
+    align-self: end;
+  }
+
+  .sr-hint {
+    margin: -0.5rem 0 0;
+    font-size: 0.73rem;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .sr-toggle-set {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+  }
+  .sr-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+  .sr-toggle-opt {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.65rem;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+  }
+  .sr-toggle-opt input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+  .sr-toggle-opt:has(input:checked) {
+    border-color: var(--color-purple-400);
+    background: rgba(139, 91, 189, 0.18);
+    color: #fff;
+  }
+  .sr-toggle-opt:has(input:focus-visible) {
+    outline: 2px solid var(--color-purple-400);
+    outline-offset: 2px;
+  }
+
   .sr-hp {
     position: absolute;
     left: -9999px;
@@ -181,6 +339,15 @@ import Turnstile from './Turnstile.astro';
     color: #fff;
     background: var(--color-purple-500);
   }
+
+  @media (max-width: 560px) {
+    .sr-row {
+      grid-template-columns: 1fr;
+    }
+    .sr-row-amount {
+      grid-template-columns: 1fr 6.5rem;
+    }
+  }
 </style>
 
 <script>
@@ -192,10 +359,65 @@ import Turnstile from './Turnstile.astro';
   const open = document.getElementById('srOpen');
 
   if (form && intro && done && open) {
+    const first = document.getElementById('srFirst') as HTMLInputElement;
+    const last = document.getElementById('srLast') as HTMLInputElement;
+    const fullName = document.getElementById('srFullName') as HTMLInputElement;
+    const type = document.getElementById('srType') as HTMLSelectElement;
+    const message = document.getElementById('srMessage') as HTMLTextAreaElement;
+    const messageLabel = document.getElementById('srMessageLabel')!;
+    const amountWrap = document.getElementById('srAmountWrap') as HTMLElement;
+    const amount = document.getElementById('srAmount') as HTMLInputElement;
+    const currency = document.getElementById('srCurrency') as HTMLSelectElement;
+    const amountCombined = document.getElementById('srAmountCombined') as HTMLInputElement;
+
     open.addEventListener('click', () => {
       intro.hidden = true;
       form.hidden = false;
-      form.querySelector<HTMLInputElement>('input[name="full_name"]')?.focus();
+      first.focus();
+    });
+
+    // "Did you lose money?" - reveal the amount only on Yes. Disabled while hidden so the
+    // browser neither validates nor submits it.
+    for (const radio of form.querySelectorAll<HTMLInputElement>('input[name="lost_money"]')) {
+      radio.addEventListener('change', () => {
+        const yes = radio.value === 'yes' && radio.checked;
+        amountWrap.hidden = !yes;
+        amount.disabled = !yes;
+        currency.disabled = !yes;
+        amount.required = yes;
+        if (!yes) amount.value = '';
+      });
+    }
+
+    // "Something else" leaves the dropdown carrying no information, so the free text
+    // becomes the report - promote it from optional to required.
+    type.addEventListener('change', () => {
+      const other = type.value === 'Something else';
+      message.required = other;
+      messageLabel.textContent = other
+        ? 'Please describe what happened *'
+        : 'Additional details (optional)';
+    });
+
+    // PhoneCheckTool calls form.reset() when the visitor checks another number, which
+    // clears the values but not these derived states.
+    form.addEventListener('reset', () => {
+      amountWrap.hidden = true;
+      amount.disabled = true;
+      currency.disabled = true;
+      amount.required = false;
+      message.required = false;
+      messageLabel.textContent = 'Additional details (optional)';
+    });
+
+    // Compose the two hidden columns. Registered BEFORE initForm so it runs first and
+    // the FormData it reads already contains them.
+    form.addEventListener('submit', () => {
+      fullName.value = `${first.value.trim()} ${last.value.trim()}`.trim();
+      amountCombined.value =
+        !amount.disabled && amount.value.trim()
+          ? `${amount.value.trim()} ${currency.value}`
+          : '';
     });
 
     initForm(form, {

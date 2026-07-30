@@ -6,8 +6,11 @@ export class Lead {
     full_name,
     email,
     phone,
+    reported_number,
     country,
     message,
+    scam_type,
+    lost_money,
     amount,
     platform_name,
     platform_website,
@@ -20,16 +23,20 @@ export class Lead {
   }) {
     const [result] = await pool.execute(
       `INSERT INTO leads
-         (full_name, email, phone, country, message,
+         (full_name, email, phone, reported_number, country, message, scam_type, lost_money,
           amount_lost, platform_name, platform_website, first_transaction, last_transaction,
           source, locale, ip_address, user_agent)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         full_name,
         email,
         phone ?? null,
+        reported_number ?? null,
         country ?? null,
         message ?? null,
+        scam_type ?? null,
+        // tinyint column: keep NULL ("not asked") distinct from 0 ("said no").
+        lost_money === undefined || lost_money === null ? null : lost_money ? 1 : 0,
         amount ?? null,
         platform_name ?? null,
         platform_website ?? null,

@@ -2,7 +2,7 @@
 // 4-column footer + trust badges (brief §4 Footer).
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
-import { CONTACT, PHONE_CHECK } from '../data/site';
+import { CONTACT, PHONE_CHECK_GLOBAL } from '../data/site';
 import { asset, link, serviceUrl } from '../lib/paths';
 import { localeFromUrl, DEFAULT_LOCALE } from '../i18n/config';
 import { useTranslations, getServices } from '../i18n';
@@ -20,9 +20,10 @@ const quickLinks = [
   { label: t('nav.contact'), href: '/contact-us/' },
 ];
 // `unprefixed` opts a link out of locale prefixing: the phone checker is a single root
-// URL (the UK page), so /nl/who-called-me-uk/ would 404.
+// URL, so /nl/who-called-me/ would 404. The footer promotes the GLOBAL variant; the header
+// promotes the UK one (see PHONE_CHECK vs PHONE_CHECK_GLOBAL in data/site.ts).
 const resources = [
-  { label: t('nav.phoneCheck'), href: PHONE_CHECK.href, unprefixed: true },
+  { label: t('nav.phoneCheck'), href: PHONE_CHECK_GLOBAL.href, unprefixed: true },
   { label: t('legal.cookieTitle'), href: '/cookie-policy/' },
   { label: t('legal.privacyTitle'), href: '/privacy-policy/' },
   { label: t('legal.termsTitle'), href: '/terms-and-conditions/' },

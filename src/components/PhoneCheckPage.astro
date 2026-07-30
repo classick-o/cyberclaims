@@ -59,6 +59,7 @@ const faqLd = {
   locale={locale}
   path={path}
   localeSlugs={localeSlugs}
+  langFallback="/phone-check/"
   noindex={noindex}
 >
   <script type="application/ld+json" slot="head" set:html={jsonLdScript(faqLd)} />
@@ -71,6 +72,15 @@ const faqLd = {
         <span class="pc-eyebrow">{c.eyebrow}</span>
         <h1 class="pc-title">{c.h1}</h1>
         <p class="pc-sub">{c.subhead}</p>
+        {/* Jumps to the investigator form further down, so a visitor who has actually lost
+            money gets a route to a human instead of only a self-serve lookup. */}
+        {
+          c.showInvestigator && c.investigatorCta && (
+            <p class="pc-cta">
+              {c.investigatorCta.lead} <a href="#investigator">{c.investigatorCta.link}</a>
+            </p>
+          )
+        }
       </div>
 
       <PhoneCheckTool c={c} locale={reportLocale} defaultIso={defaultIso} />
@@ -206,6 +216,21 @@ const faqLd = {
     line-height: 1.7;
     max-width: 52ch;
     margin: 0 auto;
+  }
+  .pc-cta {
+    margin: 1rem auto 0;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.72);
+  }
+  .pc-cta a {
+    color: var(--color-purple-300);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+  }
+  .pc-cta a:hover {
+    color: #fff;
   }
 
   .pc-sec,

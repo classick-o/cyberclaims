@@ -17,7 +17,8 @@ const {
 } = Astro.props;
 ---
 
-<section class="inv">
+{/* id is the scroll target for the "Speak with an investigator" CTA up by the tool. */}
+<section class="inv" id="investigator">
   <div class="wrap">
     <div class="glass inv-card" data-reveal>
       <div id="invHead">
@@ -71,6 +72,8 @@ const {
   .inv {
     background: var(--color-navy);
     padding: 3.5rem 0;
+    /* Clear the sticky header when jumped to via #investigator. */
+    scroll-margin-top: 5.5rem;
   }
   .inv-card {
     max-width: 42rem;

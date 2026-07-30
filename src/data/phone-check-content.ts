@@ -64,6 +64,19 @@ export interface PhoneCheckContent {
   extraSections?: PhoneCheckSection[];
   /** Render the "Speak With an Investigator" case form at the foot of the page. */
   showInvestigator?: boolean;
+  /**
+   * Placeholder shown when the page preselects no country (defaultIso: ''). The global
+   * page uses this: any preselected country is a claim about who the page is for, and a
+   * default the visitor doesn't notice silently builds the number with the wrong dial code.
+   */
+  countryPlaceholder?: string;
+  /** Shown when the visitor submits without choosing a country. */
+  errorCountry?: string;
+  /**
+   * One-line CTA above the tool, jumping down to the investigator form. Only rendered
+   * alongside `showInvestigator`, since it's the anchor it scrolls to.
+   */
+  investigatorCta?: { lead: string; link: string };
 }
 
 /**
@@ -211,6 +224,7 @@ export const PHONE_CHECK_VARIANTS: PhoneCheckVariant[] = [
       },
     ],
     showInvestigator: true,
+    investigatorCta: { lead: 'Lost money to a scam?', link: 'Speak with an investigator' },
     disclaimer:
       'This report is provided for information only and is not a legal determination. If you believe you’ve been targeted or have lost money, contact our team.',
   },
@@ -220,7 +234,10 @@ export const PHONE_CHECK_VARIANTS: PhoneCheckVariant[] = [
   // for its own keyword set; keep the two metaTitles distinct so they don't compete.
   {
     slug: 'who-called-me',
-    defaultIso: 'GB',
+    // No preselection: this page is for every country, so it asks rather than assumes.
+    defaultIso: '',
+    countryPlaceholder: 'Select country',
+    errorCountry: 'Please choose the country the number is from.',
     reportLocale: 'en',
     metaTitle: 'Who called me? | Free phone number lookup | Cyberclaims',
     metaDescription:
@@ -309,6 +326,7 @@ export const PHONE_CHECK_VARIANTS: PhoneCheckVariant[] = [
       },
     ],
     showInvestigator: true,
+    investigatorCta: { lead: 'Lost money to a scam?', link: 'Speak with an investigator' },
     disclaimer:
       'This report is provided for information only and is not a legal determination. If you believe you’ve been targeted or have lost money, contact our team.',
   },

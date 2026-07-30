@@ -47,6 +47,17 @@ export const leadSchema = z.object({
   country: text(100),
   message: text(5000),
 
+  // ── scam-report form (phone checker) ──
+  // `phone` above is the reporter's own number; this is the number being reported.
+  reported_number: text(50),
+  scam_type: text(120),
+  // 'yes'/'no' from the toggle. Left undefined by every other form, which the model
+  // stores as NULL so "didn't lose money" stays distinct from "wasn't asked".
+  lost_money: z
+    .enum(['yes', 'no'])
+    .optional()
+    .transform((v) => (v === undefined ? null : v === 'yes')),
+
   amount: text(100),
   platform_name: text(255),
   platform_website: text(500),

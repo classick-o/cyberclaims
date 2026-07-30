@@ -17,6 +17,8 @@ const services = getServices(locale);
 const pathname = Astro.url.pathname;
 // Present only on pages whose URL differs per locale (articles); threaded to the switcher.
 const localeSlugs = Astro.props.localeSlugs;
+// Where the switcher sends a locale that has no slug of its own (see localeHref).
+const langFallback = Astro.props.langFallback;
 ---
 
 <header id="site-header" class="site-header" data-at-top="true">
@@ -62,7 +64,7 @@ const localeSlugs = Astro.props.localeSlugs;
     </nav>
 
     <div class="header-actions">
-      <LangSwitch localeSlugs={localeSlugs} />
+      <LangSwitch localeSlugs={localeSlugs} langFallback={langFallback} />
       <a href={link('/start-process/', locale)} class="btn btn-header">{t('nav.startProcess')}</a>
     </div>
 
@@ -107,7 +109,7 @@ const localeSlugs = Astro.props.localeSlugs;
         {
           LOCALES.map((l) => (
             <a
-              href={localeHref(l, pathname, localeSlugs)}
+              href={localeHref(l, pathname, localeSlugs, langFallback)}
               hreflang={LOCALE_META[l].htmlLang}
               lang={LOCALE_META[l].htmlLang}
               class={`mobile-lang-link${l === locale ? ' is-current' : ''}`}

@@ -13,7 +13,11 @@ import { localeHref, asset } from '../lib/paths';
 
 // localeSlugs is passed only on pages whose URL differs per locale (articles - the slug
 // is translated). Without it, localeHref() falls back to a prefix swap of the current path.
-const { localeSlugs } = Astro.props as { localeSlugs?: Partial<Record<Locale, string>> };
+// langFallback is where a locale with no slug of its own should go (see localeHref).
+const { localeSlugs, langFallback } = Astro.props as {
+  localeSlugs?: Partial<Record<Locale, string>>;
+  langFallback?: string;
+};
 
 const locale = localeFromUrl(Astro.url);
 const pathname = Astro.url.pathname;
@@ -31,7 +35,7 @@ const current = LOCALE_META[locale];
       LOCALES.map((l) => (
         <li>
           <a
-            href={localeHref(l, pathname, localeSlugs)}
+            href={localeHref(l, pathname, localeSlugs, langFallback)}
             hreflang={LOCALE_META[l].htmlLang}
             lang={LOCALE_META[l].htmlLang}
             class={`lang-option${l === locale ? ' is-current' : ''}`}

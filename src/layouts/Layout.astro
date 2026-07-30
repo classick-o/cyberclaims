@@ -20,6 +20,12 @@ interface Props {
    * locale is assumed to share `path`, which is true for every static page.
    */
   localeSlugs?: Partial<Record<Locale, string>>;
+  /**
+   * Where the language switcher sends a locale that `localeSlugs` has no slug for.
+   * Defaults to the article index, which suits articles; the phone-checker variants pass
+   * '/phone-check/' so switching language lands on the same tool, not on the news list.
+   */
+  langFallback?: string;
   /** Keep this page out of search results (draft previews, the thank-you page). */
   noindex?: boolean;
   /**
@@ -122,7 +128,7 @@ const canonical = Astro.props.canonicalUrl ?? absoluteUrl(path, locale, Astro.si
     <slot name="head" />
   </head>
   <body>
-    <Header locale={locale} localeSlugs={localeSlugs} />
+    <Header locale={locale} localeSlugs={localeSlugs} langFallback={Astro.props.langFallback} />
     <main>
       <slot />
     </main>
