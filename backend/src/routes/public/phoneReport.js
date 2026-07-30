@@ -36,14 +36,18 @@ function upstreamHeaders() {
   return headers;
 }
 
+// Derived from SITE_URL rather than hardcoded, so the PDF a .net visitor downloads is
+// branded cyberclaims.net and not the staging domain.
+const siteBase = env.SITE_URL.replace(/\/+$/, '');
 const BRANDING = {
   company_name: 'CyberClaims',
-  website: 'cyberclaims.nl',
+  website: new URL(siteBase).host,
   tagline: 'Cybercrime victim support & recovery',
   accent_color: '#0EA5A4',
   // A public, real PNG (the site has no logo.png; the favicon is the mark). ScamInfo
-  // fetches this to white-label the PDF, so it must be reachable from the internet.
-  logo_url: 'https://cyberclaims.nl/favicon-192.png',
+  // FETCHES this to white-label the PDF, so it must be reachable from the internet -
+  // hence the override for a domain that isn't pointed at us yet.
+  logo_url: env.REPORT_LOGO_URL || `${siteBase}/favicon-192.png`,
 };
 
 router.post('/', honeypot, phoneReportLimiter, validate(phoneReportSchema), async (req, res, next) => {

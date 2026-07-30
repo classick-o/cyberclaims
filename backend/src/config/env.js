@@ -85,11 +85,18 @@ const schema = z
     // 503 rather than the whole site refusing to boot — the report is one feature, not
     // a precondition for serving.
     SCAMINFO_API_KEY: optional,
-    SCAMINFO_API_URL: z.string().url().default('https://api.test.scaminfo.ai'),
+    // Production gateway. The test one (api.test.scaminfo.ai) is opt-in via .env, so a
+    // deployment that forgets this var talks to prod rather than silently serving reports
+    // from a test environment.
+    SCAMINFO_API_URL: z.string().url().default('https://api.scaminfo.ai'),
     // The test gateway (api.test.scaminfo.ai) sits behind HTTP Basic auth on top of the
-    // API key. Defaults match the test environment; unset/override on production.
+    // API key. Ignored for the production host, which uses the key alone.
     SCAMINFO_BASIC_USER: optional,
     SCAMINFO_BASIC_PASS: optional,
+    // Logo ScamInfo fetches to white-label the report PDF. Defaults to this site's own
+    // favicon; override when SITE_URL is not yet publicly reachable (cyberclaims.net
+    // before its DNS cutover), since ScamInfo has to be able to GET it.
+    REPORT_LOGO_URL: optional,
   });
 
 const parsed = schema.safeParse(present);
