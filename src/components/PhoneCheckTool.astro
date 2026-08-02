@@ -48,7 +48,13 @@ const { c, locale, defaultIso } = Astro.props;
           }
           {
             DIAL_COUNTRIES.map((country) => (
-              <option value={country.dial} selected={!!defaultIso && country.iso === defaultIso}>
+              // data-iso drives libphonenumber's per-country rules. It can't be derived
+              // from the dial code, because US and CA both dial +1.
+              <option
+                value={country.dial}
+                data-iso={country.iso}
+                selected={!!defaultIso && country.iso === defaultIso}
+              >
                 {country.name} (+{country.dial})
               </option>
             ))
@@ -57,17 +63,32 @@ const { c, locale, defaultIso } = Astro.props;
       </div>
       <div class="pc-field pc-number">
         <label for="pcNumber">{c.numberLabel}</label>
-        <input
-          id="pcNumber"
-          name="number"
-          type="tel"
-          inputmode="tel"
-          autocomplete="tel-national"
-          placeholder={c.numberPlaceholder}
-          required
-        />
+        {/* The dial code sits INSIDE the field, so it's visible that it's already
+            supplied and shouldn't be typed again. Submit still normalises, because
+            people paste full international numbers regardless. */}
+        <div class="pc-tel" id="pcTel">
+          <span class="pc-dial" id="pcDial" aria-hidden="true"></span>
+          <input
+            id="pcNumber"
+            name="number"
+            type="tel"
+            inputmode="tel"
+            autocomplete="tel-national"
+            aria-describedby="pcFieldErr"
+            placeholder={c.numberPlaceholder}
+            {/* generous enough for a pasted "+44 (0) 20 7946 0958", short enough that
+                nobody types an essay into the field */}
+            maxlength="24"
+            required
+          />
+        </div>
       </div>
     </div>
+
+    {/* Inline validation message. Spans both fields, so it reads correctly whether the
+        problem is the country or the number, on one row or two. A wrong number is a typo,
+        not a failure - it must never replace the form the way an API error does. */}
+    <p class="pc-field-err" id="pcFieldErr" role="alert" hidden></p>
 
     {/* Honeypot: hidden from humans, catnip for bots. */}
     <div class="pc-hp" aria-hidden="true">
@@ -142,6 +163,63 @@ const { c, locale, defaultIso } = Astro.props;
   }
   .pc-field select {
     appearance: none;
+  }
+
+  /* Phone field: the bordered box is the wrapper, so the dial-code prefix and the
+     input read as one control and the prefix can be any width (+1 … +351). */
+  .pc-tel {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.7rem;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .pc-tel:focus-within {
+    border-color: var(--color-purple-400);
+    background: rgba(139, 91, 189, 0.08);
+  }
+  /* Live validation state. Only applied once the visitor has left the field or pressed
+     submit, so it never scolds someone mid-keystroke. */
+  .pc-tel.is-invalid,
+  .pc-tel.is-invalid:focus-within {
+    border-color: #e4707a;
+  }
+  .pc-tel.is-valid {
+    border-color: rgba(74, 197, 148, 0.7);
+  }
+  .pc-field-err {
+    margin: -0.35rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: #ffb4b4;
+    text-align: left;
+  }
+  .pc-dial {
+    flex-shrink: 0;
+    padding-left: 1rem;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.98rem;
+    font-variant-numeric: tabular-nums;
+  }
+  /* empty until a country is chosen (the global page preselects none) */
+  .pc-dial:empty {
+    display: none;
+  }
+  /* Scoped through .pc-field so these beat the generic `.pc-field input` rules that
+     follow them in this stylesheet - otherwise the input paints its own background on
+     top of the wrapper's and the field looks like two stacked boxes. */
+  .pc-field .pc-tel input,
+  .pc-field .pc-tel input:focus {
+    flex: 1;
+    min-width: 0;
+    padding-left: 0.45rem;
+    background: transparent;
+    border: 0;
+    outline: none;
+  }
+  .pc-field .pc-dial:empty + input {
+    padding-left: 1rem;
   }
   .pc-field select option {
     color: #000;
@@ -237,6 +315,8 @@ const { c, locale, defaultIso } = Astro.props;
 </style>
 
 <script>
+  import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js';
+
   // Build an E.164 number, POST it to our server proxy, and stream back a PDF the browser
   // downloads. No risk verdict is ever shown here - the result lives only inside the PDF.
   const form = document.getElementById('pcForm') as HTMLFormElement | null;
@@ -262,15 +342,100 @@ const { c, locale, defaultIso } = Astro.props;
       for (const s of [form, loadingEl, successEl, errorEl]) s.hidden = s !== el;
     };
 
-    const toE164 = (dial: string, national: string) => {
-      const n = national.replace(/\D/g, '').replace(/^0+/, '');
-      return `+${dial}${n}`;
+    // The ISO code of the selected country - libphonenumber's per-country rules key off
+    // this, and it can't come from the dial code because US and CA share +1.
+    const selectedIso = () =>
+      countryEl.selectedOptions[0]?.dataset.iso as CountryCode | undefined;
+
+    /**
+     * Turn what the visitor typed into a validated E.164 number.
+     *
+     * libphonenumber (Google's, via libphonenumber-js) knows each country's real number
+     * plans, so it handles every form the field actually receives - national "20 7946
+     * 0958", pasted "+44 20 7946 0958", "0044…", a trunk-prefixed "07946…", or another
+     * country entirely - and, unlike a digit count, rejects numbers that are the right
+     * LENGTH but not real, e.g. +44 99 9999 9999.
+     */
+    const parseNumber = (raw: string) => {
+      const iso = selectedIso();
+      if (!iso) return null;
+      const parsed = parsePhoneNumberFromString(raw.trim(), iso);
+      return parsed && parsed.isValid() ? parsed : null;
     };
 
+    // Mirror the picker's dial code into the field, so it's visibly already supplied.
+    const dialEl = document.getElementById('pcDial');
+    const syncDial = () => {
+      if (dialEl) dialEl.textContent = countryEl.value ? `+${countryEl.value}` : '';
+    };
+    countryEl.addEventListener('change', syncDial);
+    syncDial();
+
+    // If they paste a full international number, move the picker to match it rather than
+    // leaving the visible country contradicting the number being checked.
+    numberEl.addEventListener('input', () => {
+      const text = numberEl.value.trim();
+      if (!text.startsWith('+') && !text.replace(/\D/g, '').startsWith('00')) return;
+      const parsed = parsePhoneNumberFromString(text, selectedIso());
+      const iso = parsed?.country;
+      if (!iso) return;
+      const option = Array.from(countryEl.options).find((o) => o.dataset.iso === iso);
+      if (option && countryEl.selectedOptions[0] !== option) {
+        option.selected = true;
+        syncDial();
+      }
+    });
+
+    // A failed REQUEST replaces the form with the error panel. A bad number must not -
+    // see setFieldError below.
     const fail = (text: string) => {
       errorMsgEl.textContent = text;
       show(errorEl);
     };
+
+    // ── live field validation ──────────────────────────────────────────────────
+    const telEl = document.getElementById('pcTel');
+    const fieldErrEl = document.getElementById('pcFieldErr');
+
+    // Don't mark anything wrong until the visitor has left the field or pressed submit;
+    // "+44 2" is not an error, it's someone halfway through typing.
+    let touched = false;
+
+    const setFieldError = (message: string | null, state: 'valid' | 'invalid' | 'none') => {
+      telEl?.classList.toggle('is-invalid', state === 'invalid');
+      telEl?.classList.toggle('is-valid', state === 'valid');
+      if (!fieldErrEl) return;
+      fieldErrEl.textContent = message ?? '';
+      fieldErrEl.hidden = !message;
+    };
+
+    /** Returns the parsed number when valid, else null - and paints the field state. */
+    const validateField = (force = false) => {
+      if (!countryEl.value) {
+        setFieldError(force ? msg.country : null, force ? 'invalid' : 'none');
+        return null;
+      }
+      const raw = numberEl.value.trim();
+      if (!raw) {
+        setFieldError(force ? msg.invalid : null, force ? 'invalid' : 'none');
+        return null;
+      }
+      const parsed = parseNumber(raw);
+      if (parsed) {
+        setFieldError(null, 'valid');
+        return parsed;
+      }
+      // Wrong, but only say so once they've had a fair chance to finish typing.
+      setFieldError(touched || force ? msg.invalid : null, touched || force ? 'invalid' : 'none');
+      return null;
+    };
+
+    numberEl.addEventListener('input', () => validateField());
+    numberEl.addEventListener('blur', () => {
+      touched = true;
+      validateField();
+    });
+    countryEl.addEventListener('change', () => validateField());
 
     // Put the report prompt back to its unopened state, so checking a second number
     // doesn't leave the previous number's form (or its "thank you") on screen.
@@ -287,26 +452,28 @@ const { c, locale, defaultIso } = Astro.props;
 
     document.getElementById('pcAgain')?.addEventListener('click', () => {
       resetReportPrompt();
+      numberEl.value = '';
+      touched = false;
+      setFieldError(null, 'none');
+      show(form);
+      numberEl.focus();
+    });
+    document.getElementById('pcRetry')?.addEventListener('click', () => {
+      touched = false;
+      setFieldError(null, 'none');
       show(form);
     });
-    document.getElementById('pcRetry')?.addEventListener('click', () => show(form));
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      // The global page preselects no country, so guard it before building the number -
-      // otherwise an unset dial code silently produces a malformed E.164.
-      if (!countryEl.value) {
-        countryEl.focus();
-        fail(msg.country);
+      // Validate against the selected country's real number plan, not just a digit count.
+      // Stays inline: the visitor keeps the form, the message, and what they typed.
+      const parsed = validateField(true);
+      if (!parsed) {
+        (countryEl.value ? numberEl : countryEl).focus();
         return;
       }
-      const national = numberEl.value.trim();
-      if (national.replace(/\D/g, '').length < 4) {
-        numberEl.focus();
-        fail(msg.invalid);
-        return;
-      }
-      const phone_number = toE164(countryEl.value, national);
+      const phone_number = parsed.number;
 
       show(loadingEl);
 
