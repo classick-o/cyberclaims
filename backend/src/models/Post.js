@@ -27,7 +27,7 @@ const PUBLIC_COLUMNS = `
   c.key_slug AS category_key, c.color AS category_color,
   COALESCE(ct.name, c.key_slug) AS category_name,
   COALESCE(ct.slug, c.key_slug) AS category_slug,
-  a.name AS author_name, a.role AS author_role,
+  a.name AS author_name, a.role AS author_role, a.slug AS author_slug,
   m.path AS cover_path, m.variants AS cover_variants, m.width AS cover_width, m.height AS cover_height,
   mt.alt AS cover_alt`;
 
@@ -79,6 +79,29 @@ export class Post {
    * already showed and skips others entirely. Ordering on a column that is unique makes
    * the sort a total order, and the pages line up.
    */
+  /**
+   * Published posts by one author, for the author page.
+   *
+   * Falls back to the default locale like findPublished does, so an author page in a
+   * language none of their posts is translated into still lists their work instead of
+   * looking like they have written nothing.
+   */
+  static async findByAuthor(authorId, locale, { limit = 60 } = {}) {
+    const run = async (loc) => {
+      const [rows] = await pool.query(
+        `SELECT ${PUBLIC_COLUMNS} ${PUBLIC_JOINS}
+          WHERE p.status = 'published' AND p.published_at <= NOW() AND p.author_id = ?
+          ORDER BY p.published_at DESC, p.id DESC
+          LIMIT ?`,
+        [loc, loc, loc, Number(authorId), toLimit(limit, { def: 60 })]
+      );
+      return rows.map(hydrate);
+    };
+    const rows = await run(locale);
+    if (rows.length === 0 && locale !== DEFAULT_LOCALE) return run(DEFAULT_LOCALE);
+    return rows;
+  }
+
   static async findPublished(
     locale,
     { categorySlug = null, limit = 24, offset = 0, excludeId = null } = {}

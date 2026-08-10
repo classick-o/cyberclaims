@@ -112,7 +112,16 @@ jsonLd = {
       articleSection: post.category_name ?? undefined,
       inLanguage: locale,
       author: post.author_name
-        ? { '@type': 'Person', name: post.author_name, jobTitle: post.author_role ?? undefined }
+        ? {
+            '@type': 'Person',
+            name: post.author_name,
+            jobTitle: post.author_role ?? undefined,
+            // Ties the byline to the author page, so the Person is a resolvable entity
+            // rather than a loose string - the part that actually carries E-E-A-T weight.
+            url: post.author_slug
+              ? absoluteUrl(`/author/${post.author_slug}/`, DEFAULT_LOCALE, Astro.site)
+              : undefined,
+          }
         : { '@type': 'Organization', name: 'Cyberclaims' },
       publisher: {
         '@type': 'Organization',
@@ -232,7 +241,16 @@ if (!preview) {
               <>
                 <span class="art-dot" />
                 <span>
-                  {t('news.by')}{' '}<strong>{post.author_name}</strong>
+                  {t('news.by')}{' '}
+                  {/* Linked when the author has a page - the byline is where an E-E-A-T
+                      signal is worth something. Plain text otherwise, never a dead link. */}
+                  {post.author_slug ? (
+                    <a class="art-author" href={link(`/author/${post.author_slug}/`, locale)}>
+                      <strong>{post.author_name}</strong>
+                    </a>
+                  ) : (
+                    <strong>{post.author_name}</strong>
+                  )}
                   {post.author_role && <span class="art-role">, {post.author_role}</span>}
                 </span>
               </>
@@ -416,6 +434,17 @@ if (!preview) {
   }
   .art-role {
     color: rgba(255, 255, 255, 0.5);
+  }
+  /* Underlined on hover only: the byline should read as text, but still be discoverably
+     a link to the author's page. */
+  .art-author {
+    color: inherit;
+    text-decoration: none;
+  }
+  .art-author:hover strong {
+    color: var(--color-purple-200);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
   .art-dot {
     width: 3px;

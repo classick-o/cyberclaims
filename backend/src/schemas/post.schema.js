@@ -82,6 +82,10 @@ export const categorySchema = z.object({
 
 export const authorSchema = z.object({
   name: z.string().trim().min(2).max(255),
+  // Optional: derived from the name when absent. Supplied only to choose a nicer URL -
+  // the model slugifies and de-duplicates whatever arrives, and leaves an existing slug
+  // alone unless one is explicitly sent, so renaming an author never moves their page.
+  slug: optionalText(255),
   role: optionalText(255),
   bio: optionalText(2000),
   avatar_id: z.coerce.number().int().positive().nullish(),

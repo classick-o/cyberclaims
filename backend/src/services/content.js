@@ -259,6 +259,8 @@ export const RESERVED_SLUGS = new Set([
   'cookie-policy',
   'terms-and-conditions',
   'data-protection-addendum',
+  // author profile pages - src/pages/author/[slug].astro
+  'author',
   // Express owns these, before Astro ever sees the request
   'admin',
   'api',

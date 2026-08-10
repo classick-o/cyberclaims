@@ -13,12 +13,22 @@ import jwt from 'jsonwebtoken';
 import type { AstroCookies } from 'astro';
 
 import { Post } from '../../backend/src/models/Post.js';
-import { Category } from '../../backend/src/models/Taxonomy.js';
+import { Category, Author } from '../../backend/src/models/Taxonomy.js';
 import { cached } from '../../backend/src/services/contentCache.js';
 import { extractFaq } from '../../backend/src/services/content.js';
 import { env } from '../../backend/src/config/env.js';
 
-export { Post, Category, cached, extractFaq };
+export { Post, Category, Author, cached, extractFaq };
+
+/** An author, as the public author page needs them. */
+export type PublicAuthor = {
+  id: number;
+  slug: string;
+  name: string;
+  role: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+};
 
 export type PostCard = {
   id: number;
@@ -34,6 +44,8 @@ export type PostCard = {
   category_color: string | null;
   author_name: string | null;
   author_role: string | null;
+  /** Null for an author created before slugs existed; the byline stays plain text then. */
+  author_slug: string | null;
   cover_path: string | null;
   cover_variants: Record<string, string> | null;
   cover_alt: string | null;

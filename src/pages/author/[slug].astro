@@ -1,0 +1,270 @@
+---
+// /author/<slug>/ - the author page.
+//
+// An E-E-A-T signal: it gives every byline a real destination showing who wrote the
+// article, what they do, and everything else they have written, and it is what the
+// Article schema's author.url points at.
+//
+// SSR, like the articles themselves, so a bio edited in the admin is live immediately
+// and an author added today does not need a rebuild to have a page.
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import Cover from '../../components/Cover.astro';
+import RecoveryCta from '../../components/RecoveryCta.astro';
+import { link, absoluteUrl, asset } from '../../lib/paths';
+import { jsonLdScript } from '../../lib/jsonld';
+import { Post, Author, type PostCard, type PublicAuthor } from '../../lib/content';
+import { localeFromUrl, DEFAULT_LOCALE } from '../../i18n/config';
+import { useTranslations, formatDate } from '../../i18n';
+
+const locale = localeFromUrl(Astro.url);
+const t = useTranslations(locale);
+const { slug } = Astro.params;
+
+const author = (await Author.findBySlug(slug!)) as PublicAuthor | null;
+if (!author) return new Response(null, { status: 404, statusText: 'Not found' });
+
+const posts = (await Post.findByAuthor(author.id, locale)) as PostCard[];
+
+const path = `/author/${author.slug}/`;
+const url = absoluteUrl(path, DEFAULT_LOCALE, Astro.site);
+const avatar = author.avatar_url ? asset(author.avatar_url) : null;
+
+// The page's own title, but a description that actually says something: a bare name is
+// a useless snippet, so fall back to what the person is and how much they've written.
+const metaDescription =
+  author.bio?.trim() ||
+  [author.role, `${posts.length} article${posts.length === 1 ? '' : 's'} on Cyberclaims`]
+    .filter(Boolean)
+    .join(' - ');
+
+// ProfilePage + Person is the pairing Google documents for author pages, and the Person
+// here is the same entity the articles credit - which is the point of the exercise.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'ProfilePage',
+      '@id': `${url}#profile`,
+      url,
+      name: author.name,
+      mainEntity: { '@id': `${url}#person` },
+    },
+    {
+      '@type': 'Person',
+      '@id': `${url}#person`,
+      name: author.name,
+      url,
+      jobTitle: author.role ?? undefined,
+      description: author.bio ?? undefined,
+      image: avatar ? absoluteUrl(avatar, DEFAULT_LOCALE, Astro.site) : undefined,
+      worksFor: { '@type': 'Organization', name: 'Cyberclaims', url: Astro.site?.origin },
+    },
+  ],
+};
+---
+
+<Layout
+  title={`${author.name}${author.role ? ` - ${author.role}` : ''} | Cyberclaims`}
+  description={metaDescription}
+  locale={locale}
+  path={path}
+>
+  <script type="application/ld+json" slot="head" set:html={jsonLdScript(jsonLd)} />
+
+  <section class="au">
+    <div class="wrap">
+      <a href={link('/news/', locale)} class="au-back">&larr; {t('news.backToNews')}</a>
+
+      <header class="au-head" data-reveal>
+        {
+          avatar ? (
+            <img class="au-avatar" src={avatar} alt="" width="112" height="112" loading="eager" />
+          ) : (
+            <span class="au-avatar au-avatar-fallback" aria-hidden="true">
+              {author.name.slice(0, 1).toUpperCase()}
+            </span>
+          )
+        }
+        <div class="au-id">
+          <h1 class="au-name">{author.name}</h1>
+          {author.role && <p class="au-role">{author.role}</p>}
+          <p class="au-count">
+            {posts.length === 1 ? '1 article' : `${posts.length} articles`}
+          </p>
+        </div>
+      </header>
+
+      {author.bio && <p class="au-bio" data-reveal>{author.bio}</p>}
+
+      {
+        posts.length > 0 ? (
+          <div class="au-grid">
+            {posts.map((p) => (
+              <a href={link(`/${p.slug}/`, locale)} class="au-card" data-reveal>
+                <span class="cover au-card-media">
+                  <Cover
+                    path={p.cover_path}
+                    variants={p.cover_variants}
+                    alt={p.cover_alt}
+                    sizes="(min-width: 1000px) 30vw, (min-width: 700px) 45vw, 100vw"
+                  />
+                </span>
+                <div class="au-card-body">
+                  <h2 class="au-card-title" data-clamp>{p.title}</h2>
+                  {p.excerpt && <p class="au-card-ex" data-clamp>{p.excerpt}</p>}
+                  <div class="au-meta">
+                    <time datetime={new Date(p.published_at).toISOString()}>
+                      {formatDate(p.published_at, locale)}
+                    </time>
+                    <span class="au-dot" />
+                    <span>{t('news.readingTime', { minutes: p.reading_minutes })}</span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p class="au-empty">No published articles yet.</p>
+        )
+      }
+    </div>
+  </section>
+
+  <RecoveryCta />
+</Layout>
+
+<style>
+  .au {
+    background: var(--gradient-depth);
+    padding: 9rem 0 4rem;
+  }
+  .au-back {
+    display: inline-block;
+    margin-bottom: 1.6rem;
+    color: var(--color-purple-300);
+    font-size: 0.9rem;
+  }
+  .au-back:hover {
+    color: #fff;
+  }
+  .au-head {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+    margin-bottom: 1.2rem;
+  }
+  .au-avatar {
+    width: 7rem;
+    height: 7rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(139, 91, 189, 0.45);
+  }
+  .au-avatar-fallback {
+    display: grid;
+    place-items: center;
+    background: rgba(139, 91, 189, 0.18);
+    color: var(--color-purple-200);
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    font-weight: 700;
+  }
+  .au-name {
+    font-size: clamp(1.7rem, 4vw, 2.5rem);
+    color: #fff;
+    margin: 0;
+    line-height: 1.15;
+  }
+  .au-role {
+    margin: 0.4rem 0 0;
+    color: var(--color-purple-200);
+    font-size: 1rem;
+  }
+  .au-count {
+    margin: 0.35rem 0 0;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+  }
+  .au-bio {
+    max-width: 60ch;
+    margin: 0 0 2.5rem;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.8;
+  }
+  .au-empty {
+    color: rgba(255, 255, 255, 0.6);
+    margin: 2rem 0 0;
+  }
+
+  .au-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+  .au-card {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.9rem;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .au-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(139, 91, 189, 0.5);
+  }
+  .au-card-media {
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+  }
+  .au-card-body {
+    padding: 1rem 1.1rem 1.2rem;
+  }
+  .au-card-title {
+    margin: 0 0 0.45rem;
+    color: #fff;
+    font-size: 1.02rem;
+    line-height: 1.35;
+  }
+  .au-card-ex {
+    margin: 0 0 0.8rem;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+  .au-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.78rem;
+  }
+  .au-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  @media (max-width: 640px) {
+    .au {
+      padding-top: 7.5rem;
+    }
+    .au-head {
+      gap: 1rem;
+    }
+    .au-avatar {
+      width: 5rem;
+      height: 5rem;
+    }
+    .au-avatar-fallback {
+      font-size: 1.9rem;
+    }
+  }
+</style>

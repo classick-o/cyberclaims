@@ -22,3 +22,7 @@ Thumbs.db
 
 # working scratch files (site-scrape extract)
 _home_text.txt
+
+# Deploy credentials. deploy/ is tracked (scripts + README) but the env files hold live
+# database / JWT / SMTP / Turnstile / ScamInfo secrets and this repo has a GitHub remote.
+deploy/env.*

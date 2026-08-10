@@ -8,7 +8,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { Post, cached } from '../lib/content';
+import { Post, Author, cached } from '../lib/content';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../i18n/config';
 import { LANDING_SLUGS } from '../data/landing-content';
 import { PHONE_CHECK_VARIANT_SLUGS } from '../data/phone-check-content';
@@ -90,6 +90,17 @@ export const GET: APIRoute = async ({ site }) => {
     <loc>${escape(`${origin}/${slug}/`)}</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>`);
+  }
+
+  // Author pages. Only authors with a published post get one, so the sitemap never
+  // advertises an empty profile.
+  const authors = await cached('sitemap:authors', () => Author.listPublished()).catch(() => []);
+  for (const a of authors as { slug: string }[]) {
+    entries.push(`  <url>
+    <loc>${escape(`${origin}/author/${a.slug}/`)}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>`);
   }
 

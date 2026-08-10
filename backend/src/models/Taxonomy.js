@@ -89,6 +89,17 @@ export class Category {
   }
 }
 
+/** "Bastiaan van Roekel" -> "bastiaan-van-roekel". Accents are folded, not dropped. */
+export function slugifyName(name) {
+  return String(name)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 200);
+}
+
 export class Author {
   static async list() {
     const [rows] = await pool.query(
@@ -100,20 +111,71 @@ export class Author {
     return rows;
   }
 
-  static async create({ name, role, bio, avatar_id }) {
+  /** The public author page. Returns null for an unknown slug. */
+  static async findBySlug(slug) {
+    const [rows] = await pool.execute(
+      `SELECT a.*, m.path AS avatar_url
+         FROM authors a
+         LEFT JOIN media m ON m.id = a.avatar_id
+        WHERE a.slug = ?
+        LIMIT 1`,
+      [slug]
+    );
+    return rows[0] ?? null;
+  }
+
+  /** Authors who have at least one published post - the only ones worth a public page. */
+  static async listPublished() {
+    const [rows] = await pool.query(
+      `SELECT a.id, a.slug, a.name
+         FROM authors a
+         JOIN posts p ON p.author_id = a.id AND p.status = 'published'
+        WHERE a.slug IS NOT NULL AND a.slug <> ''
+        GROUP BY a.id, a.slug, a.name
+        ORDER BY a.name`
+    );
+    return rows;
+  }
+
+  /**
+   * A slug is derived from the name unless one is supplied, and kept unique by suffixing
+   * -2, -3, … Uniqueness is enforced by the column too; this just avoids handing the
+   * editor a raw duplicate-key error.
+   */
+  static async uniqueSlug(desired, excludeId = null) {
+    const base = slugifyName(desired) || 'author';
+    let candidate = base;
+    for (let n = 2; n < 50; n += 1) {
+      const [rows] = await pool.execute(
+        `SELECT id FROM authors WHERE slug = ? ${excludeId ? 'AND id <> ?' : ''} LIMIT 1`,
+        excludeId ? [candidate, excludeId] : [candidate]
+      );
+      if (rows.length === 0) return candidate;
+      candidate = `${base}-${n}`;
+    }
+    return `${base}-${Date.now()}`;
+  }
+
+  static async create({ name, slug, role, bio, avatar_id }) {
+    const finalSlug = await Author.uniqueSlug(slug || name);
     const [result] = await pool.execute(
-      'INSERT INTO authors (name, role, bio, avatar_id) VALUES (?, ?, ?, ?)',
-      [name, role ?? null, bio ?? null, avatar_id ?? null]
+      'INSERT INTO authors (name, slug, role, bio, avatar_id) VALUES (?, ?, ?, ?, ?)',
+      [name, finalSlug, role ?? null, bio ?? null, avatar_id ?? null]
     );
     return result.insertId;
   }
 
-  static async update(id, { name, role, bio, avatar_id }) {
+  static async update(id, { name, slug, role, bio, avatar_id }) {
+    // Only re-slug when a slug is explicitly supplied. Renaming an author must not move
+    // a page that is already indexed and linked to.
+    const finalSlug = slug ? await Author.uniqueSlug(slug, id) : null;
     await pool.execute(
       `UPDATE authors
-          SET name = COALESCE(?, name), role = ?, bio = ?, avatar_id = ?
+          SET name = COALESCE(?, name),
+              slug = COALESCE(?, slug),
+              role = ?, bio = ?, avatar_id = ?
         WHERE id = ?`,
-      [name ?? null, role ?? null, bio ?? null, avatar_id ?? null, id]
+      [name ?? null, finalSlug, role ?? null, bio ?? null, avatar_id ?? null, id]
     );
   }
 
