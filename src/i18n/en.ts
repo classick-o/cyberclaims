@@ -363,6 +363,10 @@ export const en = {
   'sus.co2': 'CO₂ Compensated',
   'sus.happyCustomers': 'Happy Customers',
   'contact.address': 'Kalvermarkt 53, 2511 CB, The Hague, Netherlands.',
+
+  // Floating WhatsApp button (src/components/WhatsappButton.astro).
+  'whatsapp.aria': 'Chat on WhatsApp',
+  'whatsapp.message': 'Hello, I would like to request a consultation.',
 } as const;
 
 export type UIKey = keyof typeof en;

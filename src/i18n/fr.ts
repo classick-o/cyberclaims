@@ -343,4 +343,8 @@ export const fr: Record<UIKey, string> = {
   'sus.co2': 'CO₂ compensé',
   'sus.happyCustomers': 'Clients satisfaits',
   'contact.address': 'Kalvermarkt 53, 2511 CB, La Haye, Pays-Bas.',
+
+  // Floating WhatsApp button (src/components/WhatsappButton.astro).
+  'whatsapp.aria': 'Discuter sur WhatsApp',
+  'whatsapp.message': 'Bonjour, je souhaiterais demander une consultation.',
 };

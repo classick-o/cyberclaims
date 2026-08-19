@@ -336,4 +336,8 @@ export const pt: Record<UIKey, string> = {
   'sus.co2': 'CO₂ compensado',
   'sus.happyCustomers': 'Clientes satisfeitos',
   'contact.address': 'Kalvermarkt 53, 2511 CB, Haia, Países Baixos.',
+
+  // Floating WhatsApp button (src/components/WhatsappButton.astro).
+  'whatsapp.aria': 'Falar no WhatsApp',
+  'whatsapp.message': 'Olá, gostaria de solicitar uma consulta.',
 } as const;

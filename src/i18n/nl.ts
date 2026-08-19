@@ -343,4 +343,8 @@ export const nl: Record<UIKey, string> = {
   'sus.co2': 'CO₂ gecompenseerd',
   'sus.happyCustomers': 'Tevreden klanten',
   'contact.address': 'Kalvermarkt 53, 2511 CB, Den Haag, Nederland.',
+
+  // Floating WhatsApp button (src/components/WhatsappButton.astro).
+  'whatsapp.aria': 'Chat via WhatsApp',
+  'whatsapp.message': 'Hallo, ik zou graag een consult aanvragen.',
 };

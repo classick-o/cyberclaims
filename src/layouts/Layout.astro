@@ -3,6 +3,7 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ImpersonatorNotice from '../components/ImpersonatorNotice.astro';
+import WhatsappButton from '../components/WhatsappButton.astro';
 import { asset, absoluteUrl } from '../lib/paths';
 import { LOCALES, DEFAULT_LOCALE, LOCALE_META, localeFromUrl, type Locale } from '../i18n/config';
 
@@ -134,6 +135,9 @@ const canonical = Astro.props.canonicalUrl ?? absoluteUrl(path, locale, Astro.si
     </main>
     {notice && <ImpersonatorNotice />}
     <Footer locale={locale} />
+    {/* Last in the body so it paints over the page, but z-indexed under the header and
+        under the impersonator popup. */}
+    <WhatsappButton />
   </body>
 </html>
 
