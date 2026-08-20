@@ -26,25 +26,63 @@ export const securityHeaders = helmet({
       // it the browser refuses to compile the WebAssembly and the model silently never
       // loads - the canvas is there, empty. It permits WebAssembly compilation ONLY;
       // unlike 'unsafe-eval' it does not re-enable eval() or new Function().
+      // Google Tag Manager loads gtm.js from googletagmanager.com, and the Ads
+      // conversion tag it contains then pulls further script from googleadservices /
+      // doubleclick. Without every one of these the tag silently does nothing and the
+      // container reports "no data received".
       'script-src': [
         "'self'",
         "'unsafe-inline'",
         "'wasm-unsafe-eval'",
         'https://challenges.cloudflare.com',
+        'https://www.googletagmanager.com',
+        'https://www.googleadservices.com',
+        'https://googleads.g.doubleclick.net',
+        'https://www.google.com',
+        'https://www.gstatic.com',
       ],
       'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       'font-src': ["'self'", 'https://fonts.gstatic.com'],
       // https: because article covers may one day be served from a CDN; data: for the
       // inline SVG icons Astro emits.
       'img-src': ["'self'", 'data:', 'https:'],
-      'connect-src': ["'self'", 'https://challenges.cloudflare.com'],
+      // GTM posts its measurement beacons over fetch/XHR, not just as image pixels.
+      'connect-src': [
+        "'self'",
+        'https://challenges.cloudflare.com',
+        'https://www.googletagmanager.com',
+        'https://*.google-analytics.com',
+        'https://*.analytics.google.com',
+        'https://stats.g.doubleclick.net',
+        'https://googleads.g.doubleclick.net',
+        'https://td.doubleclick.net',
+        'https://www.google.com',
+      ],
       // Turnstile's widget, and the office map on /contact-us/.
-      'frame-src': ['https://challenges.cloudflare.com', 'https://maps.google.com', 'https://www.google.com'],
+      // googletagmanager.com is the <noscript> fallback iframe; the doubleclick hosts are
+      // the Ads conversion frames.
+      'frame-src': [
+        'https://challenges.cloudflare.com',
+        'https://maps.google.com',
+        'https://www.google.com',
+        'https://www.googletagmanager.com',
+        'https://td.doubleclick.net',
+        'https://bid.g.doubleclick.net',
+      ],
       'worker-src': ["'self'", 'blob:'], // the Draco decoder for the 3D hero
       'object-src': ["'none'"],
       'base-uri': ["'self'"],
       'form-action': ["'self'"],
-      'frame-ancestors': ["'none'"],
+      // 'none' except Google's Tag Assistant, which debugs a container by loading the
+      // site in an iframe - GTM's Preview button just fails against a flat 'none'. The
+      // clickjacking protection this exists for is unaffected: only a Google-owned
+      // origin is allowed, so no attacker page can frame the lead forms.
+      // Was 'none'. It cannot stay 'none' AND allow Tag Assistant: per CSP3 'none' is
+      // only valid as the sole value, so listing both makes the browser ignore the
+      // 'none'. A bare allowlist is the correct spelling and is just as strict - any
+      // origin not named here still cannot frame the site, so the clickjacking
+      // protection over the lead forms is intact.
+      'frame-ancestors': ['https://tagassistant.google.com'],
       ...(isProd ? { 'upgrade-insecure-requests': [] } : {}),
     },
   },

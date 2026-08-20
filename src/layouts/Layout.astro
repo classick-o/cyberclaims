@@ -84,6 +84,11 @@ const xDefaultPath = localeSlugs?.[DEFAULT_LOCALE] ? `/${localeSlugs[DEFAULT_LOC
 
 // canonical + og:url, overridable for English-fallback pages.
 const canonical = Astro.props.canonicalUrl ?? absoluteUrl(path, locale, Astro.site);
+
+// Google Tag Manager. Driven by env so it loads on the production domain ONLY - firing
+// Ads conversion tags from the .nl staging copy would pollute the very campaign data the
+// container exists to measure. Unset -> nothing is emitted at all.
+const gtmId = import.meta.env.PUBLIC_GTM_ID;
 ---
 
 <!doctype html>
@@ -91,6 +96,22 @@ const canonical = Astro.props.canonicalUrl ?? absoluteUrl(path, locale, Astro.si
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    {/* Google Tag Manager - GTM wants this as early in <head> as possible. is:inline so
+        Astro ships it verbatim instead of bundling it as a module. */}
+    {
+      gtmId && (
+        <script
+          is:inline
+          set:html={`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${gtmId}');`}
+        />
+      )
+    }
+
     <meta name="description" content={description} />
     {robotsNoindex && <meta name="robots" content="noindex" />}
 
@@ -129,6 +150,15 @@ const canonical = Astro.props.canonicalUrl ?? absoluteUrl(path, locale, Astro.si
     <slot name="head" />
   </head>
   <body>
+    {/* Google Tag Manager (noscript) - must be the first thing inside <body>. */}
+    {
+      gtmId && (
+        <noscript
+          set:html={`<iframe src="https://www.googletagmanager.com/ns.html?id=${gtmId}"
+height="0" width="0" style="display:none;visibility:hidden"></iframe>`}
+        />
+      )
+    }
     <Header locale={locale} localeSlugs={localeSlugs} langFallback={Astro.props.langFallback} />
     <main>
       <slot />
