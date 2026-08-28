@@ -42,6 +42,10 @@ export const en = {
 
   // Lead forms
   'form.fullName': 'Full Name',
+  'form.firstName': 'First Name',
+  'form.lastName': 'Surname',
+  // Short label for the dial-code select sitting beside the phone number.
+  'form.phoneCode': 'Code',
   'form.email': 'Email',
   'form.phone': 'Phone Number',
   'form.country': 'Country of Residence',

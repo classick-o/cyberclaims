@@ -13,8 +13,8 @@ export const CONTACT = {
   ],
   // The floating chat button. `wa` is the digits only - wa.me rejects spaces and the
   // leading '+' - while `waDisplay` is what a human should ever see.
-  whatsapp: '41767620191',
-  whatsappDisplay: '+41 76 762 01 91',
+  whatsapp: '31615724180',
+  whatsappDisplay: '+31 6 15724180',
 };
 
 // Structure only - locale-independent. The copy (title, blurb, short) moved into the

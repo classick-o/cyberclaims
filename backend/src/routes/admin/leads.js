@@ -21,7 +21,10 @@ leads.get('/', async (req, res, next) => {
 leads.get('/export.csv', async (_req, res, next) => {
   try {
     sendCsv(res, `cyberclaims-leads-${new Date().toISOString().slice(0, 10)}.csv`, await Lead.all(), [
-      'id', 'created_at', 'source', 'status', 'full_name', 'email', 'phone', 'country',
+      'id', 'created_at', 'source', 'status',
+      // first/last and the ISO code are the columns a CRM import maps cleanly; full_name
+      // and country stay for continuity with older exports.
+      'first_name', 'last_name', 'full_name', 'email', 'phone', 'country_code', 'country',
       // scam-report form (phone checker); NULL for every other source
       'reported_number', 'scam_type', 'lost_money',
       'amount_lost', 'platform_name', 'platform_website', 'first_transaction',

@@ -6,11 +6,15 @@
 // email. Fields map straight onto the leads table: full_name, email, phone, message.
 import Icon from './Icon.astro';
 import Turnstile from './Turnstile.astro';
+import { countriesFor } from '../data/countries';
 
 interface Props {
   heading?: string;
   intro?: string;
 }
+// English-only block, so an English country list.
+const countries = countriesFor('en');
+
 const {
   heading = 'Speak With an Investigator',
   intro = 'Lost money to a scam? Our investigators can assess your case and explain how CyberClaims may be able to assist with a professional investigation.',
@@ -26,21 +30,36 @@ const {
         <p class="inv-intro">{intro}</p>
 
         <form class="inv-form" id="invForm" method="post" action="/api/lead" novalidate>
-          <div class="field">
-            <input type="text" name="full_name" required placeholder=" " />
-            <label>Full Name <span aria-hidden="true">*</span></label>
-          </div>
           <div class="field-row">
             <div class="field">
-              <input type="email" name="email" required placeholder=" " />
-              <label>Email <span aria-hidden="true">*</span></label>
+              <input type="text" name="first_name" required placeholder=" " autocomplete="given-name" />
+              <label>First Name <span aria-hidden="true">*</span></label>
             </div>
             <div class="field">
-              <input type="tel" name="phone" placeholder=" " />
-              <label>Your Phone</label>
+              <input type="text" name="last_name" required placeholder=" " autocomplete="family-name" />
+              <label>Surname <span aria-hidden="true">*</span></label>
             </div>
           </div>
-          <p class="inv-hint">Mobile or phone number</p>
+          <div class="field">
+            <input type="email" name="email" required placeholder=" " autocomplete="email" />
+            <label>Email <span aria-hidden="true">*</span></label>
+          </div>
+          <div class="field-row phone-row">
+            <div class="field">
+              <select name="phone_dial" required aria-label="Country code" data-placeholder>
+                <option value="" disabled selected>Code</option>
+                {countries.map((c) => (
+                  <option value={c.dial}>
+                    +{c.dial} {c.code}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div class="field">
+              <input type="tel" name="phone" required placeholder=" " inputmode="numeric" autocomplete="tel-national" />
+              <label>Your Phone <span aria-hidden="true">*</span></label>
+            </div>
+          </div>
           <div class="field">
             <textarea name="message" rows="5" required placeholder=" "></textarea>
             <label>What happened? <span aria-hidden="true">*</span></label>

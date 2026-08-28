@@ -15,6 +15,9 @@
 // it - so the copy says so explicitly rather than quietly contradicting that promise.
 import Icon from './Icon.astro';
 import Turnstile from './Turnstile.astro';
+import { countriesFor } from '../data/countries';
+
+const countries = countriesFor('en');
 
 // Broad enough to cover the common cases without becoming a wall of options. 'Something
 // else' promotes the free-text field to required, since it's the only signal left.
@@ -62,16 +65,26 @@ const CURRENCIES = ['EUR', 'GBP', 'USD', 'CHF', 'CAD', 'AUD', 'SEK', 'NOK', 'DKK
       </div>
     </div>
 
-    <div class="sr-row">
-      <div class="sr-field">
-        <input type="email" name="email" id="srEmail" required placeholder=" " autocomplete="email" />
-        <label for="srEmail">Email <span aria-hidden="true">*</span></label>
-      </div>
-      <div class="sr-field">
-        <input type="tel" name="phone" id="srPhone" required placeholder=" " autocomplete="tel" />
-        <label for="srPhone">Your phone <span aria-hidden="true">*</span></label>
-      </div>
+    <div class="sr-field">
+      <input type="email" name="email" id="srEmail" required placeholder=" " autocomplete="email" />
+      <label for="srEmail">Email <span aria-hidden="true">*</span></label>
     </div>
+<div class="sr-row sr-row-phone">
+        <div class="sr-field sr-select">
+          <select name="phone_dial" id="srDial" required aria-label="Country code">
+            <option value="" disabled selected>Code</option>
+            {countries.map((c) => (
+              <option value={c.dial}>
+                +{c.dial} {c.code}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div class="sr-field">
+          <input type="tel" name="phone" id="srPhone" required placeholder=" " inputmode="numeric" autocomplete="tel-national" />
+          <label for="srPhone">Your phone <span aria-hidden="true">*</span></label>
+        </div>
+      </div>
     <p class="sr-hint">Your own number, so an investigator can follow up.</p>
 
     <div class="sr-field sr-select">
@@ -189,6 +202,9 @@ const CURRENCIES = ['EUR', 'GBP', 'USD', 'CHF', 'CAD', 'AUD', 'SEK', 'NOK', 'DKK
   }
   .sr-row-amount {
     grid-template-columns: 1fr 7.5rem;
+  }
+  .sr-row-phone {
+    grid-template-columns: 7rem 1fr;
   }
   .sr-field {
     position: relative;
@@ -346,6 +362,11 @@ const CURRENCIES = ['EUR', 'GBP', 'USD', 'CHF', 'CAD', 'AUD', 'SEK', 'NOK', 'DKK
     }
     .sr-row-amount {
       grid-template-columns: 1fr 6.5rem;
+    }
+    /* the code and the number stay on one line even here - split apart they stop
+       reading as a single value */
+    .sr-row-phone {
+      grid-template-columns: 6rem 1fr;
     }
   }
 </style>

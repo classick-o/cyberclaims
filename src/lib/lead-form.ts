@@ -93,10 +93,69 @@ function solveCaptcha(form: HTMLFormElement): Promise<string | null> {
 
 // submit
 
+
+// identity fields
+//
+// Country of residence, the dial code and the phone number are three inputs describing
+// one person, so they are wired together in one place rather than in each of the six
+// forms that carry them.
+
+function initIdentityFields(form: HTMLFormElement): void {
+  const country = form.querySelector<HTMLSelectElement>('select[name="country_code"]');
+  const dial = form.querySelector<HTMLSelectElement>('select[name="phone_dial"]');
+  const phone = form.querySelector<HTMLInputElement>('input[name="phone"]');
+
+  // Picking a country fills in the matching dial code - the common case is a visitor
+  // whose number belongs to where they live, so make that the zero-click path. It stays
+  // a real select, so anyone with a foreign number can still change it.
+  if (country && dial) {
+    const sync = () => {
+      const chosen = country.selectedOptions[0]?.dataset.dial;
+      if (!chosen) return;
+      // Only move the dial code while the visitor hasn't set it themselves.
+      if (dial.dataset.touched === '1') return;
+      const match = Array.from(dial.options).find((o) => o.value === chosen);
+      if (match) dial.value = match.value;
+    };
+    country.addEventListener('change', sync);
+    dial.addEventListener('change', () => {
+      dial.dataset.touched = '1';
+    });
+    sync();
+  }
+
+  // Digits only. Typed spaces are kept while typing (people group numbers) and the
+  // server strips them when it builds E.164.
+  phone?.addEventListener('input', () => {
+    const cleaned = phone.value.replace(/[^\d\s]/g, '');
+    if (cleaned !== phone.value) {
+      const at = phone.selectionStart ?? cleaned.length;
+      phone.value = cleaned;
+      phone.setSelectionRange(at - 1, at - 1);
+    }
+  });
+
+  // A select with a placeholder option shows the hint colour until a real choice is
+  // made; the attribute is what the stylesheet keys off.
+  for (const select of [country, dial]) {
+    if (!select) continue;
+    const paint = () => {
+      if (select.value) select.removeAttribute('data-placeholder');
+      else select.setAttribute('data-placeholder', '');
+    };
+    select.addEventListener('change', paint);
+    paint();
+  }
+}
+
 export function initForm(form: HTMLFormElement, { endpoint, source, onSuccess }: Options): void {
   const status = form.querySelector<HTMLElement>('[data-form-status]');
   const submit = form.querySelector<HTMLButtonElement>('[type="submit"]');
   let sending = false;
+
+  // Every lead form on the site goes through initForm, so wiring the identity fields
+  // here covers all of them at once.
+  initIdentityFields(form);
 
   const setStatus = (message: string) => {
     if (!status) return;

@@ -190,7 +190,10 @@ export default function Leads() {
             <div className="modal-body">
               <Detail label="Email" value={<a href={`mailto:${open.email}`}>{open.email}</a>} />
               <Detail label="Phone" value={open.phone} />
-              <Detail label="Country" value={open.country} />
+              <Detail
+                label="Country"
+                value={open.country && `${open.country}${open.country_code ? ` (${open.country_code})` : ''}`}
+              />
               <Detail label="Form" value={SOURCES[open.source] ?? open.source} />
               {/* Scam-report form (phone checker). NULL on every other form, and Detail
                   renders nothing for an empty value, so these stay invisible elsewhere. */}

@@ -30,6 +30,10 @@ export const de: Record<UIKey, string> = {
 
   // Lead forms
   'form.fullName': 'Vollständiger Name',
+  'form.firstName': 'Vorname',
+  'form.lastName': 'Nachname',
+  // Short label for the dial-code select sitting beside the phone number.
+  'form.phoneCode': 'Vorwahl',
   'form.email': 'E-Mail',
   'form.phone': 'Telefonnummer',
   'form.country': 'Wohnsitzland',

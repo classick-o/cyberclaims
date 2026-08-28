@@ -4,10 +4,13 @@ import { toLimit, toOffset } from '../services/pagination.js';
 export class Lead {
   static async create({
     full_name,
+    first_name,
+    last_name,
     email,
     phone,
     reported_number,
     country,
+    country_code,
     message,
     scam_type,
     lost_money,
@@ -23,16 +26,20 @@ export class Lead {
   }) {
     const [result] = await pool.execute(
       `INSERT INTO leads
-         (full_name, email, phone, reported_number, country, message, scam_type, lost_money,
+         (full_name, first_name, last_name, email, phone, reported_number,
+          country, country_code, message, scam_type, lost_money,
           amount_lost, platform_name, platform_website, first_transaction, last_transaction,
           source, locale, ip_address, user_agent)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         full_name,
+        first_name ?? null,
+        last_name ?? null,
         email,
         phone ?? null,
         reported_number ?? null,
         country ?? null,
+        country_code ?? null,
         message ?? null,
         scam_type ?? null,
         // tinyint column: keep NULL ("not asked") distinct from 0 ("said no").

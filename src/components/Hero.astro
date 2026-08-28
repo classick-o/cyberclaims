@@ -4,6 +4,7 @@ import { CONTACT } from '../data/site';
 import { asset, link } from '../lib/paths';
 import { localeFromUrl } from '../i18n/config';
 import { useTranslations } from '../i18n';
+import { countriesFor } from '../data/countries';
 import Icon from './Icon.astro';
 import Turnstile from './Turnstile.astro';
 
@@ -12,6 +13,9 @@ import Turnstile from './Turnstile.astro';
 // language's URLs on the page without erroring.
 const locale = localeFromUrl(Astro.url);
 const t = useTranslations(locale);
+
+// ISO country list for the residence + dial-code selects, named in the page's language.
+const countries = countriesFor(locale);
 ---
 
 <section class="hero">
@@ -55,25 +59,47 @@ const t = useTranslations(locale);
           <p class="form-note">{t('cta.freeReview')}</p>
         </div>
         <form class="lead-form" id="heroForm" method="post" action="/api/lead" novalidate>
-          <div class="field">
-            <input type="text" name="full_name" required placeholder=" " />
-            <label>{t('form.fullName')}</label>
-          </div>
           <div class="field-row">
             <div class="field">
-              <input type="email" name="email" required placeholder=" " />
-              <label>{t('form.email')}</label>
+              <input type="text" name="first_name" required placeholder=" " autocomplete="given-name" />
+              <label>{t('form.firstName')}</label>
             </div>
             <div class="field">
-              <input type="tel" name="phone" required placeholder=" " />
+              <input type="text" name="last_name" required placeholder=" " autocomplete="family-name" />
+              <label>{t('form.lastName')}</label>
+            </div>
+          </div>
+          <div class="field">
+            <input type="email" name="email" required placeholder=" " />
+            <label>{t('form.email')}</label>
+          </div>
+<div class="field-row phone-row">
+            <div class="field">
+              <select name="phone_dial" required aria-label={t('form.phoneCode')} data-placeholder>
+                <option value="" disabled selected>{t('form.phoneCode')}</option>
+                {countries.map((c) => (
+                  <option value={c.dial}>
+                    +{c.dial} {c.code}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div class="field">
+              <input type="tel" name="phone" required placeholder=" " inputmode="numeric" autocomplete="tel-national" />
               <label>{t('form.phone')}</label>
             </div>
           </div>
           <div class="field-row">
-            <div class="field">
-              <input type="text" name="country" required placeholder=" " />
-              <label>{t('form.country')}</label>
-            </div>
+          <div class="field">
+            <select name="country_code" required aria-label={t('form.country')} data-placeholder>
+              <option value="" disabled selected>{t('form.country')}</option>
+              {countries.map((c) => (
+                <option value={c.code} data-dial={c.dial}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
             <div class="field">
               <input type="text" name="amount" required placeholder=" " />
               <label>{t('form.amountLost')}</label>

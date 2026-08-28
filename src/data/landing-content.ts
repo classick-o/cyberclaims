@@ -17,7 +17,12 @@ export interface LandingTechnique {
 }
 export interface LandingForm {
   heading: string;
+  /** Kept for the archived copy; the live form asks for the two halves below. */
   fullName: string;
+  firstName: string;
+  lastName: string;
+  /** Short label for the dial-code select beside the phone number. */
+  phoneCode: string;
   email: string;
   phone: string;
   country: string;
@@ -54,6 +59,9 @@ export interface LandingConfig {
 const FORM_EN: LandingForm = {
   heading: 'Please fill the form below to start the fund-recovery process',
   fullName: 'Full Name',
+  firstName: 'First Name',
+  lastName: 'Surname',
+  phoneCode: 'Code',
   email: 'Email',
   phone: 'Phone',
   country: 'Country of Residence',
@@ -220,6 +228,9 @@ export const LANDING_PAGES: LandingConfig[] = [
     form: {
       heading: 'Compila il modulo qui sotto per avviare il processo di recupero fondi',
       fullName: 'Nome completo',
+      firstName: 'Nome',
+      lastName: 'Cognome',
+      phoneCode: 'Prefisso',
       email: 'Email',
       phone: 'Telefono',
       country: 'Paese di residenza',

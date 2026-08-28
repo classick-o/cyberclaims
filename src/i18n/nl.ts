@@ -32,6 +32,10 @@ export const nl: Record<UIKey, string> = {
 
   // Lead forms
   'form.fullName': 'Volledige naam',
+  'form.firstName': 'Voornaam',
+  'form.lastName': 'Achternaam',
+  // Short label for the dial-code select sitting beside the phone number.
+  'form.phoneCode': 'Code',
   'form.email': 'E-mail',
   'form.phone': 'Telefoonnummer',
   'form.country': 'Land van verblijf',

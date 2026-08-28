@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { isCountryCode, countryNameEn } from '../services/countryData.js';
 
 // Deliberately permissive. Only a name and an email are enforced; every other field
 // is optional even when the HTML marks it `required` (that's client-side UX).
@@ -25,16 +27,42 @@ const date = z
   .or(z.literal(''))
   .transform((v) => v || null);
 
+// Which forms actually ask for these. Keep in step with the markup: a source listed here
+// whose form has no such input would reject every submission from it.
+const COUNTRY_SOURCES = new Set(['hero', 'contact', 'start_process', 'landing']);
+const PHONE_SOURCES = new Set(['hero', 'contact', 'start_process', 'landing', 'investigator']);
+
+/**
+ * E.164 from the dial code + national number the form posts, or null when the pair is
+ * not a real number for that country. Falls back to parsing `phone` on its own so a
+ * pasted "+44 20 7946 0958" still works.
+ */
+function toE164({ phone, phone_dial: dial, country_code: iso }) {
+  if (!phone) return null;
+  const raw = String(phone).trim();
+  const candidates = [
+    dial && !raw.startsWith('+') ? `+${String(dial).replace(/\D/g, '')}${raw.replace(/\D/g, '')}` : null,
+    raw,
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    const parsed = parsePhoneNumberFromString(candidate, isCountryCode(iso) ? iso.toUpperCase() : undefined);
+    if (parsed?.isValid()) return parsed.number;
+  }
+  return null;
+}
+
 export const leadSchema = z.object({
   source: z.enum(['hero', 'contact', 'start_process', 'url_checker', 'landing', 'investigator', 'scam_report'], {
     errorMap: () => ({ message: 'Unknown form.' }),
   }),
 
-  full_name: z
-    .string()
-    .trim()
-    .min(2, 'Please enter your full name.')
-    .max(200, 'Name is too long.'),
+  // The forms post first_name + last_name; full_name is composed below and remains the
+  // column every email, export and admin view already reads. It stays accepted on its own
+  // so anything still posting a single name (an old cached page, an integration) works.
+  first_name: text(100),
+  last_name: text(100),
+  full_name: z.string().trim().max(200, 'Name is too long.').optional(),
 
   email: z
     .string()
@@ -44,7 +72,11 @@ export const leadSchema = z.object({
     .max(255, 'Email is too long.'),
 
   phone: text(50),
+  /** Calling code without the plus, e.g. '31'. Combined with `phone` into E.164 below. */
+  phone_dial: text(6),
   country: text(100),
+  /** ISO 3166-1 alpha-2 from the country select; `country` is derived from it. */
+  country_code: text(2),
   message: text(5000),
 
   // ── scam-report form (phone checker) ──
@@ -72,4 +104,47 @@ export const leadSchema = z.object({
   // Honeypot. Handled before validation, but declared so `.strip()` doesn't
   // surprise us and so an unexpected value can't sneak through.
   _honey: z.string().max(0).optional(),
-});
+})
+  // ── identity: validate what the split fields posted, then normalise ──────────
+  //
+  // Which fields are mandatory depends on the form. Every lead form collects a name;
+  // only some collect a country (the investigator and scam-report forms have no country
+  // input at all), so requiring one globally would reject those outright.
+  .superRefine((v, ctx) => {
+    const wantsCountry = COUNTRY_SOURCES.has(v.source);
+    const wantsPhone = PHONE_SOURCES.has(v.source);
+    const fail = (path, message) => ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
+
+    // A name is required on every form. Either half missing is only an error when the
+    // legacy single full_name wasn't sent instead.
+    if (!v.full_name) {
+      if (!v.first_name) fail('first_name', 'Please enter your first name.');
+      if (!v.last_name) fail('last_name', 'Please enter your surname.');
+    }
+
+    if (wantsCountry && !isCountryCode(v.country_code)) {
+      fail('country_code', 'Please select your country of residence.');
+    }
+
+    if (wantsPhone) {
+      if (!v.phone) fail('phone', 'Please enter your phone number.');
+      else if (!toE164(v)) fail('phone', 'Please enter a valid phone number for that country.');
+    }
+  })
+  .transform((v) => {
+    // full_name stays the canonical column: composed here so it is correct even when the
+    // browser posted natively and no client script ran.
+    const composed = [v.first_name, v.last_name].filter(Boolean).join(' ').trim();
+    const e164 = toE164(v);
+
+    return {
+      ...v,
+      full_name: composed || v.full_name || null,
+      // Store the CODE plus the canonical English name, never the visitor's language.
+      country_code: isCountryCode(v.country_code) ? v.country_code.toUpperCase() : null,
+      country: isCountryCode(v.country_code) ? countryNameEn(v.country_code) : v.country,
+      // E.164 when we can build it; otherwise whatever was typed, so a lead is never lost
+      // to a number we merely failed to parse.
+      phone: e164 ?? v.phone,
+    };
+  });
