@@ -162,12 +162,12 @@ export const LANDING_PAGES: LandingConfig[] = [
   }),
   enLanding({
     slug: 'recover-your-lost-digital-funds-in-canada-scam-recovery-services',
-    title: 'Best Scam Recovery Services in Canada | Recover Funds - Cyberclaims',
+    title: 'Recover Your Lost Digital Funds in Canada | Scam Recovery Services - Cyberclaims',
     metaDescription:
-      'CyberClaims helps recover lost digital funds in Canada. Submit your claim today and let our certified experts help you reclaim what’s yours.',
+      'CyberClaims helps recover lost digital funds in Canada. Submit your claim today and let our experts assist you in reclaiming what’s yours.',
     place: 'in Canada',
     placeName: 'Canada',
-    demonym: 'individuals and organizations in Canada',
+    demonym: 'Canadians',
     lawAdj: 'Canadian',
     audience: ['Canadian Law Firms', 'Digital Asset Investors in Canada', 'Victims of Cyber Fraud in Canada'],
   }),
